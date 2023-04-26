@@ -1,0 +1,1 @@
+hopf	0.20000001304366782	StableToUnstable

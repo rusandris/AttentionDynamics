@@ -1,0 +1,1 @@
+endpoint	0.95	UnstableToStable

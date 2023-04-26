@@ -1,0 +1,2 @@
+hopf	0.33333333977986485	UnstableToUnstable
+nd	0.6666666855646808	UnstableToUnstable

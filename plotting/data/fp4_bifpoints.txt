@@ -1,0 +1,1 @@
+bp	0.5000000056404839	UnstableToStable
