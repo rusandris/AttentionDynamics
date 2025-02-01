@@ -10,8 +10,8 @@ function att_din!(du,u,p,t)
         du[i+1] = u[i] - u[i+1]
     end
 end
-
-function create_ds(u0,p) ContinuousDynamicalSystem(att_din!,u0,p) end
+diffeq_default =  (abstol = 1.0e-6, reltol = 1.0e-6)
+function create_ds(u0,p) CoupledODEs(att_din!,u0,p;diffeq=diffeq_default) end
 function create_integrator(ds,diffeq) integrator(ds;diffeq) end
 
 

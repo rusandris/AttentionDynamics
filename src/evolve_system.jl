@@ -1,21 +1,20 @@
-function evolve_system(ds,T;Ttr,Δt,state,p,diffeq)
-	set_parameter!(ds,p)
-	ts = trajectory(ds,T,state;Ttr = Ttr,Δt = Δt,diffeq=diffeq)
+function evolve_system(ds,T;Ttr,Δt,state,p)
+	set_parameters!(ds,p)
+	traj,ts = trajectory(ds,T,state;Ttr = Ttr,Δt = Δt)
 	
-	return Matrix(ts)
+	return traj,ts
 end
 
-function evolve_system(ds,t_start,t_stop;Δt,state,p,diffeq)
-	set_parameter!(ds,p)
-	time = t_start:Δt:t_stop
-	ts = trajectory(ds,t_stop-t_start,state;Ttr = t_start,Δt = Δt,diffeq=diffeq)
+function evolve_system(ds,t_start,t_stop;Δt,state,p)
+	set_parameters!(ds,p)
+	traj,time = trajectory(ds,t_stop-t_start,state;Ttr = t_start,Δt = Δt)
 	
-	return time,Matrix(ts)
+	return time,traj
 end
 
-function ts_to_file(ds,T;Ttr,Δt,state,p,diffeq)
+function ts_to_file(ds,T;Ttr,Δt,state,p)
 	w = p[2]
-	ts = evolve_system(ds,T;Ttr,Δt,state,p,diffeq)
+	ts = evolve_system(ds,T;Ttr,Δt,state,p)
 	filename = "ts_w_$w"*"_T_$T"*"_Ttr_$Ttr"*"_Δt_$Δt"
 	writedlm(filename,ts)
 	return filename
