@@ -1,4 +1,4 @@
-using AttentionDynamics,DelimitedFiles,Plots,LaTeXStrings
+using DelimitedFiles,Plots,LaTeXStrings
 
 include("defaults.jl")
 include("plot_functions/orbit_diagrams.jl")
@@ -23,6 +23,6 @@ xticks = [od_wvalues[1],(od_wvalues[1]+od_wvalues[end])/2,od_wvalues[end]]
 
 od = plot_orbit_diagram(od_wvalues,od_data;OD_DEFAULTS...,xlims=xlims,xticks=xticks)
 
-savefig(od,"figs/orbit_diagram_"*od_datafilename*".pdf")
+savefig(od,"figs/orbit_diagram_"*od_datafilename*".png")
 od
 

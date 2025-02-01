@@ -93,7 +93,7 @@ end
 
 
 
-function lyapunov_diagram(pinteg,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12,save,realtime_plotting=true)
+function lyapunov_diagram(pinteg,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12,save,realtime_plotting=true,savedir="./")
 	gl = length(gvalues)
 	wl = length(wvalues)
 	Λ = Array{Float64}(undef, (gl,wl))
@@ -138,13 +138,19 @@ function lyapunov_diagram(pinteg,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6,
 	if save
 		replace_infs!(Λ,-1)
 		
-		writedlm("N=$N"*"_gvalues"*"_T=$T"*"_Ttr=$Ttr"*"_res_"*"$gl"*"x$wl"*".txt",gvalues)
-		writedlm("N=$N"*"_wvalues"*"_T=$T"*"_Ttr=$Ttr"*"_res_"*"$gl"*"x$wl"*".txt",wvalues)
-		writedlm("N=$N"*"_T=$T"*"_Ttr=$Ttr"*"lyaps"*"_res_"*"$gl"*"x$wl"*".txt",Λ)
+		gstart = gvalues[1]
+		gstop = gvalues[end]
+		
+		wstart = wvalues[1]
+		wstop = wvalues[end]
+		
+		writedlm(savedir*"N$N"*"_gvalues_gstart_$gstart"*"_gstop_$gstop"*"_T$T"*"_Ttr$Ttr"*"_res_"*"$gl"*"x$wl"*".txt",gvalues)
+		writedlm(savedir*"N$N"*"_wvalues_wstart_$wstart"*"_wstop_$wstop"*"_T$T"*"_Ttr$Ttr"*"_res_"*"$gl"*"x$wl"*".txt",wvalues)
+		writedlm(savedir*"N$N"*"_T$T"*"_Ttr$Ttr"*"lyaps"*"gvalues_gstart_$gstart"*"_gstop_$gstop"*"_wstart_$wstart"*"_wstop_$wstop"*"_res_"*"$gl"*"x$wl"*".txt",Λ)
 		
 		if realtime_plotting
 			pd = plot_phase_diagram(Λ,wvalues,gvalues,N;HEATMAP_DEFAULTS...)					
-			savefig(pd,"N=$N"*"_T=$T"*"_Ttr=$Ttr"*"_res_"*"$gl"*"x$wl"*"lyap_diagram.pdf")
+			savefig(pd,savedir*"N$N"*"_T=$T"*"_Ttr=$Ttr"*"_res_"*"$gl"*"x$wl"*"lyap_diagram.pdf")
 		end
 		
 	else 

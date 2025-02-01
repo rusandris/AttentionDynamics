@@ -20,24 +20,25 @@ amplitudes = scaling_data[:,4]
 Δw1 = hopf_params[2:end] .- wc1
 Δw2 = wc2 .- hc_params
 
-pl1 = plot(Δw1,amplitudes;DEFAULTS...,st=:scatter,ms=3,xlabel=L"\Delta w",ylabel=L"A(x_1)")
+pl1 = plot(Δw1,amplitudes;DEFAULTS...,st=:scatter,ms=3,xlabel=L"\Delta w",ylabel=L"A(x_1)",legend=true,label="")
 a1,b1 = my_linreg(log10.(Δw1),log10.(amplitudes[2:end]))
 @show a1,b1
 
 #plot!(Δw1,(x -> 10^b1*x^a1).(Δw1);ls=:dash,lc=:red)
 #plot!(yaxis=:log,xaxis=:log)
 
-pl1 = plot!(Δw1,(x -> 10^b1*sqrt(x)).(Δw1);ls=:dash,lc=:red)
-savefig(pl1,"hopf_amplitude_scaling_N2_g5.png")
+pl1 = plot!(Δw1,(x -> 10^b1*sqrt(x)).(Δw1);ls=:dash,lc=:red,label=L"0.6 \cdot \Delta w^{1/2}",legendfontsize=DEFAULTS.xguidefontsize)
+savefig(pl1,"./figs/hopf_amplitude_scaling_N2_g5.png")
 
 
 a2,b2 = my_linreg(log10.(reverse(Δw2)),log10.(reverse(periods)))
 @show a2,b2
+a2r = round(a2;digits=2)
 
-pl2 = plot(reverse(Δw2),reverse(periods);DEFAULTS...,st=:scatter,ms=3,xlabel=L"\Delta w",ylabel="T")
-pl2 = plot!(Δw2,(x -> 10^b2*x^a2).(Δw2);ls=:dash,lc=:red)
-pl2 = plot!(yaxis=:log,xaxis=:log)
+pl2 = plot(reverse(Δw2),reverse(periods);DEFAULTS...,st=:scatter,ms=3,xlabel=L"\Delta w",ylabel="T",legend=true,label="")
+pl2 = plot!(Δw2,(x -> 10^b2*x^a2).(Δw2);ls=:dash,lc=:red,label=L"0.035 \cdot \Delta w^{-0.84}",legendfontsize=DEFAULTS.xguidefontsize)
+pl2 = plot!(yaxis=:log,xaxis=:log,xticks=[10^(-2.5),10^(-2),10^(-1.5)])
 
-savefig(pl2,"homoclinic_period_scaling_N2_g5.png")
+savefig(pl2,"./figs/homoclinic_period_scaling_N2_g5.png")
 
 

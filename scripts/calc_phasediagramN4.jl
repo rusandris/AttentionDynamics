@@ -21,12 +21,12 @@ diffeq = (alg = Tsit5(),dt = 1e-3,adaptive=true,dtmax=1e-2,maxiters=1e15)
 pinteg = create_pinteg(u0,p,d0;diffeq=diffeq)
 
 
-Ttr = 15000 #transient time
-T = 1000 #comp time
+Ttr = 10 #transient time
+T = 1 #comp time
 
 #parameter ranges
 gvalues = range(3,10,10)
 wvalues = range(0.3,1.0,10)
 
 #phase diagram calculation
-lyapunov_diagram(pinteg,gvalues,wvalues;T=T,Ttr=Ttr,Δt = 1,save=true,realtime_plotting=false)
+lyapunov_diagram(pinteg,gvalues,wvalues;T=T,Ttr=Ttr,Δt = 1,save=true,realtime_plotting=false,savedir=joinpath(@__DIR__, "..", "plotting/data/"))

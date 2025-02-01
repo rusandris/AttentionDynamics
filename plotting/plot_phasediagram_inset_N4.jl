@@ -4,7 +4,7 @@ include("defaults.jl")
 include("plot_functions/lyapunov.jl")
 
 
-output_filename = "figs/phase_diagram_N4_T=500_Ttr=3000_res_40x40.pdf"
+output_filename = "figs/phase_diagram_N4_T=1000_Ttr=10000_res_40x40.pdf"
 Λ = readdlm("data/N=4.0_T=1000_Ttr=10000lyaps_res_40x40.txt")
 wvalues = vec(readdlm("data/N=4.0_wvalues_T=1000_Ttr=10000_res_40x40.txt"))
 gvalues = vec(readdlm("data/N=4.0_gvalues_T=1000_Ttr=10000_res_40x40.txt"))

@@ -36,6 +36,7 @@ end
 
 function periodic_orbit_continuation(att_din,att_din!;init_cond,paramforguess,Ttr=500.0,T,dt=1e-3,M=300,optnewton = NewtonPar(tol = 1e-11,maxIter = 100 ,verbose = false),pMin = 0.35, pMax = 0.65, dsmax = 0.05, ds , dsmin = 1e-5,jacobian=jacobian,finaliseSolution= (z, tau, step, contResult; prob = nothing, kwargs...) -> true)
 
+	N = paramforguess.N  
 	prob = BifurcationProblem(att_din, init_cond, paramforguess, (@lens _.w), J = jacobian,
 	recordFromSolution = (x, p) -> norminf(x),
 	plotSolution = (x, p; k...) -> plot!(x; ylabel="solution", label="", k...))
@@ -46,11 +47,11 @@ function periodic_orbit_continuation(att_din,att_din!;init_cond,paramforguess,Tt
 	
 	# continuation parameters
 	opts_po_cont = ContinuationPar(pMin = pMin, pMax = pMax, dsmax = dsmax, ds = ds, dsmin = dsmin,
- 			newtonOptions = optnewton, maxBisectionSteps = 25 ,tolStability = 1e-2,
+ 			newtonOptions = optnewton, maxBisectionSteps = 150 ,tolStability = 1e-3,
  			detectBifurcation = 3, saveSolEveryStep=1)
 
 
-	po = continuation(probtrap, og, PALC(), opts_po_cont;verbosity = 4,
+	po = continuation(probtrap, og, PALC(), opts_po_cont;verbosity = 4,nev=2*N,
 		recordFromSolution = (x, p) -> begin
 			N = paramforguess[3];
 		 	xtt=reshape(x[1:end-1],2*N,probtrap.M);

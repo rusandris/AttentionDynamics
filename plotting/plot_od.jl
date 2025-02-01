@@ -1,4 +1,4 @@
-using AttentionDynamics,DelimitedFiles,Plots,LaTeXStrings
+using DelimitedFiles,Plots,LaTeXStrings
 
 include("defaults.jl")
 include("plot_functions/orbit_diagrams.jl")
@@ -26,6 +26,6 @@ od = plot_orbit_diagram(od_wvalues,od_data;OD_DEFAULTS...,xlims=xlims,ylims=(1.6
 scatter!(starred_values,[3.7,3.7],markershape=:star5,c=[:gray70, :gray40],ms=10,markerstrokecolor=[:gray70, :gray40])
 
 
-savefig(od,"figs/orbit_diagram_"*od_datafilename*".pdf")
+savefig(od,"figs/orbit_diagram_"*od_datafilename*".png")
 od
 

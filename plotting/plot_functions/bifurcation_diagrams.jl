@@ -28,7 +28,7 @@ function plot_bifdiagram!(pl,continuation_datafile::String,bifpoints_datafile::S
 		bp_color = BIF_COLORS[bp.type]
 		bp_coords = [bp.param,continuation_curve[index_before_bif+1]]
 		scatter!(pl,[bp_coords[1]],[bp_coords[2]];kwargs...,mc=bp_color)
-		annotate!(bp_coords[1]+0.02,bp_coords[2]-0.2,text(BIF_NAMES[bp.type], 12,:left))
+		annotate!(bp_coords[1]+0.02,bp_coords[2]-0.3,text(BIF_NAMES[bp.type], 12,:left))
 	
 		start_index = index_before_bif +  2
 	end

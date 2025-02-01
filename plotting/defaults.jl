@@ -16,6 +16,6 @@ THREED_DEFAULTS = (xguidefontsize=guide_fontsize/2,yguidefontsize=guide_fontsize
 BIF_DEFAULTS = (xguidefontsize=guide_fontsize,yguidefontsize=guide_fontsize,legend=false,legendfontsize=legend_fontsize,
 tickfontsize=tick_fontsize,grid=false,framestyle=:box,lw=3,ms=8,lc=:gray10,right_margin = 15Plots.mm,yguidefontrotation=0,dpi=300)
 
-BIF_COLORS = Dict(:pd => :orange,:ns => :green, :hopf => :red,:bp => :gray50,:nd => :purple,:d => :gray50)
-BIF_NAMES = Dict(:pd => "PD",:ns => "NS", :hopf => "H",:bp => "BP",:nd => "?",:d => "D")
+BIF_COLORS = Dict(:pd => :orange,:ns => :green, :hopf => :red,:bp => :gray50,:nd => :purple,:d => :gray50,:dhopf => :red)
+BIF_NAMES = Dict(:pd => "PD",:ns => "NS", :hopf => "H",:bp => "BP",:nd => "?",:d => "D",:dhopf => "DH")
 
