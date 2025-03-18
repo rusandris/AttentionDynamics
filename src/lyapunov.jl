@@ -1,3 +1,4 @@
+export lyapunov_curve,lyapunov_curves,lyapunov_diagram,lyapunov_diagram!
 function lyapunov_curve(pinteg,T,Ttr,param_interval;Δt, d0, ut, lt)
 	lyaps = []
 	for param in param_interval
@@ -91,50 +92,25 @@ function replace_infs!(Λ,value)
 	end
 end
 
-
-
-function lyapunov_diagram(pinteg,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12,save,realtime_plotting=true,savedir="./")
+#calculate lyapunov exponents for the phase diagram
+#lyapunov considers u0=initial_state(ds)
+#system is multistable! final state of p_i should be the initial state of p_{i+1}
+function lyapunov_diagram(ds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12,save,realtime_plotting=true,savedir="./")
 	gl = length(gvalues)
 	wl = length(wvalues)
 	Λ = Array{Float64}(undef, (gl,wl))
 	fill!(Λ,Inf)
-	N = pinteg.p[3]
+	N = current_parameters(ds)[3]
 	wc2 = (N-1)/N
 
-	for (gindex,g) in enumerate(gvalues)
-		set_parameter!(pinteg,1,g)
-		
-		if iseven(gindex)
-			witer = reverse(wvalues)
-		else
-			witer = wvalues
-		end
-		
-		for (windex,w) in enumerate(witer)
-			
-			#skip second fixed point parameter interval
-			(w <= 1.0 && w > wc2) && continue
-	
-			set_parameter!(pinteg,2,w)
-			reinit!(pinteg)
+	#create pds (parallel system) 
+	#for a lower level call to lyapunov
+	s = current_state(ds)
+	states = [s, s.+rand(Int(2N))*d0]
+	pds = ParallelDynamicalSystem(ds,states)
 
-			@show (g,w)
-			lyap = lyapunov(pinteg, T, Ttr, Δt, d0, ut, lt)
-			@show lyap
-			if iseven(gindex)
-				Λ[gindex,wl-windex+1] = lyap
-			else
-				Λ[gindex,windex] = lyap
-			end
-			
-			if realtime_plotting
-				pd = plot_phase_diagram(Λ,wvalues,gvalues,N;HEATMAP_DEFAULTS...)					
-				display(pd)
-			end
-			
-		end
-	end
-	
+	lyapunov_diagram!(Λ,pds,gvalues,wvalues; T=T, Ttr=Ttr, Δt=Δt, d0=d0, ut=ut, lt=lt)
+
 	if save
 		replace_infs!(Λ,-1)
 		
@@ -153,8 +129,54 @@ function lyapunov_diagram(pinteg,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6,
 			savefig(pd,savedir*"N$N"*"_T=$T"*"_Ttr=$Ttr"*"_res_"*"$gl"*"x$wl"*"lyap_diagram.pdf")
 		end
 		
-	else 
-		return Λ 
+	end 
+	return Λ 
+end
+
+#parallel lyapunov calculation?
+#parallelize row-wise
+#each thread saves λ lyap exponent to the same Λ
+#pds cannot be shared among threads
+function lyapunov_diagram!(Λ,pds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12)
+
+	gl = length(gvalues)
+
+	for (gindex,g) in enumerate(gvalues)
+		set_parameter!(pds,1,g)
+		
+		if iseven(gindex)
+			witer = reverse(wvalues)
+		else
+			witer = wvalues
+		end
+		
+		calc_lyap_row!(Λ,pds,gvalues,witer,gindex; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12)
 	end
 end
+
+
+function calc_lyap_row!(Λ,pds,gvalues,witer,gindex; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12)
+	wl = length(witer)
+	N = current_parameters(pds)[3]
+	wc2 = (N-1)/N
+
+	for (windex,w) in enumerate(witer)
+			
+		#skip second fixed point parameter interval
+		(w <= 1.0 && w > wc2) && continue
+
+		set_parameter!(pds,2,w)
+
+		@show current_parameters(pds)
+		lyap = lyapunov(pds, T; Ttr=Ttr, Δt=Δt, d0=d0, d0_upper=ut, d0_lower=lt)
+		@show lyap
+		if iseven(gindex)
+			Λ[gindex,wl-windex+1] = lyap
+		else
+			Λ[gindex,windex] = lyap
+		end
+	end
+
+end
+
 
