@@ -95,7 +95,8 @@ end
 #calculate lyapunov exponents for the phase diagram
 #lyapunov considers u0=initial_state(ds)
 #system is multistable! final state of p_i should be the initial state of p_{i+1}
-function lyapunov_diagram(ds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12,save,realtime_plotting=true,savedir="./")
+#highest level series version
+function lyapunov_diagram(ds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12,parallelize=false,save,realtime_plotting=true,savedir="./")
 	gl = length(gvalues)
 	wl = length(wvalues)
 	Λ = Array{Float64}(undef, (gl,wl))
@@ -103,13 +104,18 @@ function lyapunov_diagram(ds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=
 	N = current_parameters(ds)[3]
 	wc2 = (N-1)/N
 
-	#create pds (parallel system) 
-	#for a lower level call to lyapunov
-	s = current_state(ds)
-	states = [s, s.+rand(Int(2N))*d0]
-	pds = ParallelDynamicalSystem(ds,states)
+	if parallelize
+		lyapunov_diagram_parallel!(Λ,ds,gvalues,wvalues; T=T, Ttr=Ttr, Δt=Δt, d0=d0, ut=ut, lt=lt)
 
-	lyapunov_diagram!(Λ,pds,gvalues,wvalues; T=T, Ttr=Ttr, Δt=Δt, d0=d0, ut=ut, lt=lt)
+	else
+		#create pds (parallel system) 
+		#for a lower level call to lyapunov
+		s = current_state(ds)
+		states = [s, s.+rand(Int(2N))*d0]
+		pds = ParallelDynamicalSystem(ds,states)
+
+		lyapunov_diagram!(Λ,pds,gvalues,wvalues; T=T, Ttr=Ttr, Δt=Δt, d0=d0, ut=ut, lt=lt)
+	end
 
 	if save
 		replace_infs!(Λ,-1)
@@ -137,6 +143,40 @@ end
 #parallelize row-wise
 #each thread saves λ lyap exponent to the same Λ
 #pds cannot be shared among threads
+function lyapunov_diagram_parallel!(Λ,ds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12)
+
+	gl = length(gvalues)
+	N = Int(dimension(ds)/2)
+
+	#init pds states to initial state of ds
+	s = initial_state(ds)
+	states = [s, s.+rand(Int(2N))*d0]
+	gs_ti = zeros(Int,length(gvalues))
+
+	#start threads wrt g values (columns in the lyap. diag.)
+	Threads.@threads for g_i in 1:length(gvalues)
+		gs_ti[g_i] = Threads.threadid()
+		@show gs_ti
+		#@show Threads.threadid(),g_i,gvalues[g_i]
+		#create pds (parallel system) for each thread 
+		pds = ParallelDynamicalSystem(deepcopy(ds),deepcopy(states))
+
+		set_parameter!(pds,1,gvalues[g_i])
+		
+		#set direction for w param (lower to larger or viceversa)
+		if iseven(g_i)
+			witer = reverse(wvalues)
+		else
+			witer = wvalues
+		end
+		
+		#calc lyapunovs and save to Λ
+		#calc for all w values 
+		calc_lyap_row!(Λ,pds,gvalues,witer,g_i; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12)
+	end
+end
+
+#serial version (no threading)
 function lyapunov_diagram!(Λ,pds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12)
 
 	gl = length(gvalues)
@@ -163,13 +203,13 @@ function calc_lyap_row!(Λ,pds,gvalues,witer,gindex; T, Ttr, Δt, d0=1e-9, ut=1e
 	for (windex,w) in enumerate(witer)
 			
 		#skip second fixed point parameter interval
+		(w <= 1.0 && w > wc2) && println("wtf")
 		(w <= 1.0 && w > wc2) && continue
 
 		set_parameter!(pds,2,w)
 
-		@show current_parameters(pds)
+		@show Threads.threadid(),gindex,gvalues[gindex],w
 		lyap = lyapunov(pds, T; Ttr=Ttr, Δt=Δt, d0=d0, d0_upper=ut, d0_lower=lt)
-		@show lyap
 		if iseven(gindex)
 			Λ[gindex,wl-windex+1] = lyap
 		else
@@ -178,5 +218,6 @@ function calc_lyap_row!(Λ,pds,gvalues,witer,gindex; T, Ttr, Δt, d0=1e-9, ut=1e
 	end
 
 end
+
 
 
