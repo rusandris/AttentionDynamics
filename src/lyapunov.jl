@@ -96,7 +96,7 @@ end
 #lyapunov considers u0=initial_state(ds)
 #system is multistable! final state of p_i should be the initial state of p_{i+1}
 #highest level series version
-function lyapunov_diagram(ds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12,parallelize=false,save,realtime_plotting=true,savedir="./")
+function lyapunov_diagram(ds,gvalues,wvalues; T, Ttr, Δt,fp_settings=[100,100,0.1], d0=1e-9, ut=1e-6, lt=1e-12,parallelize=false,save,realtime_plotting=true,savedir="./")
 	gl = length(gvalues)
 	wl = length(wvalues)
 	Λ = Array{Float64}(undef, (gl,wl))
@@ -114,7 +114,7 @@ function lyapunov_diagram(ds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=
 		states = [s, s.+rand(Int(2N))*d0]
 		pds = ParallelDynamicalSystem(ds,states)
 
-		lyapunov_diagram!(Λ,pds,gvalues,wvalues; T=T, Ttr=Ttr, Δt=Δt, d0=d0, ut=ut, lt=lt)
+		lyapunov_diagram!(Λ,pds,gvalues,wvalues; T=T, Ttr=Ttr, Δt=Δt,fp_settings=fp_settings, d0=d0, ut=ut, lt=lt)
 	end
 
 	if save
@@ -177,29 +177,32 @@ function lyapunov_diagram_parallel!(Λ,ds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9,
 end
 
 #serial version (no threading)
-function lyapunov_diagram!(Λ,pds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12)
+function lyapunov_diagram!(Λ,pds,gvalues,wvalues; T, Ttr, Δt,fp_settings=[100,100,0.1] ,d0=1e-9, ut=1e-6, lt=1e-12)
 
 	gl = length(gvalues)
 
 	for (gindex,g) in enumerate(gvalues)
 		set_parameter!(pds,1,g)
-		
+		@show g		
 		if iseven(gindex)
 			witer = reverse(wvalues)
 		else
 			witer = wvalues
 		end
 		
-		calc_lyap_row!(Λ,pds,gvalues,witer,gindex; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12)
+		calc_lyap_row!(Λ,pds,gvalues,witer,gindex; T, Ttr, Δt,fp_settings=fp_settings, d0=1e-9, ut=1e-6, lt=1e-12)
 	end
 end
 
 
-function calc_lyap_row!(Λ,pds,gvalues,witer,gindex; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12)
+function calc_lyap_row!(Λ,pds,gvalues,witer,gindex; T, Ttr, Δt,fp_settings=[100,100,0.1], d0=1e-9, ut=1e-6, lt=1e-12)
 	wl = length(witer)
 	N = current_parameters(pds)[3]
 	wc2 = (N-1)/N
+	wc1 = (N-1)/gvalues[gindex]
+	T_fp,Ttr_fp,Δt_fp = fp_settings
 
+	#reinit!(pds)
 	for (windex,w) in enumerate(witer)
 			
 		#skip second fixed point parameter interval
@@ -207,9 +210,18 @@ function calc_lyap_row!(Λ,pds,gvalues,witer,gindex; T, Ttr, Δt, d0=1e-9, ut=1e
 		(w <= 1.0 && w > wc2) && continue
 
 		set_parameter!(pds,2,w)
+		reinit!(pds)
+		@show w
+		@show current_state(pds)[1]
+		#@show Threads.threadid(),gindex,gvalues[gindex],w
 
-		@show Threads.threadid(),gindex,gvalues[gindex],w
-		lyap = lyapunov(pds, T; Ttr=Ttr, Δt=Δt, d0=d0, d0_upper=ut, d0_lower=lt)
+		#use lower transients for stable fixed point dynamics
+		if w < wc1
+			lyap = lyapunov(pds, T_fp; Ttr=Ttr_fp, Δt=Δt_fp, d0=d0, d0_upper=ut, d0_lower=lt)
+		else
+			lyap = lyapunov(pds, T; Ttr=Ttr, Δt=Δt, d0=d0, d0_upper=ut, d0_lower=lt)
+		end
+		@show lyap
 		if iseven(gindex)
 			Λ[gindex,wl-windex+1] = lyap
 		else
