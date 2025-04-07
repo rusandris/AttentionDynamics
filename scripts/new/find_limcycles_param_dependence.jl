@@ -4,10 +4,9 @@ using AttentionDynamics
 using OrdinaryDiffEq
 using DelimitedFiles
 using Plots,LaTeXStrings
+cd(@__DIR__)
 
 diffeq = (alg = Tsit5(),dt = 1e-3,adaptive=true,dtmax=1e-2,maxiters=1e15)
-
-N = 4
 
 gs_N10 = vec(readdlm("../../plotting/data/N=10.0_gvalues.txt"))
 gs = gs_N10 ./(10-1)
@@ -16,20 +15,38 @@ g_N = gs[30]
 grid_size = 200 #phase space grid cell size
 
 T_test = 1000
-Ttr=5000
-cons_recurrences = 5000; 
+Ttr=10000
+cons_recurrences = 500; 
 locate_steps = 10000;
 max_ensemble = 50
 attractor_finding_results = []
 
-#parameters
-g = g_N * (N-1)
+#---------------------------system parameters-----------------------------
+#N = 4 # N=4 case
+N = 5 
+g = g_N * (N-1) 
 wc1 = (N-1)/g
 wc2 = (N-1)/N
 ws = [wc1+0.02:0.01:wc2-0.01;] 
+w = wc1 + (wc2-wc1)/2 
 
 ds = create_ds(rand(2N),[g,w,N];diffeq=diffeq)
 @show g
+
+#attractor plots
+g_val = current_parameters(ds)[1]
+set_parameter!(ds,2,ws[1])
+w_val = current_parameters(ds)[2]
+traj,_ = trajectory(ds,200;Ttr=10000,Δt=1e-2)
+pp1 = plot(traj[:,1],traj[:,2],xlabel=L"x_1",ylabel=L"y_1",title=L"N=%$N,g=%$g_val"*L", w=%$w_val",dpi=300)
+#savefig(pp1,"phase_portrait_N7_example1.png")
+
+set_parameter!(ds,2,ws[10])
+w_val = current_parameters(ds)[2]
+traj,_ = trajectory(ds,200;Ttr=10000,Δt=1e-2)
+pp2 = plot(traj[:,1],traj[:,2],xlabel=L"x_1",ylabel=L"y_1",title=L"N=%$N,g=%$g_val"*L", w=%$w_val",dpi=300)
+pp = plot(pp1,pp2,layout=(1,2),size=(1200,600),guidefontsize=18,left_margin=8Plots.mm)
+savefig(pp,"../../phase_portrait_N$(N)_examples.png")
 
 attractor_finding_results = []
 
