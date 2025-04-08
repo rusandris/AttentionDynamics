@@ -1,9 +1,11 @@
+export build_jacobian,eigval_maxrealparts,eigen_spectrum
+
 function skipsum(a,i,N)
 	x = @view a[1:N]
     return sum(x) - x[i]
 end
 
-function jacobian(u,p)
+function build_jacobian(u,p)
 	g,w,N = p
 	N = Int(N)
 	
@@ -35,7 +37,8 @@ function jacobian(u,p)
 	
 end
 
-function eigval_curves(fixed_points,w_values,p)
+#calc max real part of eigvals numerically
+function eigval_maxrealparts(fixed_points,w_values,p)
 	l = length(fixed_points[1])
 	allmax_realparts = []
 	
@@ -43,7 +46,7 @@ function eigval_curves(fixed_points,w_values,p)
 		max_realparts = []
 		for w in w_values
 			p[2] = w 
-			J = jacobian(fp,p)
+			J = build_jacobian(fp,p)
 			eigen_values = eigvals!(J)
 			push!(max_realparts,maximum(real.(eigen_values)))
 		end
@@ -53,4 +56,24 @@ function eigval_curves(fixed_points,w_values,p)
 	allmax_realparts
 end
 
+#calc eigvals of J numerically
+function eigen_spectrum(J,w_values)
+	realparts = []
+	imagparts = []
+	
+	for w in w_values
+		eigen_values = eigvals!(J)
+		push!(realparts,real.(eigen_values))
+		push!(imagparts,imag.(eigen_values))
+	end
+	return realparts,imagparts
+end
+
+#TODO: implement formulas for analytic eigvals
+#extract real parts and imaginary parts
+
+function fixed_point_eigen_spectrum(N,M,p)
+
+
+end
 
