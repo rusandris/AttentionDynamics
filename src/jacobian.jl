@@ -1,4 +1,4 @@
-export build_jacobian,eigval_maxrealparts,eigen_spectrum
+export build_jacobian,eigval_maxrealparts,eigen_spectrum,fixed_point_eigen_spectrum
 
 function skipsum(a,i,N)
 	x = @view a[1:N]
@@ -73,7 +73,38 @@ end
 #extract real parts and imaginary parts
 
 function fixed_point_eigen_spectrum(N,M,p)
+	g,w,N = p 
+	w_M = (w*M)/(N-1)
+	w_N = (w*N)/(N-1)
+	s = 1/(1 + w_M - w_N) #fixed point value (nonzero)
 
+	eigen_spectrum = []
 
+	#origin case 
+	if M == 0
+		λ1 = -1
+		λ2 = g
+		push!(eigen_spectrum,λ1,λ2)
+	end
+
+	#other cases
+	if M != N
+		λ1 = -1
+		λ2 = g*(1 - w_M*s)
+		push!(eigen_spectrum,λ1,λ2)
+	elseif M >= 2
+		a2 = -(g*w*s)/(N-1)
+		b = g*(w-1)*s
+		a3 = -(M-1)*a2
+
+		λ3_1 = 0.5*( -(1 + a2) + sqrt(Complex((1+a2)^2 + 4(b-a2))) )
+		λ3_2 = 0.5*( -(1 + a2) - sqrt(Complex((1+a2)^2 + 4(b-a2))) )
+
+		λ4_1 = 0.5*( -(1 + a3) + sqrt(Complex((1+a3)^2 + 4(b-a3))) )
+		λ4_2 = 0.5*( -(1 + a3) - sqrt(Complex((1+a3)^2 + 4(b-a3))) )
+
+		push!(eigen_spectrum,λ3_1,λ3_2,λ4_1,λ4_2)
+	end
+	return eigen_spectrum
 end
 

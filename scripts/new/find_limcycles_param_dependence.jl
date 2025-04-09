@@ -30,11 +30,10 @@ Ttr=10000
 cons_recurrences = 500; 
 locate_steps = 10000;
 max_ensemble = 50
-attractor_finding_results = []
 
 #---------------------------system parameters-----------------------------
-#N = 4 # N=4 case
-N = 5 
+N = 4 # N=4 case
+#N = 5 
 g = g_N * (N-1) 
 wc1 = (N-1)/g
 wc2 = (N-1)/N
@@ -46,7 +45,7 @@ ds = create_ds(rand(2N),[g,w,N];diffeq=diffeq)
 
 #------------------------------------attractor plots------------------------------------
 g_val = current_parameters(ds)[1]
-set_parameter!(ds,2,ws[1])
+set_parameter!(ds,2,0.63)
 w_val = current_parameters(ds)[2]
 traj,ts = trajectory(ds,200;Ttr=10000,Δt=1e-2)
 
@@ -59,7 +58,7 @@ pl_cr1 = plot(ts[1:1000],crs[1:1000],xlabel=L"t",ylabel=L"tr(J)",label="",lc=:gr
 hline!(pl_cr1,[crs_avg],ls=:dash,lc=:red,lw=2,label=L"<tr(J)>=%$crs_avg",legendfontsize=14)
 #savefig(pp1,"phase_portrait_N7_example1.png")
 
-set_parameter!(ds,2,ws[10])
+set_parameter!(ds,2,0.7)
 w_val = current_parameters(ds)[2]
 traj,ts = trajectory(ds,200;Ttr=10000,Δt=1e-2)
 λ = lyapunov(ds,5000,Ttr=10000,Δt=0.1)
