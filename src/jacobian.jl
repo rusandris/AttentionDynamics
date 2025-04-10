@@ -73,37 +73,47 @@ end
 #extract real parts and imaginary parts
 
 function fixed_point_eigen_spectrum(N,M,p)
-	g,w,N = p 
+	g,w,N = p
+	
+	#need expressions, convenient notations
 	w_M = (w*M)/(N-1)
 	w_N = (w*N)/(N-1)
 	s = 1/(1 + w_M - w_N) #fixed point value (nonzero)
 
+	a2 = -(g*w*s)/(N-1)
+	b = g*(w-1)*s
+	a3 = -(M-1)*a2
+
+
 	eigen_spectrum = []
+
+	#eigenvalues 
+	λ1 = -1 #type 1
+	λ2 = g*(1 - w_M*s) #type 2
+	#type 3
+	λ3_1 = 0.5*( -(1 + a2) + sqrt(Complex((1+a2)^2 + 4(b-a2))) )
+	λ3_2 = 0.5*( -(1 + a2) - sqrt(Complex((1+a2)^2 + 4(b-a2))) )
+	# type 4
+	λ4_1 = 0.5*( -(1 + a3) + sqrt(Complex((1+a3)^2 + 4(b-a3))) )
+	λ4_2 = 0.5*( -(1 + a3) - sqrt(Complex((1+a3)^2 + 4(b-a3))) )
 
 	#origin case 
 	if M == 0
-		λ1 = -1
-		λ2 = g
 		push!(eigen_spectrum,λ1,λ2)
+		return eigen_spectrum
 	end
 
-	#other cases
-	if M != N
-		λ1 = -1
-		λ2 = g*(1 - w_M*s)
-		push!(eigen_spectrum,λ1,λ2)
-	elseif M >= 2
-		a2 = -(g*w*s)/(N-1)
-		b = g*(w-1)*s
-		a3 = -(M-1)*a2
+	#dominance case
+	if M == 1
+		push!(eigen_spectrum,λ1,λ2,λ4_1,λ4_2)
+		return eigen_spectrum
+	end
 
-		λ3_1 = 0.5*( -(1 + a2) + sqrt(Complex((1+a2)^2 + 4(b-a2))) )
-		λ3_2 = 0.5*( -(1 + a2) - sqrt(Complex((1+a2)^2 + 4(b-a2))) )
-
-		λ4_1 = 0.5*( -(1 + a3) + sqrt(Complex((1+a3)^2 + 4(b-a3))) )
-		λ4_2 = 0.5*( -(1 + a3) - sqrt(Complex((1+a3)^2 + 4(b-a3))) )
-
+	if M == N 
 		push!(eigen_spectrum,λ3_1,λ3_2,λ4_1,λ4_2)
+		return eigen_spectrum
+	else #all other cases
+		push!(eigen_spectrum,λ1,λ2,λ3_1,λ3_2,λ4_1,λ4_2)
 	end
 	return eigen_spectrum
 end
