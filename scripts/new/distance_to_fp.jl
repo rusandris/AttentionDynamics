@@ -18,7 +18,7 @@ gs_N10 = vec(readdlm("../../plotting/data/N=10.0_gvalues.txt"))
 gs = gs_N10 ./(10-1)
 g_N = gs[30]
 
-N = 6
+N = 10
 #N = 3
 #N = 5 
 g = g_N * (N-1) 
@@ -152,11 +152,12 @@ plot!(ws,imagparts_M4[:,[3,4]],ylims=ylims_spec,lc=:red,lw=2,ls=:dash,label="ima
 plot!(ws,realparts_M4[:,[5,6]],ylims=ylims_spec,lc=:blue,lw=2,label="real type 4 M=4")
 plot!(ws,imagparts_M4[:,[5,6]],ylims=ylims_spec,lc=:blue,lw=2,ls=:dash,label="imag type 4 M=4")
 
+pl=plot()
 vline!([wc1],lc=:gray10,lw=2,ls=:dash,label=L"w^{(1)}_c")
 vline!([wc2],lc=:gray10,lw=2,ls=:dash,label=L"w^{(2)}_c")
 
-
-plot!(ws,dist_extremas_coex_mins,lc=:blue)
+plot!(ws,dist_extremas_coex_mins,lc=:blue,label=L"N=%$N,g=%$g",
+    ylims=(Inf,Inf),ylabel=L"min(d_c)",xlabel=L"w")
 plot!(ws,dist_extremas_coex_maxs,lc=:blue,ls=:dash)
 
 plot!(ws,dist_extremas_dom_mins,lc=:orange)

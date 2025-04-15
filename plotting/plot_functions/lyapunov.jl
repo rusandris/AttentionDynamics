@@ -53,8 +53,8 @@ function plot_lyapunovs(system_sizes)
 end
 
 #article params in rescaled param space
-w(r,N;α=0.005,K=1.0,c=2.4) = 1/(1+r/(α*K*c*(N-1)))
-g(r;α=0.005) = r/α
+w_rescaled_param(r,N;α=0.005,K=1.0,c=2.4) = 1/(1+r/(α*K*c*(N-1)))
+g_rescaled_param(r;α=0.005) = r/α
 
 critical_curve(w,N) = (N-1)/w
 critical_curve_adim(w) = 1/w
