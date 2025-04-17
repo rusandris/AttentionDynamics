@@ -32,8 +32,8 @@ locate_steps = 10000;
 max_ensemble = 50
 
 #---------------------------system parameters-----------------------------
-N = 4 # N=4 case
-#N = 5 
+#N = 4 # N=4 case
+N = 10 
 g = g_N * (N-1) 
 wc1 = (N-1)/g
 wc2 = (N-1)/N
@@ -45,7 +45,7 @@ ds = create_ds(rand(2N),[g,w,N];diffeq=diffeq)
 
 #------------------------------------attractor plots------------------------------------
 g_val = current_parameters(ds)[1]
-set_parameter!(ds,2,0.63)
+set_parameter!(ds,2,ws[1])
 w_val = current_parameters(ds)[2]
 traj,ts = trajectory(ds,200;Ttr=10000,Δt=1e-2)
 
@@ -58,14 +58,14 @@ pl_cr1 = plot(ts[1:1000],crs[1:1000],xlabel=L"t",ylabel=L"tr(J)",label="",lc=:gr
 hline!(pl_cr1,[crs_avg],ls=:dash,lc=:red,lw=2,label=L"<tr(J)>=%$crs_avg",legendfontsize=14)
 #savefig(pp1,"phase_portrait_N7_example1.png")
 
-set_parameter!(ds,2,0.7)
+set_parameter!(ds,2,ws[end])
 w_val = current_parameters(ds)[2]
 traj,ts = trajectory(ds,200;Ttr=10000,Δt=1e-2)
 λ = lyapunov(ds,5000,Ttr=10000,Δt=0.1)
 
 crs = [contraction_rate(traj[i],current_parameters(ds)) for i in 1:length(traj)]
 crs_avg = mean(crs)
-pl_cr2 = plot(ts[1:1000],crs[1:1000],xlabel=L"t",ylabel=L"tr(J)",label="",lc=:gray10,ylims=(-Inf,15),yticks=[-30:5:15;])
+pl_cr2 = plot(ts[1:1000],crs[1:1000],xlabel=L"t",ylabel=L"tr(J)",label="",lc=:gray10,ylims=(-30,15),yticks=[-30:5:15;])
 hline!(pl_cr2,[crs_avg],ls=:dash,lc=:red,lw=2,label=L"<tr(J)>=%$crs_avg",legendfontsize=14)
 pp2 = plot(traj[:,1],traj[:,2],xlabel=L"x_1",ylabel=L"y_1",label=L"\lambda=%$λ",legendfontsize=14,title=L"N=%$N,g=%$g_val"*L", w=%$w_val",dpi=300)
 pp = plot(pp1,pp2,pl_cr1,pl_cr2,layout=(2,2),size=(1200,1200),guidefontsize=18,left_margin=8Plots.mm)

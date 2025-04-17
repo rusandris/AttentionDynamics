@@ -1,3 +1,5 @@
+export att_din!,skipsum
+
 function skipsum(a,i)
 	x = a[1:2:end]
     return sum(x) - a[i]
