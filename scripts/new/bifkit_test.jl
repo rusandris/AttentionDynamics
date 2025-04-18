@@ -21,8 +21,9 @@ function F_ad(u,p)
     du
 end
 
-N = 4 
-g = 5.64
+#=
+N = 5 
+g = 7.5
 w = 0.5
 wc1 = (N-1)/g
 wc2 = (N-1)/N
@@ -39,11 +40,14 @@ prob = BifurcationProblem(F_ad,
 
 br = continuation(prob, PALC(), ContinuationPar(p_min = 0.5, p_max = 0.6))
 
+=#
 #use DiffEq to solve for a periodic trajectory
 
-N = 4 
-g = 5.64
-w = 0.55
+N = 5 
+g = 7.5
+w = 0.7
+wc1 = (N-1)/g
+wc2 = (N-1)/N
 p = [g,w,N]
 u0 = rand(2N)
 
@@ -56,12 +60,18 @@ prob_de = ODEProblem(att_din!, sol.u[end], (0,20.), p, reltol = 1e-8, abstol = 1
 sol = DifferentialEquations.solve(prob_de, Rodas5())
 
 plot(sol)
+#approximate period 
+T_period = 10.0
 
-probtrap, orbit_guess = generate_ci_problem(PeriodicOrbitTrapProblem(M = 300),prob, sol, 6.)
-opts_po_cont = ContinuationPar(p_min = 0.55, p_max = 0.65, ds = 0.002, dsmax = 0.01, n_inversion = 6, nev = 4,opts_br, max_steps = 50, tol_stability = 1e-8)
+probtrap, orbit_guess = generate_ci_problem(PeriodicOrbitTrapProblem(M = 300),prob, sol, T_period)
+opts_po_cont = ContinuationPar(p_min = 0.55, p_max = 0.75, ds = -0.002, dsmax = 0.01, n_inversion = 6, nev = 4, max_steps = 50, tol_stability = 1e-8)
 
 brpo = continuation(probtrap, orbit_guess, PALC(), opts_po_cont,; 
 	verbosity = 3, plot = true,finalise_solution = (z, tau, step, contResult; k...) -> begin
     @info "Floquet exponents:"
     (Base.display(contResult.eig[end].eigenvals) ;true)
     end)
+
+periods = brpo.branch.period 
+floqs = [brpo.eig[i].eigenvals for i in 1:length(brpo.eig)]
+floq_mult_max_abs = [maximum(abs.(exp.(floqs[i].*periods[i]))) for i in 1:length(floqs)]
