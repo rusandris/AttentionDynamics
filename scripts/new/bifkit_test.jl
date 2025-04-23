@@ -1,7 +1,7 @@
 using Revise
 using BifurcationKit
 using Plots
-using AttentionDynamics
+import AttentionDynamics: att_din!
 using DifferentialEquations
 using LinearAlgebra
 
@@ -49,7 +49,7 @@ prob = BifurcationProblem(F_ad,
         u0, # initial condition x0
         p, # set of parameters
         2;     # parameter index for continuation
-        record_from_solution = (x,p; k...) -> x[1])
+        )
 
 #br = continuation(prob, PALC(), ContinuationPar(p_min = 0.5, p_max = 0.8))
 
@@ -68,13 +68,15 @@ T_period = 13.0
 
 probtrap, orbit_guess = generate_ci_problem(PeriodicOrbitTrapProblem(M = 300),prob, sol, T_period)
 opts_po_cont = ContinuationPar(p_min = wc1-0.05, p_max = 0.75, ds = -0.02, newton_options=NewtonPar(;eigsolver=DefaultEig(;which=imag)), 
-    dsmax = 0.02, detect_bifurcation=1, nev = 3, max_steps = 120, tol_stability = 1e-10,save_sol_every_step=1)
+    dsmax = 0.02, detect_bifurcation=1, nev = 3, max_steps = 10, tol_stability = 1e-10,save_sol_every_step=1)
 
 brpo = continuation(probtrap, orbit_guess, PALC(), opts_po_cont; 
-	verbosity = 3, plot = true,finalise_solution = (z, tau, step, contResult; k...) -> begin
-    @info "Floquet exponents:"
-    (Base.display(contResult.eig[end].eigenvals) ;true)
-    end)
+	verbosity = 3, plot = true,record_from_solution = (x,p; k...) -> max(x[1]))
+    
+    #finalise_solution = (z, tau, step, contResult; k...) -> begin
+    #@info "Floquet exponents:"
+    #(Base.display(contResult.eig[end].eigenvals) ;true)
+    #end)
 
 periods = brpo.branch.period 
 floqs = [brpo.eig[i].eigenvals for i in 1:length(brpo.eig)]

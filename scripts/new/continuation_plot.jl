@@ -65,7 +65,7 @@ for (i,N) in enumerate(Ns)
             u0, # initial condition x0
             p, # set of parameters
             2;     # parameter index for continuation
-            record_from_solution = (x,p; k...) -> x[1])
+            )
 
     #------------------solve for a lim cycle---------------
     #take lim cycle closer to wc2
@@ -91,8 +91,10 @@ for (i,N) in enumerate(Ns)
     opts_po_cont = ContinuationPar(p_min = w_min, p_max = w_max, ds = -0.02,newton_options=NewtonPar(;eigsolver=DefaultEig(;which=abs)),
     dsmax = 0.02,detect_bifurcation=2, nev = 2N, max_steps = 150, tol_stability = 1e-10)
 
+    #trapezoid method continuation 
+    #save max of x1
     brpo = continuation(probtrap, orbit_guess, PALC(), opts_po_cont,; 
-	verbosity = 3, plot = false)
+	verbosity = 3, plot = false,record_from_solution = (x,p; k...) -> max(x[1]))
     #finalise_solution = (z, tau, step, contResult; k...) -> begin
     #@info "Floquet exponents:"
     #(Base.display(contResult.eig[end].eigenvals) ;true)
@@ -131,3 +133,6 @@ for (i,N) in enumerate(Ns)
 end
 plot(plots_real...,layout=(1,length(Ns)),size=(1200,300),ylims=[-1,1])
 plot(plots_imag...,layout=(1,length(Ns)),size=(1200,300),ylims=[-1,1])
+
+#plot each branch of periodic orbits 
+#plot(brpo)
