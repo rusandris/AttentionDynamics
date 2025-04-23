@@ -3,6 +3,7 @@ using BifurcationKit
 using Plots
 using AttentionDynamics
 using DifferentialEquations
+using LinearAlgebra
 
 function skipsum(a,i)
 	x = a[1:2:end]
@@ -31,6 +32,17 @@ wc2 = (N-1)/N
 p = [g,w,N]
 #u0 = rand(2N)
 u0 = ones(2N)
+=#
+
+#use DiffEq to solve for a periodic trajectory
+
+N = 5 
+g = 7.5
+w = 0.75
+wc1 = (N-1)/g
+wc2 = (N-1)/N
+p = [g,w,N]
+u0 = rand(2N)
 
 prob = BifurcationProblem(F_ad,
         u0, # initial condition x0
@@ -38,18 +50,8 @@ prob = BifurcationProblem(F_ad,
         2;     # parameter index for continuation
         record_from_solution = (x,p; k...) -> x[1])
 
-br = continuation(prob, PALC(), ContinuationPar(p_min = 0.5, p_max = 0.6))
+#br = continuation(prob, PALC(), ContinuationPar(p_min = 0.5, p_max = 0.8))
 
-=#
-#use DiffEq to solve for a periodic trajectory
-
-N = 5 
-g = 7.5
-w = 0.7
-wc1 = (N-1)/g
-wc2 = (N-1)/N
-p = [g,w,N]
-u0 = rand(2N)
 
 #transient
 prob_de = ODEProblem(att_din!, u0, (0,1000.0), p;saveat=[1000.0])
@@ -61,10 +63,10 @@ sol = DifferentialEquations.solve(prob_de, Rodas5())
 
 plot(sol)
 #approximate period 
-T_period = 10.0
+T_period = 15.0
 
 probtrap, orbit_guess = generate_ci_problem(PeriodicOrbitTrapProblem(M = 300),prob, sol, T_period)
-opts_po_cont = ContinuationPar(p_min = 0.55, p_max = 0.75, ds = -0.002, dsmax = 0.01, n_inversion = 6, nev = 4, max_steps = 50, tol_stability = 1e-8)
+opts_po_cont = ContinuationPar(p_min = 0.55, p_max = 0.75, ds = -0.02, dsmax = 0.02,detect_bifurcation=2, nev = 20, max_steps = 150, tol_stability = 1e-10)
 
 brpo = continuation(probtrap, orbit_guess, PALC(), opts_po_cont,; 
 	verbosity = 3, plot = true,finalise_solution = (z, tau, step, contResult; k...) -> begin
@@ -74,4 +76,38 @@ brpo = continuation(probtrap, orbit_guess, PALC(), opts_po_cont,;
 
 periods = brpo.branch.period 
 floqs = [brpo.eig[i].eigenvals for i in 1:length(brpo.eig)]
+floq_mult = [exp.(floqs[i].*periods[i]) for i in 1:length(floqs)]
 floq_mult_max_abs = [maximum(abs.(exp.(floqs[i].*periods[i]))) for i in 1:length(floqs)]
+
+#plot eigenvalues in the complex plane
+#start and end of continuation
+real_parts_start = real.(floq_mult[1])
+imag_parts_start = imag.(floq_mult[1])
+
+real_parts_end = real.(floq_mult[end])
+imag_parts_end = imag.(floq_mult[end])
+
+plot(real_parts_start,imag_parts_start,st=:scatter,mc=:gray10,xlims=(-2,2),ylims=(-2,2))
+plot!(real_parts_end,imag_parts_end,st=:scatter,mc=:orange,xlims=(-2,2),ylims=(-2,2))
+
+#extract w params
+ws = brpo.branch.param
+
+real_parts = stack([real.(floq_mult[i]) for i in 1:length(floq_mult)])'
+imag_parts = stack([imag.(floq_mult[i]) for i in 1:length(floq_mult)])'
+plot(ws,imag_parts[:,1:3],st=:scatter,ms=2,markerstrokewidth=0.0)
+plot(ws,real_parts[:,1:3],st=:scatter,ms=2,markerstrokewidth=0.0)
+abs_value = sqrt.(real_parts[:,2] .^2 + imag_parts[:,2] .^2)
+plot(ws,abs_value,st=:scatter,ms=2,markerstrokewidth=0.0)
+
+#=
+#test eigenvals of the Jacobian of the cont system
+#loop through the whole lim cycle
+eigvals_all_jac = []
+for i in 1:length(sol) 
+    u = sol[i]
+    J = build_jacobian(u,p)
+    eigvals_jac = eigvals(J)
+    push!(eigvals_all_jac,eigvals_jac)
+end
+=#
