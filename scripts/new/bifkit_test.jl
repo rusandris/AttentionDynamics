@@ -37,7 +37,7 @@ u0 = ones(2N)
 #use DiffEq to solve for a periodic trajectory
 
 N = 5 
-g = 7.5
+g = 7.5213675
 w = 0.75
 wc1 = (N-1)/g
 wc2 = (N-1)/N
@@ -67,8 +67,8 @@ plot(sol)
 T_period = 13.0
 
 probtrap, orbit_guess = generate_ci_problem(PeriodicOrbitTrapProblem(M = 300),prob, sol, T_period)
-opts_po_cont = ContinuationPar(p_min = 0.55, p_max = 0.75, ds = -0.02, newton_options=NewtonPar(;eigsolver=DefaultEig(;which=imag)), 
-    dsmax = 0.02, detect_bifurcation=1, nev = 3, max_steps = 20, tol_stability = 1e-10)
+opts_po_cont = ContinuationPar(p_min = wc1-0.05, p_max = 0.75, ds = -0.02, newton_options=NewtonPar(;eigsolver=DefaultEig(;which=imag)), 
+    dsmax = 0.02, detect_bifurcation=1, nev = 3, max_steps = 120, tol_stability = 1e-10,save_sol_every_step=1)
 
 brpo = continuation(probtrap, orbit_guess, PALC(), opts_po_cont; 
 	verbosity = 3, plot = true,finalise_solution = (z, tau, step, contResult; k...) -> begin
