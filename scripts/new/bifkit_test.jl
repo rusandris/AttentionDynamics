@@ -43,6 +43,7 @@ wc1 = (N-1)/g
 wc2 = (N-1)/N
 p = [g,w,N]
 u0 = rand(2N)
+Δt = 1e-2
 
 prob = BifurcationProblem(F_ad,
         u0, # initial condition x0
@@ -59,16 +60,17 @@ sol = DifferentialEquations.solve(prob_de, Rodas5())
 
 #higher precision, shorter traj (couple of periods)
 prob_de = ODEProblem(att_din!, sol.u[end], (0,20.), p, reltol = 1e-8, abstol = 1e-10)
-sol = DifferentialEquations.solve(prob_de, Rodas5())
+sol = DifferentialEquations.solve(prob_de, Rodas5(),saveat=Δt)
 
 plot(sol)
 #approximate period 
-T_period = 15.0
+T_period = 13.0
 
 probtrap, orbit_guess = generate_ci_problem(PeriodicOrbitTrapProblem(M = 300),prob, sol, T_period)
-opts_po_cont = ContinuationPar(p_min = 0.55, p_max = 0.75, ds = -0.02, dsmax = 0.02,detect_bifurcation=2, nev = 20, max_steps = 150, tol_stability = 1e-10)
+opts_po_cont = ContinuationPar(p_min = 0.55, p_max = 0.75, ds = -0.02, newton_options=NewtonPar(;eigsolver=DefaultEig(;which=imag)), 
+    dsmax = 0.02, detect_bifurcation=1, nev = 3, max_steps = 20, tol_stability = 1e-10)
 
-brpo = continuation(probtrap, orbit_guess, PALC(), opts_po_cont,; 
+brpo = continuation(probtrap, orbit_guess, PALC(), opts_po_cont; 
 	verbosity = 3, plot = true,finalise_solution = (z, tau, step, contResult; k...) -> begin
     @info "Floquet exponents:"
     (Base.display(contResult.eig[end].eigenvals) ;true)
