@@ -12,7 +12,7 @@ HEATMAP_DEFAULTS = (xguidefontsize=guide_fontsize,yguidefontsize=guide_fontsize,
     legendfontsize=legend_fontsize,legend=:bottomleft,colorbar_titlefontsize=guide_fontsize,tickfontsize=tick_fontsize,
     dpi=300,right_margin = 15Plots.mm)
 
-OD_DEFAULTS =  (xlabel=L"$w$",ylabel = L"$x_1$",st=:scatter,ms=0.1,xguidefontsize=guide_fontsize,yguidefontsize=guide_fontsize,tickfontsize=tick_fontsize,mc=:gray10,	grid=false,widen=true,legend=false,framestyle=:box,dpi=300)
+OD_DEFAULTS =  (xlabel=L"$w$",ylabel = L"$x_1$",st=:scatter,ms=0.1,xguidefontsize=guide_fontsize,yguidefontsize=guide_fontsize,tickfontsize=tick_fontsize,mc=:gray10,widen=true,legend=false,dpi=300)
 
 THREED_DEFAULTS = (xguidefontsize=guide_fontsize/2,yguidefontsize=guide_fontsize/2,zguidefontsize=guide_fontsize/2,tickfontsize=tick_fontsize/2,lw=5,legend=false,dpi=300)
 

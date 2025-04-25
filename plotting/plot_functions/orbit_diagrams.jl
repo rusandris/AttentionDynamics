@@ -27,7 +27,7 @@ end
 function plot_orbit_diagram(pvalues,poincare_points;kwargs...)
 	pl = plot()
 	for (i,pval) in enumerate(pvalues)
-		points_i = poincare_points[i]
+		points_i = poincare_points[:,i]
 		plot!(pl,fill(pval,length(points_i)),points_i;kwargs...)
 	end
 	return pl
