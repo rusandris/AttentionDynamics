@@ -4,26 +4,57 @@ using DynamicalSystemsBase
 using OrdinaryDiffEq
 using DelimitedFiles
 cd(@__DIR__)
-#----------define parameters------------
-od_dir = "../../orbit_diagram_data/"
-mkpath(od_dir)
-Ns = [3:7;] #nr of competitors dim = 2N 
-#select g value from the phase diagram
-gs_N10 = vec(readdlm("../../plotting/data/N=10.0_gvalues.txt"))
-gs = gs_N10 ./(10-1)
-gval_phase_diag = gs[30]
+
+#include standard parameters and init conditions
+#run necessary mkpaths
+include("bif_floq_od_method_parameters.jl")
+
+
+#----------define local parameters------------
 
 n = 100 # nr of points for each param value
-Ttr = 5000 #transient time 
 plane = (3,1.0) #poincare plane 
 comp = 1 #save components x1 of the points on the poincare surface
 p_index = 2
 #Δw = 0.0005 param step size
-nw = 200 #param resolution in w
+nw = 800 #param resolution in w
 diffeq = (alg = Rodas5(),dt = 1e-3,adaptive=true,maxiters=1e15)
 orbit_diag_data_allN = [] 
 
 #-------------------orbit diagrams for each N----------------------
+for (i,N) in enumerate(Ns)
+    @show N
+    #select g for each N (system size)
+    #so g/(N-1) is the same for each N
+    g = gval_phase_diag * (N-1)
+    wc1 = (N-1)/g
+    wc2 = (N-1)/N
+
+    #generate standard init cond
+    #u0 = rand(2N)
+    u0 = generate_initial_condition(N)
+    @show u0
+
+    #params for continuation
+    w_min = w_min_ratio * wc1
+    w_max = w_max_ratio * wc2
+    w_values = range(w_max,w_min;length=nw) 
+    @show length(w_values)
+
+    p = [g,w_max,N]
+    @show wc1,wc2,p
+    #create system
+    ds = create_ds(u0,p;diffeq=diffeq)
+    #--------------orbit diag------------
+    pmap = PoincareMap(ds, plane)
+
+    od = orbitdiagram(pmap, comp, p_index, w_values; n=n, Ttr=Ttr, show_progress=true)
+    writedlm(od_dir*"od_N$N"*".txt",vcat(w_values',stack(od)))
+    push!(orbit_diag_data_allN,od)
+end
+
+lyap_allN = [] #save lyaps here
+
 for (i,N) in enumerate(Ns)
     @show N
     #select g for each N (system size)
@@ -42,12 +73,19 @@ for (i,N) in enumerate(Ns)
     @show length(w_values)
 
     p = [g,w_max,N]
+    #create system
+    ds = create_ds(u0,p;diffeq=diffeq)
 
+    #lyapunov exps of the whole continuous system 
+    lyaps = zeros(length(w_values))
+    for (i,w) in enumerate(w_values)
+        @show w
+        set_parameter!(ds,2,w)
+        lyaps[i] = lyapunov(ds,T;Ttr=Ttr)
+    end  
 
-    ds = create_ds(u0,p;diffeq=diffeq) 
-    pmap = PoincareMap(ds, plane)
+    writedlm(od_dir*"lyaps_N$N"*".txt",hcat(w_values,lyaps))
+    push!(lyap_allN,lyaps)
 
-    od = orbitdiagram(pmap, comp, p_index, w_values; n=n, Ttr=Ttr, show_progress=true)
-    writedlm(od_dir*"od_N$N"*".txt",vcat(w_values',stack(od)))
-    push!(orbit_diag_data_allN,od)
 end
+

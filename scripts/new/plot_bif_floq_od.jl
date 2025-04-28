@@ -1,23 +1,37 @@
 using Plots
 using LaTeXStrings
 using DelimitedFiles
-using JLD2
 cd(@__DIR__)
 include("../../plotting/plot_functions/orbit_diagrams.jl")
 include("../../plotting/defaults.jl")
 #-----------------------plot od data-----------------------
 Ns = [3:7;]
 od_dir = "../../orbit_diagram_data/"
-od_files = readdir(od_dir)
+cont_dir = "../../bifkit_branches/"
+od_lyap_files = readdir(od_dir)
 plots_od = []
-for (i,file) in enumerate(od_files)
-    od_data = readdlm(od_dir*file)
+for (i,N) in enumerate(Ns)
+
+    od_lyap_files_N = od_lyap_files[findall(f -> occursin("N$N",f),od_lyap_files)]
+    od_file = od_lyap_files_N[findfirst(f -> occursin("od",f),od_lyap_files_N)]
+
+    #read the matched files
+    od_data = readdlm(od_dir*od_file)
+
     ps = od_data[1,:]   
     od = od_data[2:end,:]
-    @show size(ps)
-    @show size(od)
-    pl = plot_orbit_diagram(ps,od;OD_DEFAULTS...,ma=0.7,tickfontsize=4,ylabel="",xlims=(0.4,1.0))
-    i == 1 && ylabel!(pl,L"x_1")
+
+    #critical values
+    g = gval_phase_diag * (N-1)
+    wc1 = (N-1)/g
+    wc2 = (N-1)/N
+
+    pl = plot_orbit_diagram(ps,od;OD_DEFAULTS...,ma=0.7,tickfontsize=8,ylabel="",xlims=(0.4,0.9),widen=false)
+    i == 1 && ylabel!(pl,L"x_1 pmap")
+
+    vline!([wc1],ls=:dash,lc=:gray10)
+    vline!([wc2],ls=:dash,lc=:gray10)
+
     push!(plots_od,pl)
 end
 pl_od=plot(plots_od...,layout=(1,5),size=(1200,300),left_margin=8Plots.mm,bottom_margin=8Plots.mm)
@@ -56,7 +70,7 @@ for (i,N) in enumerate(Ns)
 
     linestyle = [stb ? :solid : :dot for stb in stability]
     linewidth = [stb ? 2 : 1 for stb in stability]
-    pl = plot(params, maxs, lc=:gray10,legend=false,
+    pl = plot(params, maxs, lc=:gray10,legend=false,guidefontsize=guide_fontsize,
         title=L"N=%$N"*"\n"*L"g/(N-1)=%$(round(gval_phase_diag;digits=2))",
         ls=linestyle,lw=linewidth,xlabel=L"w",xlims=(0.4,0.9))
 
@@ -95,16 +109,35 @@ for (i,N) in enumerate(Ns)
     contres_eig_file = contres_files_N[findfirst(f -> occursin("eig",f),contres_files_N)]
     contres_sol_file = contres_files_N[findfirst(f -> occursin("sols",f),contres_files_N)]
 
+    #find files that match N 
+    od_lyap_files_N = od_lyap_files[findall(f -> occursin("N$N",f),od_lyap_files)]
+    lyaps_file = od_lyap_files_N[findfirst(f -> occursin("lyaps",f),od_lyap_files_N)]
+
     #read the matched files
     contres_eig = readdlm(cont_dir*contres_eig_file)
     contres_sols = readdlm(cont_dir*contres_sol_file)
+    lyaps = readdlm(od_dir*lyaps_file)[:,2]
+    lyaps_params = readdlm(od_dir*lyaps_file)[:,1]
 
     params = contres_sols[:,1]
 
-    pl_maxreal = plot(params,contres_eig,mc=:gray10,xlabel=L"w",
-    ylims=(-2,2),xlims=(0.4,0.9),st=:scatter,ms=2,markerstrokewidth=0.0,legend=false)
+    #critical values
+    g = gval_phase_diag * (N-1)
+    wc1 = (N-1)/g
+    wc2 = (N-1)/N
+
+    #floq maxreal
+    pl_maxreal = plot(params,contres_eig,mc=:gray10,xlabel=L"w",guidefontsize=guide_fontsize,
+        ylims=(-1.0,0.5),xlims=(0.4,0.9),markershape=:cross,ms=1,lc=:gray10,markerstrokewidth=0.0,legend=false)
+
+    #lyapunov LLE
+    plot!(lyaps_params,lyaps,mc=:gray10,markershape=:circle,ms=1,lc=:gray10,markerstrokewidth=0.0,legend=false)
+
+    vline!([wc1],ls=:dash,lc=:gray10)
+    vline!([wc2],ls=:dash,lc=:gray10)
+
     hline!([0.0],ls=:dash)
-    i == 1 && ylabel!(pl_maxreal,L"max(Re(μ_i))")
+    i == 1 && ylabel!(pl_maxreal,L"max(Re(μ_i)),\lambda")
 
     push!(plots_maxreal,pl_maxreal)
 
@@ -115,5 +148,5 @@ pl_floq = plot(plots_maxreal...,layout=(1,length(Ns)),
 
 pl = plot(pl_bif,pl_floq,pl_od,layout=(3,1),size=(1500,800),dpi=300)
 #savefig(pl,"../../continuation_test_maxreal.png")
-savefig(pl,"../../continuation_results_bif_floq_od.png")
+savefig(pl,"../../continuation_results_bif_floq_lyap_od.png")
 

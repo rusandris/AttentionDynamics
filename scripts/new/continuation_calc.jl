@@ -7,8 +7,12 @@ using LinearAlgebra
 using DelimitedFiles
 #using DynamicalSystems
 using ChaosTools
-using JLD2
 cd(@__DIR__)
+
+#include standard parameters and init conditions
+#run necessary mkpaths
+include("bif_floq_od_method_parameters.jl")
+
 
 isunity(z) = isapprox(real(z),1.0;atol=1e-1) && isapprox(imag(z),0.0;atol=1e-1)
 iszero_approx(z) = isapprox(real(z),0.0;atol=1e-2) && isapprox(imag(z),0.0;atol=1e-2)
@@ -48,32 +52,19 @@ funcs_po = (record_from_solution = (x, p; k...) -> begin
 		# plot!(br; subplot = 1, putspecialptlegend = false)
 	end)
 
-#----------define parameters------------
-Ns = [3:7;] #nr of competitors dim = 2N 
-cont_dir = "../../bifkit_branches/" #dir that will contain branch files 
-mkpath(cont_dir)
-#select g value from the phase diagram
-gs_N10 = vec(readdlm("../../plotting/data/N=10.0_gvalues.txt"))
-gs = gs_N10 ./(10-1)
-gval_phase_diag = gs[30]
-global_params = [Ns...,gval_phase_diag]
-writedlm(cont_dir*"global_params_Ns_g.txt",global_params)
+#----------define some local parameters------------
 
 Δt = 1e-2 #lim cycle sol sampling
+dsmax = 0.02 #max step size along bif curve
+ds = -0.02 #initial step along bif curve
+detect_bifurcation = 2 #detection level
+max_steps = 250 #max nr of continuation steps
+M = 250 #discretization for trapezoid method
 
 #nev (nr of eigs) needs to be set every time? to 2N
 
-branches_limc = []
 #--------------------------------continuation for each N-----------------------------
 #loop through N values
-#real_parts_allN = [] #store floq multipliers real parts
-#imag_parts_allN = [] #store floq multipliers imag parts
-#sum_floq_exps_allN = [] #trace
-#prod_floq_exps_allN = [] #det
-
-maxreal_floq_exps_allN = [] #maxim real part of floq exps
-special_points = []
-ws_step_values = []
 
 for (i,N) in enumerate(Ns)
     @show N
@@ -82,13 +73,13 @@ for (i,N) in enumerate(Ns)
     g = gval_phase_diag * (N-1)
     wc1 = (N-1)/g
     wc2 = (N-1)/N
-    #w = wc1 + (wc2-wc1)/2
-    #@show wc1,wc2,w,g
-    u0 = rand(2N)
+
+    #generate standard init cond
+    u0 = generate_initial_condition(N)
 
     #params for continuation
-    w_min = 1.01 * wc1
-    w_max = 0.9 * wc2
+    w_min = w_min_ratio * wc1
+    w_max = w_max_ratio * wc2
     p = [g,w_max,N]
 
     #def problem 
@@ -102,7 +93,7 @@ for (i,N) in enumerate(Ns)
     #take lim cycle closer to wc2
 
     #transient
-    prob_de = ODEProblem(att_din!, u0, (0,5000.0), p;saveat=[5000.0])
+    prob_de = ODEProblem(att_din!, u0, (0,Ttr), p;saveat=[Ttr])
     sol = DifferentialEquations.solve(prob_de, Rodas5())
 
     #higher precision, shorter traj (couple of periods)
@@ -118,22 +109,18 @@ for (i,N) in enumerate(Ns)
 
     #setup for periodic orbit (lim cycle) continuation
     #------periodic orbit continuation parameters---------
-    opts_po_cont = ContinuationPar(p_min = w_min, p_max = w_max, ds = -0.02,
+    opts_po_cont = ContinuationPar(p_min = w_min, p_max = w_max, ds = ds,
         newton_options = NewtonPar(;eigsolver=DefaultEig(;which=abs)), save_to_file=false,
         save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,
-        dsmax = 0.02,detect_bifurcation=2, max_steps = 150, tol_stability = 1e-10)
+        dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = max_steps, tol_stability = 1e-10)
     
     #trapezoid method continuation 
-    probtrap, orbit_guess = generate_ci_problem(PeriodicOrbitTrapProblem(M = 250),prob, sol, T_period)
+    probtrap, orbit_guess = generate_ci_problem(PeriodicOrbitTrapProblem(M = M),prob, sol, T_period)
     
     #save max of x1
     #perform continuation wc_max -> w_min direction (backwards)
     brpo = continuation(probtrap, orbit_guess, PALC(), opts_po_cont,; 
 	verbosity = 3,filename=cont_dir*"limit_cycle_branch_N$N" ,plot = false,funcs_po...)
-
-    #push!(branches_limc,brpo)
-
-    
 
     #-------------------extract data from continuation res-------------------------
 
