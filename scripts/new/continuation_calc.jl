@@ -59,8 +59,8 @@ cont_dir = "../../bifkit_data/"
 mkpath(cont_dir)
 
 Δt = 1e-2 #lim cycle sol sampling
-dsmax = 0.02 #max step size along bif curve
-ds = -0.02 #initial step along bif curve
+dsmax = 0.01 #max step size along bif curve
+ds = 0.01 #initial step along bif curve
 detect_bifurcation = 2 #detection level
 max_steps = 250 #max nr of continuation steps
 M = 250 #discretization for trapezoid method
@@ -78,23 +78,52 @@ for (i,N) in enumerate(Ns)
     wc1 = (N-1)/g
     wc2 = (N-1)/N
 
-    #generate standard init cond
-    u0 = generate_initial_condition(N)
+    #-----------------coexistence fixed point continuation-----------------
+    #follow coex fp up until the loss of stability (high d Hopf)
+    fp_guess = ones(2N) #coexistence fp     
 
     #params for continuation
     w_min = w_min_ratio * wc1
     w_max = w_max_ratio * wc2
-    p = [g,w_max,N]
+    p = [g,0.4,N]
 
     #def problem 
     prob = BifurcationProblem(F_ad,
-            u0, # initial condition x0
+            fp_guess, # initial condition x0
             p, # set of parameters
-            2;     # parameter index for continuation
-            )
+            2,     # parameter index for continuation
+            record_from_solution = (x, p; k...) -> x[1])
+
+    opts_fp_cont = ContinuationPar(p_min = 0.4, p_max = w_min, ds = ds,
+        newton_options = NewtonPar(;eigsolver=DefaultEig(;which=real)), save_to_file=false,
+        save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,
+        dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = max_steps, tol_stability = 1e-10)
+
+    brfp = continuation(prob, PALC(), opts_fp_cont; 
+	verbosity = 3 ,plot = false)
+
+    #-------------------extract data from continuation res-------------------------
+    #solution info: x1 of the solution for each param 
+    params = brfp.branch.param 
+    x = brfp.branch.x
+    stability = brfp.stable 
+
+    writedlm(cont_dir*"contres_fp_sols_N$N"*".txt",hcat(params,x,stability))
+
+    #bifurcation point info:
+    bifpoints = []
+    for bp in brfp.specialpoint
+        push!(bifpoints,[bp.type,bp.param,bp.idx])
+    end
+    writedlm(cont_dir*"contres_fp_bifp_N$N"*".txt",bifpoints)
+
 
     #------------------solve for a lim cycle---------------
     #take lim cycle closer to wc2
+
+    #generate standard init cond
+    p = [g,w_max,N]
+    u0 = generate_initial_condition(N)
 
     #transient
     prob_de = ODEProblem(att_din!, u0, (0,Ttr), p;saveat=[Ttr])
@@ -113,7 +142,7 @@ for (i,N) in enumerate(Ns)
 
     #setup for periodic orbit (lim cycle) continuation
     #------periodic orbit continuation parameters---------
-    opts_po_cont = ContinuationPar(p_min = w_min, p_max = w_max, ds = ds,
+    opts_po_cont = ContinuationPar(p_min = w_min, p_max = w_max, ds = -ds,
         newton_options = NewtonPar(;eigsolver=DefaultEig(;which=abs)), save_to_file=false,
         save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,
         dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = max_steps, tol_stability = 1e-10)
@@ -135,7 +164,7 @@ for (i,N) in enumerate(Ns)
     periods = brpo.branch.period
     stability = brpo.stable 
 
-    writedlm(cont_dir*"contres_sols_N$N"*".txt",hcat(params,mins,maxs,periods,stability))
+    writedlm(cont_dir*"contres_po_sols_N$N"*".txt",hcat(params,mins,maxs,periods,stability))
 
     #eig info: max of real parts of floquet exps
     floq_exps = [brpo.eig[i].eigenvals for i in 1:length(brpo.eig)]
@@ -147,14 +176,14 @@ for (i,N) in enumerate(Ns)
     maxreal_floq_exps = maximum.(real.(floq_exps_no_zero))
     maximag_floq_exps = minimum.(imag.(floq_exps_no_zero))
 
-    writedlm(cont_dir*"contres_eig_maxfloq_N$N"*".txt",hcat(maxreal_floq_exps,maximag_floq_exps))
+    writedlm(cont_dir*"contres_po_eig_maxfloq_N$N"*".txt",hcat(maxreal_floq_exps,maximag_floq_exps))
 
     #bifurcation point info:
     bifpoints = []
     for bp in brpo.specialpoint
         push!(bifpoints,[bp.type,bp.param,bp.idx])
     end
-    writedlm(cont_dir*"contres_bifp_N$N"*".txt",bifpoints)
+    writedlm(cont_dir*"contres_po_bifp_N$N"*".txt",bifpoints)
 
 
     #=
