@@ -5,9 +5,15 @@ cd(@__DIR__)
 include("../../plotting/plot_functions/orbit_diagrams.jl")
 include("../../plotting/defaults.jl")
 #-----------------------plot od data-----------------------
-Ns = [3:7;]
-od_dir = "../../orbit_diagram_data/"
-cont_dir = "../../bifkit_branches/"
+#include standard parameters and init conditions
+include("bif_floq_od_method_parameters.jl")
+
+#create dir for figs
+figs_dir = "../../paper_figs/"
+mkpath(figs_dir)
+
+xlims=(0.5,0.65)
+
 od_lyap_files = readdir(od_dir)
 plots_od = []
 for (i,N) in enumerate(Ns)
@@ -26,7 +32,7 @@ for (i,N) in enumerate(Ns)
     wc1 = (N-1)/g
     wc2 = (N-1)/N
 
-    pl = plot_orbit_diagram(ps,od;OD_DEFAULTS...,ma=0.7,tickfontsize=8,ylabel="",xlims=(0.4,0.9),widen=false)
+    pl = plot_orbit_diagram(ps,od;OD_DEFAULTS...,ma=0.4,ms=0.5,tickfontsize=8,ylabel="",xlims=xlims,widen=false)
     i == 1 && ylabel!(pl,L"x_1 pmap")
 
     vline!([wc1],ls=:dash,lc=:gray10)
@@ -72,7 +78,7 @@ for (i,N) in enumerate(Ns)
     linewidth = [stb ? 2 : 1 for stb in stability]
     pl = plot(params, maxs, lc=:gray10,legend=false,guidefontsize=guide_fontsize,
         title=L"N=%$N"*"\n"*L"g/(N-1)=%$(round(gval_phase_diag;digits=2))",
-        ls=linestyle,lw=linewidth,xlabel=L"w",xlims=(0.4,0.9))
+        ls=linestyle,lw=linewidth,xlabel=L"w",xlims=xlims)
 
     #plot some (not all) bif points
 
@@ -101,7 +107,7 @@ pl_bif = plot(branch_plots...,layout=(1,length(Ns)),
 #plot trace and det? 
 #plot real part?
 #plot complex plane with unit circle?
-plots_maxreal = []
+plots_maxfloq = []
 
 for (i,N) in enumerate(Ns)
     #find files that match N 
@@ -115,6 +121,9 @@ for (i,N) in enumerate(Ns)
 
     #read the matched files
     contres_eig = readdlm(cont_dir*contres_eig_file)
+    realpart = contres_eig[:,1]
+    imagpart = contres_eig[:,2]
+    @show maximum(abs.(imagpart))
     contres_sols = readdlm(cont_dir*contres_sol_file)
     lyaps = readdlm(od_dir*lyaps_file)[:,2]
     lyaps_params = readdlm(od_dir*lyaps_file)[:,1]
@@ -127,26 +136,30 @@ for (i,N) in enumerate(Ns)
     wc2 = (N-1)/N
 
     #floq maxreal
-    pl_maxreal = plot(params,contres_eig,mc=:gray10,xlabel=L"w",guidefontsize=guide_fontsize,
-        ylims=(-1.0,0.5),xlims=(0.4,0.9),markershape=:cross,ms=1,lc=:gray10,markerstrokewidth=0.0,legend=false)
+    pl_maxfloq = plot(params,realpart,mc=:gray10,xlabel=L"w",guidefontsize=guide_fontsize,
+        ylims=(-1.0,0.5),xlims=xlims,markershape=:cross,ms=1,lc=:gray10,markerstrokewidth=0.0,legend=false)
+
+    #floq maximag
+    #plot!(pl_maxfloq,params,imagpart,mc=:gray50,xlabel=L"w",guidefontsize=guide_fontsize,
+    #    xlims=xlims,markershape=:cross,ms=1,lc=:gray50,markerstrokewidth=0.0,legend=false)
 
     #lyapunov LLE
-    plot!(lyaps_params,lyaps,mc=:gray10,markershape=:circle,ms=1,lc=:gray10,markerstrokewidth=0.0,legend=false)
+    plot!(lyaps_params,lyaps,mc=:gray10,markershape=:circle,ms=1,lc=:red,markerstrokewidth=0.0,legend=false)
 
     vline!([wc1],ls=:dash,lc=:gray10)
     vline!([wc2],ls=:dash,lc=:gray10)
 
     hline!([0.0],ls=:dash)
-    i == 1 && ylabel!(pl_maxreal,L"max(Re(μ_i)),\lambda")
+    i == 1 && ylabel!(pl_maxfloq,L"max(Re(μ_i)),\lambda")
 
-    push!(plots_maxreal,pl_maxreal)
+    push!(plots_maxfloq,pl_maxfloq)
 
 end
-pl_floq = plot(plots_maxreal...,layout=(1,length(Ns)),
+pl_floq = plot(plots_maxfloq...,layout=(1,length(Ns)),
     size=(1200,300),left_margin=8Plots.mm,bottom_margin=8Plots.mm)
 
 
 pl = plot(pl_bif,pl_floq,pl_od,layout=(3,1),size=(1500,800),dpi=300)
 #savefig(pl,"../../continuation_test_maxreal.png")
-savefig(pl,"../../continuation_results_bif_floq_lyap_od.png")
+savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_od_Ttr10000_noreinit.png")
 

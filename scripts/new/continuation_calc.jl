@@ -54,6 +54,10 @@ funcs_po = (record_from_solution = (x, p; k...) -> begin
 
 #----------define some local parameters------------
 
+#dir for cont result
+cont_dir = "../../bifkit_data/"  
+mkpath(cont_dir)
+
 Δt = 1e-2 #lim cycle sol sampling
 dsmax = 0.02 #max step size along bif curve
 ds = -0.02 #initial step along bif curve
@@ -141,7 +145,9 @@ for (i,N) in enumerate(Ns)
     floq_exps_no_zero = [filter(μ -> !(iszero_approx(μ)),floq_exps[i]) for i in 1:length(floq_exps)]
 
     maxreal_floq_exps = maximum.(real.(floq_exps_no_zero))
-    writedlm(cont_dir*"contres_eig_maxreal_N$N"*".txt",maxreal_floq_exps)
+    maximag_floq_exps = minimum.(imag.(floq_exps_no_zero))
+
+    writedlm(cont_dir*"contres_eig_maxfloq_N$N"*".txt",hcat(maxreal_floq_exps,maximag_floq_exps))
 
     #bifurcation point info:
     bifpoints = []
