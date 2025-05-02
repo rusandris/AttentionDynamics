@@ -13,6 +13,7 @@ figs_dir = "../../paper_figs/"
 mkpath(figs_dir)
 
 xlims=(0.5,0.65)
+plot_srate = 2
 
 od_lyap_files = readdir(od_dir)
 plots_od = []
@@ -67,8 +68,8 @@ for (i,N) in enumerate(Ns)
     contres_fp_bifp = readdlm(cont_dir*contres_fp_bifp_file)
 
     #limit cycle continuation results
-    contres_sol_file = contres_files_N[findfirst(f -> occursin("contres_sols",f),contres_files_N)]
-    contres_bifp_file = contres_files_N[findfirst(f -> occursin("contres_bifp",f),contres_files_N)]
+    contres_sol_file = contres_files_N[findfirst(f -> occursin("contres_po_sols",f),contres_files_N)]
+    contres_bifp_file = contres_files_N[findfirst(f -> occursin("contres_po_bifp",f),contres_files_N)]
    
     #read the matched files
     contres_sols = readdlm(cont_dir*contres_sol_file)
@@ -83,18 +84,21 @@ for (i,N) in enumerate(Ns)
 
     params = contres_fp_sols[:,1]
     xs = contres_fp_sols[:,2]
+    @show extrema(xs)
     stability = Bool.(contres_fp_sols[:,end])
+    @show extrema(stability)
 
-    linestyle = [stb ? :solid : :dot for stb in stability]
-    linewidth = [stb ? 2 : 1 for stb in stability]
+    linestyle = [stb ? :solid : :dash for stb in stability]
+    linewidth = [stb ? 1 : 1 for stb in stability]
 
-    #plot fixed point results
+    #-------------------plot fixed point results----------------------
     pl = plot(params, xs, lc=:gray10,legend=false,guidefontsize=guide_fontsize,
         title=L"N=%$N"*"\n"*L"g/(N-1)=%$(round(gval_phase_diag;digits=2))",
         ls=linestyle,lw=linewidth,xformatter=:none,xlims=xlims)
 
-        #plot some (not all) bif points
-
+    display(pl)
+    @show length(contres_fp_bifp)
+    #plot some (not all) bif points
     for bp in eachrow(contres_fp_bifp)
         type,crit_param,idx = bp
         if type == "ns"  
@@ -104,17 +108,28 @@ for (i,N) in enumerate(Ns)
         end
     end
 
-    #plot lim cycle results
+    #-------------------plot lim cycle results----------------------
 
     params = contres_sols[:,1]
     maxs = contres_sols[:,3]
+    mins = contres_sols[:,2]
+    @show extrema(maxs)
     stability = Bool.(contres_sols[:,end])
+    @show extrema(stability)
+
+    #plot stable and unstable parts separately
+    maxs_stable = maxs[stability]  #select stable 
+    maxs_unstable = maxs[.!(stability)] #negation
 
     linestyle = [stb ? :solid : :dot for stb in stability]
-    linewidth = [stb ? 2 : 1 for stb in stability]
+    linewidth = [stb ? 2 : 2 for stb in stability]
+    #sol_sampling = [stb ? 1 : 20 for stb in stability]
 
-    plot!(pl,params, maxs, lc=:gray10,legend=false,guidefontsize=guide_fontsize,
-        ls=linestyle,lw=linewidth,xformatter=:none,xlims=xlims)
+    plot!(pl,params[stability][1:plot_srate:end], maxs_stable[1:plot_srate:end], lc=:gray10,legend=false,guidefontsize=guide_fontsize,
+        ls=:solid,lw=1,xformatter=:none,xlims=xlims)
+
+    plot!(pl,params[.!(stability)][1:plot_srate:end], maxs_unstable[1:plot_srate:end], mc=:gray10,legend=false,guidefontsize=guide_fontsize,
+        st=:scatter,ms=1,xformatter=:none,xlims=xlims)
 
     #plot some (not all) bif points
 
@@ -124,19 +139,21 @@ for (i,N) in enumerate(Ns)
             scatter!([crit_param], [maxs[idx]],ms=3,mc=:orange,markerstrokewidth=0.0)
         elseif type == "nd"
             scatter!([crit_param], [maxs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
+        elseif type == "bp"
+            scatter!([crit_param], [maxs[idx]],ms=3,mc=:green,markerstrokewidth=0.0)
         end
     end
-
+    display(pl)
     #plot!(pl,brpo,linewidthunstable=0,linewidthstable=0) #plot only bif points hack
 
     vline!(pl,[wc1],ls=:dash,lc=:gray10)
     vline!(pl,[wc2],ls=:dash,lc=:gray10)
     i == 1 && ylabel!(pl,L"max(x_1)")
-
+    display(pl)
     push!(branch_plots,pl)
 end
 pl_bif = plot(branch_plots...,layout=(1,length(Ns)),
-    size=(1500,300),left_margin=8Plots.mm,bottom_margin=reduced_bottom_margin)
+    size=(1500,300),left_margin=8Plots.mm)#bottom_margin=reduced_bottom_margin)
 
 #------------------------plot Floquet exponents/multipliers--------------------------
 #plot all non-unity floquet multis (real and imag parts)    
@@ -148,8 +165,8 @@ plots_maxfloq = []
 for (i,N) in enumerate(Ns)
     #find files that match N 
     contres_files_N = contres_files[findall(f -> occursin("N$N",f),contres_files)]
-    contres_eig_file = contres_files_N[findfirst(f -> occursin("contres_eig",f),contres_files_N)]
-    contres_sol_file = contres_files_N[findfirst(f -> occursin("contres_sols",f),contres_files_N)]
+    contres_eig_file = contres_files_N[findfirst(f -> occursin("contres_po_eig",f),contres_files_N)]
+    contres_sol_file = contres_files_N[findfirst(f -> occursin("contres_po_sols",f),contres_files_N)]
 
     #find files that match N 
     od_lyap_files_N = od_lyap_files[findall(f -> occursin("N$N",f),od_lyap_files)]
@@ -172,6 +189,7 @@ for (i,N) in enumerate(Ns)
     wc2 = (N-1)/N
 
     #floq maxreal
+    @show length(params),length(realpart)
     pl_maxfloq = plot(params,realpart,mc=:gray10,xformatter=:none,guidefontsize=guide_fontsize,
         ylims=(-1.0,0.5),xlims=xlims,markershape=:cross,ms=1,lc=:gray10,markerstrokewidth=0.0,legend=false)
 
@@ -192,7 +210,7 @@ for (i,N) in enumerate(Ns)
 
 end
 pl_floq = plot(plots_maxfloq...,layout=(1,length(Ns)),
-    size=(1200,300),left_margin=8Plots.mm,bottom_margin=reduced_bottom_margin)
+    size=(1200,300),left_margin=8Plots.mm)#bottom_margin=reduced_bottom_margin)
 
 
 pl = plot(pl_bif,pl_floq,pl_od,layout=(3,1),size=(1500,600),dpi=300)

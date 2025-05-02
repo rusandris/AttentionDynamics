@@ -5,11 +5,12 @@ using OrdinaryDiffEq
 using DelimitedFiles
 using StatsBase
 using Plots,LaTeXStrings,GLMakie
-plotly()
+#plotly()
 cd(@__DIR__)
 include("../../plotting/plot_functions/orbit_diagrams.jl")
 include("../../plotting/defaults.jl")
 include("bif_floq_od_method_parameters.jl")
+figs_dir = "../../paper_figs/"
 
 #parameters from phase diagram 
 gs_N10 = vec(readdlm("../../plotting/data/N=10.0_gvalues.txt"))
@@ -24,9 +25,12 @@ cons_recurrences = 500 #nr of recurrences
 locate_steps = 10000 #nr of steps after detection
 max_ensemble = 50 #nr of initial conditions
 
-#---------------------------system parameters-----------------------------
-N = 4 
-#N = 3 
+
+
+#-------------------------N=3 smaller systems-------------------------------
+#system parameters
+#N = 4 
+N = 3 
 g = g_N * (N-1) 
 #g = 5.0
 #critical values
@@ -43,7 +47,7 @@ ds = create_ds(rand(2N),[g,w,N];diffeq=diffeq)
 
 #test trajectory for efficient phase space grid choice
 traj,_ = trajectory(ds,T_test;Ttr=Ttr,Δt=1e-3)
-plot(traj[:,1],traj[:,2])
+Plots.plot(traj[:,1],traj[:,2])
 #need max finding along each dim
 max_values = maximum(Matrix(traj);dims=1) #ugly max finding
 
@@ -59,35 +63,30 @@ u2[1] = 2.0; u2[3] = 1.0
 mapper(u1)
 mapper(u2)
 
-for i in 1:max_ensemble
-    @show mapper(rand(6))
-end
-
 attractors = extract_attractors(mapper)
-plot_attractors(attractors,access=[1,3,5])
-att_plots = []
+#plot_attractors(attractors,access=[1,3],framestyle=:auto)
+atr1 = attractors[1]
+atr2 = attractors[2]
 
+#plot attractors
+pp = Plots.plot(atr1[:,1],atr1[:,3],lw=2,lc=:purple,markershape=:circle,
+    ms=8,mc=:purple,markerstrokewidth=0.0,xlabel=L"x_1",ylabel=L"x_2")
+Plots.plot!(pp,atr2[:,1],atr2[:,3],lw=2,lc=:blue,markershape=:utriangle,
+    ms=8,mc=:blue,markerstrokewidth=0.0)
 
-pl1 = plot()
-plot!(pl1,attractors[3][:,1],attractors[3][:,3])
-pl2 = plot()
-plot!(pl2,attractors[1][:,1],attractors[1][:,3],attractors[1][:,5])
-plot(pl1,pl2,layout=(1,2))
+#plot time series
+traj1,t1 = trajectory(ds,100,u1;Ttr=1000)
+traj2,t2 = trajectory(ds,100,u2;Ttr=1000)
 
-for i in 1:length(attractors)
-    plot!(pl2,attractors[i][:,1],attractors[i][:,3],attractors[i][:,5])
-    #push!(att_plots,pl)
-end
-plot!(pl2,camera = (100, 20))
-#=
-nr_attractors = 0
-i=0
-while (nr_attractors < factorial(N-1) ) || (i < max_ensemble)
-    attr_ID = mapper(rand(2N) .* 10)
-    nr_attractors = length(mapper.bsn_nfo.attractors)
-    @show nr_attractors
-    @show i
-    @show attr_ID
-    i+=1
-end
-=#
+ts1 = Plots.plot(t1[1:1:100],Matrix(traj1[1:1:100,[1,3,5]]),lc=:purple,lw=2,markershape=:circle,
+    ms=0,mc=:purple,markerstrokewidth=0.0,
+    ls=[:solid :dash :dashdotdot],xformatter=:none,
+    labels=[L"x_1" L"x_2" L"x_3"])
+ts2 = Plots.plot(t2[1:1:100],Matrix(traj2[1:1:100,[1,3,5]]),lc=:blue,
+    ls=[:solid :dash :dashdotdot],lw=2,markershape=:utriangle,
+    ms=0,mc=:blue,markerstrokewidth=0.0,
+    labels=[L"x_1" L"x_2" L"x_3"],
+    xlabel=L"t",ylabel=L"x_i",)
+pl_ts = Plots.plot(ts1,ts2,layout=(2,1)) 
+pl = Plots.plot(pp,pl_ts,layout=(1,2),size=(1200,600))
+savefig(pl,figs_dir*"N3_multistable.png")

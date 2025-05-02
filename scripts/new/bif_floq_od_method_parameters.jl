@@ -2,9 +2,11 @@ cd(@__DIR__)
 #-----------method parameters------------------
 const Ttr = 20000 #transient time 
 const T = 5000 #lyapunov time 
-const w_min_ratio = 1.005 #w_min/wc_1 for continuation
+const w_min_ratio = 0.9 #w_min/wc_1 for continuation
 const w_max_ratio = 0.85 #w_max/wc_2 for continuation
 
+od_dir = "../../orbit_diagram_data/"
+cont_dir = "../../bifkit_data/"
 
 Ns = [3:7;] #nr of competitors dim = 2N 
 

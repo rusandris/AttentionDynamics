@@ -15,7 +15,7 @@ include("bif_floq_od_method_parameters.jl")
 
 
 isunity(z) = isapprox(real(z),1.0;atol=1e-1) && isapprox(imag(z),0.0;atol=1e-1)
-iszero_approx(z) = isapprox(real(z),0.0;atol=1e-2) && isapprox(imag(z),0.0;atol=1e-2)
+iszero_approx(z) = isapprox(real(z),0.0;atol=1e-3) && isapprox(imag(z),0.0;atol=1e-3)
 
 #---------------------define system-----------------------
 #general so dimension can be changed
@@ -62,7 +62,7 @@ mkpath(cont_dir)
 dsmax = 0.01 #max step size along bif curve
 ds = 0.01 #initial step along bif curve
 detect_bifurcation = 2 #detection level
-max_steps = 250 #max nr of continuation steps
+max_steps = 450 #max nr of continuation steps
 M = 250 #discretization for trapezoid method
 
 #nev (nr of eigs) needs to be set every time? to 2N
@@ -94,7 +94,9 @@ for (i,N) in enumerate(Ns)
             2,     # parameter index for continuation
             record_from_solution = (x, p; k...) -> x[1])
 
-    opts_fp_cont = ContinuationPar(p_min = 0.4, p_max = w_min, ds = ds,
+    #=
+
+    opts_fp_cont = ContinuationPar(p_min = 0.2, p_max = wc1+0.01, ds = ds,
         newton_options = NewtonPar(;eigsolver=DefaultEig(;which=real)), save_to_file=false,
         save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,
         dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = max_steps, tol_stability = 1e-10)
@@ -117,6 +119,7 @@ for (i,N) in enumerate(Ns)
     end
     writedlm(cont_dir*"contres_fp_bifp_N$N"*".txt",bifpoints)
 
+    =#
 
     #------------------solve for a lim cycle---------------
     #take lim cycle closer to wc2
@@ -144,7 +147,7 @@ for (i,N) in enumerate(Ns)
     #------periodic orbit continuation parameters---------
     opts_po_cont = ContinuationPar(p_min = w_min, p_max = w_max, ds = -ds,
         newton_options = NewtonPar(;eigsolver=DefaultEig(;which=abs)), save_to_file=false,
-        save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,
+        save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,nev=2N,
         dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = max_steps, tol_stability = 1e-10)
     
     #trapezoid method continuation 
@@ -170,13 +173,29 @@ for (i,N) in enumerate(Ns)
     floq_exps = [brpo.eig[i].eigenvals for i in 1:length(brpo.eig)]
     floq_mult = [exp.(floq_exps[i].*periods[i]) for i in 1:length(floq_exps)]
 
+    #=
     #filter out zero exponents
     floq_exps_no_zero = [filter(μ -> !(iszero_approx(μ)),floq_exps[i]) for i in 1:length(floq_exps)]
 
-    maxreal_floq_exps = maximum.(real.(floq_exps_no_zero))
-    maximag_floq_exps = minimum.(imag.(floq_exps_no_zero))
+    @show length(floq_exps_no_zero)
 
-    writedlm(cont_dir*"contres_po_eig_maxfloq_N$N"*".txt",hcat(maxreal_floq_exps,maximag_floq_exps))
+    real_floq_exps = []
+    imag_floq_exps = []
+    for i in 1:length(floq_exps_no_zero)
+        if length(floq_exps_no_zero[i]) != 0
+            push!(real_floq_exps,real(floq_exps_no_zero[i]))
+            push!(imag_floq_exps,imag(floq_exps_no_zero[i]))
+        end
+    end
+
+    maxreal_floq_exps = maximum.(real_floq_exps)
+    maximag_floq_exps = minimum.(imag_floq_exps)
+    =#
+
+    @show length.(floq_exps)
+    #writedlm(cont_dir*"contres_po_eig_maxfloq_N$N"*".txt",hcat(maxreal_floq_exps,maximag_floq_exps))
+    writedlm(cont_dir*"contres_po_eig_allfloq_N$N"*".txt",hcat(stack(real.(floq_exps))',stack(imag.(floq_exps))'))
+
 
     #bifurcation point info:
     bifpoints = []
@@ -199,5 +218,3 @@ for (i,N) in enumerate(Ns)
     =#
    
 end
-
-
