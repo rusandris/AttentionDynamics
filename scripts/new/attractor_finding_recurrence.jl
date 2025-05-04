@@ -4,13 +4,14 @@ using AttentionDynamics
 using OrdinaryDiffEq
 using DelimitedFiles
 using StatsBase
-using Plots,LaTeXStrings,GLMakie
+using Plots,LaTeXStrings #,GLMakie
 #plotly()
 cd(@__DIR__)
 include("../../plotting/plot_functions/orbit_diagrams.jl")
 include("../../plotting/defaults.jl")
 include("bif_floq_od_method_parameters.jl")
 figs_dir = "../../paper_figs/"
+mkpath(figs_dir)
 
 #parameters from phase diagram 
 gs_N10 = vec(readdlm("../../plotting/data/N=10.0_gvalues.txt"))
@@ -78,15 +79,23 @@ Plots.plot!(pp,atr2[:,1],atr2[:,3],lw=2,lc=:blue,markershape=:utriangle,
 traj1,t1 = trajectory(ds,100,u1;Ttr=1000)
 traj2,t2 = trajectory(ds,100,u2;Ttr=1000)
 
-ts1 = Plots.plot(t1[1:1:100],Matrix(traj1[1:1:100,[1,3,5]]),lc=:purple,lw=2,markershape=:circle,
+ts1 = Plots.plot(t1[1:1:100],Matrix(traj1[1:1:100,[1,3,5]]),lc=:purple,lw=5,markershape=:circle,
     ms=0,mc=:purple,markerstrokewidth=0.0,
-    ls=[:solid :dash :dashdotdot],xformatter=:none,
+    ls=[:solid :dash :dot],xformatter=:none,
     labels=[L"x_1" L"x_2" L"x_3"])
+#plot attractor markers
+plot!(ts1,t1[1:5:100],Matrix(traj1[1:5:100,[1,3,5]]),st=:scatter,markershape=:circle,
+    ms=8,mc=:purple,markerstrokewidth=0.0,label="")
+
 ts2 = Plots.plot(t2[1:1:100],Matrix(traj2[1:1:100,[1,3,5]]),lc=:blue,
-    ls=[:solid :dash :dashdotdot],lw=2,markershape=:utriangle,
+    ls=[:solid :dash :dot],lw=5,markershape=:utriangle,
     ms=0,mc=:blue,markerstrokewidth=0.0,
     labels=[L"x_1" L"x_2" L"x_3"],
-    xlabel=L"t",ylabel=L"x_i",)
+    xlabel=L"t",ylabel=L"x_i")
+#plot attractor markers
+plot!(ts2,t2[1:5:100],Matrix(traj2[1:5:100,[1,3,5]]),st=:scatter,markershape=:utriangle,
+    ms=8,mc=:blue,markerstrokewidth=0.0,label="")
+
 pl_ts = Plots.plot(ts1,ts2,layout=(2,1)) 
 pl = Plots.plot(pp,pl_ts,layout=(1,2),size=(1200,600))
 savefig(pl,figs_dir*"N3_multistable.png")

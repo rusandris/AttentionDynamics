@@ -18,7 +18,7 @@ mkpath(od_dir)
 
 n = 100 # nr of points for each param value
 plane = (3,1.0) #poincare plane 
-comp = 1 #save components x1 of the points on the poincare surface
+comp = [1,2] #save components x1 of the points on the poincare surface
 p_index = 2
 #Δw = 0.0005 param step size
 nw = 50 #param resolution in w
@@ -40,7 +40,7 @@ for (i,N) in enumerate(Ns)
     @show u0
 
     #params for continuation
-    w_min = w_min_ratio * wc1
+    w_min = w_min_ratio_od * wc1
     w_max = w_max_ratio * wc2
     w_values = range(w_max,w_min;length=nw) 
     @show length(w_values)

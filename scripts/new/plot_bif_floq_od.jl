@@ -41,7 +41,7 @@ for (i,N) in enumerate(Ns)
 
     push!(plots_od,pl)
 end
-pl_od=plot(plots_od...,layout=(1,5),size=(1200,300),left_margin=8Plots.mm,bottom_margin=5Plots.mm)
+pl_od=plot(plots_od...,layout=(1,5),size=(1200,300),left_margin=8Plots.mm,bottom_margin=5Plots.mm);
 
 #----------------plot each branch of periodic orbits---------------------
 

@@ -94,7 +94,6 @@ for (i,N) in enumerate(Ns)
             2,     # parameter index for continuation
             record_from_solution = (x, p; k...) -> x[1])
 
-    #=
 
     opts_fp_cont = ContinuationPar(p_min = 0.2, p_max = wc1+0.01, ds = ds,
         newton_options = NewtonPar(;eigsolver=DefaultEig(;which=real)), save_to_file=false,
@@ -119,8 +118,9 @@ for (i,N) in enumerate(Ns)
     end
     writedlm(cont_dir*"contres_fp_bifp_N$N"*".txt",bifpoints)
 
-    =#
+    
 
+    #=
     #------------------solve for a lim cycle---------------
     #take lim cycle closer to wc2
 
@@ -204,6 +204,7 @@ for (i,N) in enumerate(Ns)
     end
     writedlm(cont_dir*"contres_po_bifp_N$N"*".txt",bifpoints)
 
+    =#
 
     #=
     #should filter out unity values
@@ -216,5 +217,5 @@ for (i,N) in enumerate(Ns)
     push!(imag_parts_allN,imag_parts)
     push!(real_parts_allN,real_parts)
     =#
-   
+    
 end
