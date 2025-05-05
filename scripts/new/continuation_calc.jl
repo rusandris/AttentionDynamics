@@ -55,15 +55,15 @@ funcs_po = (record_from_solution = (x, p; k...) -> begin
 #----------define some local parameters------------
 
 #dir for cont result
-cont_dir = "../../bifkit_data/"  
+cont_dir = "../../bifkit_data_gN22/"  
 mkpath(cont_dir)
 
 Δt = 1e-2 #lim cycle sol sampling
-dsmax = 0.01 #max step size along bif curve
+dsmax = 0.1 #max step size along bif curve
 ds = 0.01 #initial step along bif curve
 detect_bifurcation = 2 #detection level
-max_steps = 450 #max nr of continuation steps
-M = 250 #discretization for trapezoid method
+max_steps = 250 #max nr of continuation steps
+M = 350 #discretization for trapezoid method
 
 #nev (nr of eigs) needs to be set every time? to 2N
 
@@ -84,8 +84,10 @@ for (i,N) in enumerate(Ns)
 
     #params for continuation
     w_min = w_min_ratio * wc1
-    w_max = w_max_ratio * wc2
-    p = [g,0.4,N]
+    #w_max = w_max_ratio * wc2
+    w_max = 0.4
+    @show w_min,w_max
+    p = [g,w_min,N]
 
     #def problem 
     prob = BifurcationProblem(F_ad,
@@ -95,7 +97,7 @@ for (i,N) in enumerate(Ns)
             record_from_solution = (x, p; k...) -> x[1])
 
 
-    opts_fp_cont = ContinuationPar(p_min = 0.2, p_max = wc1+0.01, ds = ds,
+    opts_fp_cont = ContinuationPar(p_min = 0.1, p_max = wc1+0.01, ds = ds,
         newton_options = NewtonPar(;eigsolver=DefaultEig(;which=real)), save_to_file=false,
         save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,
         dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = max_steps, tol_stability = 1e-10)
@@ -119,8 +121,6 @@ for (i,N) in enumerate(Ns)
     writedlm(cont_dir*"contres_fp_bifp_N$N"*".txt",bifpoints)
 
     
-
-    #=
     #------------------solve for a lim cycle---------------
     #take lim cycle closer to wc2
 
@@ -204,7 +204,6 @@ for (i,N) in enumerate(Ns)
     end
     writedlm(cont_dir*"contres_po_bifp_N$N"*".txt",bifpoints)
 
-    =#
 
     #=
     #should filter out unity values
