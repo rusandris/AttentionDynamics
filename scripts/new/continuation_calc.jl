@@ -55,7 +55,7 @@ funcs_po = (record_from_solution = (x, p; k...) -> begin
 #----------define some local parameters------------
 
 #dir for cont result
-cont_dir = "../../bifkit_data_gN22/"  
+cont_dir = "../../bifkit_data_gN5/"  
 mkpath(cont_dir)
 
 Δt = 1e-2 #lim cycle sol sampling

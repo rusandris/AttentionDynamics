@@ -174,9 +174,16 @@ for (i,N) in enumerate(Ns)
 
     #read the matched files
     contres_eig = readdlm(cont_dir*contres_eig_file)
-    realpart = contres_eig[:,1]
-    imagpart = contres_eig[:,2]
-    @show maximum(abs.(imagpart))
+
+    #filter eig results
+    #contains real and imag parts separately
+    #
+
+    realparts = contres_eig[:,1:2N]
+    imagparts = contres_eig[:,(2N+1):end]
+    realparts_max = maximum()
+
+
     contres_sols = readdlm(cont_dir*contres_sol_file)
     lyaps = readdlm(od_dir*lyaps_file)[:,2]
     lyaps_params = readdlm(od_dir*lyaps_file)[:,1]
