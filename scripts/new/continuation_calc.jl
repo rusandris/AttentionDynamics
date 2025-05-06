@@ -55,12 +55,12 @@ funcs_po = (record_from_solution = (x, p; k...) -> begin
 #----------define some local parameters------------
 
 #dir for cont result
-cont_dir = "../../bifkit_data_gN5/"  
+cont_dir = "../../bifkit_data_gN5_210/"  
 mkpath(cont_dir)
 
 Δt = 1e-2 #lim cycle sol sampling
-dsmax = 0.1 #max step size along bif curve
-ds = 0.01 #initial step along bif curve
+dsmax = 0.01 #max step size along bif curve
+ds = 0.001 #initial step along bif curve
 detect_bifurcation = 2 #detection level
 max_steps = 250 #max nr of continuation steps
 M = 350 #discretization for trapezoid method
@@ -85,7 +85,7 @@ for (i,N) in enumerate(Ns)
     #params for continuation
     w_min = w_min_ratio * wc1
     #w_max = w_max_ratio * wc2
-    w_max = 0.4
+    w_max = 0.35
     @show w_min,w_max
     p = [g,w_min,N]
 

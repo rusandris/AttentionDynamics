@@ -8,12 +8,18 @@ include("../../plotting/defaults.jl")
 #include standard parameters and init conditions
 include("bif_floq_od_method_parameters.jl")
 
+#data dirs
+od_dir = "../../orbit_diagram_data_gN5/"
+cont_dir = "../../bifkit_data_gN5_210/"
+#cont_dir = "../../bifkit_data_gN5/"
+
 #create dir for figs
 figs_dir = "../../paper_figs/"
 mkpath(figs_dir)
 
-xlims=(0.5,0.65)
-plot_srate = 2
+#xlims=(0.5,0.65)
+xlims=(0.1,0.4)
+plot_srate = 1
 
 od_lyap_files = readdir(od_dir)
 plots_od = []
@@ -117,19 +123,26 @@ for (i,N) in enumerate(Ns)
     stability = Bool.(contres_sols[:,end])
     @show extrema(stability)
 
+    linestyle = [stb ? :solid : :dot for stb in stability]
+    linewidth = [stb ? 2 : 1 for stb in stability]
+    #sol_sampling = [stb ? 1 : 20 for stb in stability]
+
+    plot!(pl,params[1:plot_srate:end], maxs[1:plot_srate:end],lc=:gray10,legend=false,guidefontsize=guide_fontsize,
+    ls=linestyle[1:plot_srate:end],lw=linewidth[1:plot_srate:end],xformatter=:none,xlims=xlims)
+
+    #=
+
     #plot stable and unstable parts separately
     maxs_stable = maxs[stability]  #select stable 
     maxs_unstable = maxs[.!(stability)] #negation
-
-    linestyle = [stb ? :solid : :dot for stb in stability]
-    linewidth = [stb ? 2 : 2 for stb in stability]
-    #sol_sampling = [stb ? 1 : 20 for stb in stability]
 
     plot!(pl,params[stability][1:plot_srate:end], maxs_stable[1:plot_srate:end], lc=:gray10,legend=false,guidefontsize=guide_fontsize,
         ls=:solid,lw=1,xformatter=:none,xlims=xlims)
 
     plot!(pl,params[.!(stability)][1:plot_srate:end], maxs_unstable[1:plot_srate:end], mc=:gray10,legend=false,guidefontsize=guide_fontsize,
         st=:scatter,ms=1,xformatter=:none,xlims=xlims)
+
+    =#
 
     #plot some (not all) bif points
 
@@ -181,7 +194,10 @@ for (i,N) in enumerate(Ns)
 
     realparts = contres_eig[:,1:2N]
     imagparts = contres_eig[:,(2N+1):end]
-    realparts_max = maximum()
+
+    #how to filter out zero exponents
+    
+    realparts_max = maximum(realparts;dims=2)
 
 
     contres_sols = readdlm(cont_dir*contres_sol_file)
@@ -196,9 +212,9 @@ for (i,N) in enumerate(Ns)
     wc2 = (N-1)/N
 
     #floq maxreal
-    @show length(params),length(realpart)
-    pl_maxfloq = plot(params,realpart,mc=:gray10,xformatter=:none,guidefontsize=guide_fontsize,
-        ylims=(-1.0,0.5),xlims=xlims,markershape=:cross,ms=1,lc=:gray10,markerstrokewidth=0.0,legend=false)
+    @show length(params),length(realparts_max)
+    pl_maxfloq = plot(params,realparts,mc=:gray10,xformatter=:none,guidefontsize=guide_fontsize,
+        ylims=(Inf,Inf),xlims=xlims,markershape=:cross,ms=1,lc=:gray10,markerstrokewidth=0.0,legend=false)
 
     #floq maximag
     #plot!(pl_maxfloq,params,imagpart,mc=:gray50,xlabel=L"w",guidefontsize=guide_fontsize,
@@ -222,5 +238,5 @@ pl_floq = plot(plots_maxfloq...,layout=(1,length(Ns)),
 
 pl = plot(pl_bif,pl_floq,pl_od,layout=(3,1),size=(1500,600),dpi=300)
 #savefig(pl,"../../continuation_test_maxreal.png")
-savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_od_Ttr20000_noreinit.png")
+savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_od_Ttr20000_noreinit_g5_N26.png")
 

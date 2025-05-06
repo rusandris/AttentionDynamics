@@ -45,7 +45,7 @@ u0 = generate_initial_condition(N)
 w_values = [0.3,0.495]
 @show length(w_values)
 
-p = [g,w_max,N]
+p = [g,w_values[1],N]
 @show wc1,wc2,p
 #create system
 ds = create_ds(u0,p;diffeq=diffeq)

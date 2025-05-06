@@ -6,10 +6,8 @@ const w_min_ratio = 0.9 #w_min/wc_1 for continuation
 const w_max_ratio = 0.6 #w_max/wc_2 for continuation
 const w_min_ratio_od = 1.005 #w_min/wc_1 for orbit diag
 
-od_dir = "../../orbit_diagram_data/"
-cont_dir = "../../bifkit_data/"
-
-Ns = [2:6;] #nr of competitors dim = 2N 
+#Ns = [2:6;] #nr of competitors dim = 2N 
+Ns = [2,5,10]#[10] #
 
 #select g value from the phase diagram
 gs_N10 = vec(readdlm("../../plotting/data/N=10.0_gvalues.txt"))
@@ -18,8 +16,10 @@ gs = gs_N10 ./(10-1)
 const gval_phase_diag = 5.0
 global_params = [Ns...,gval_phase_diag]
 
+cont_dir = "../../bifkit_data_gN5_210/"
+mkpath(cont_dir)
 #save params that apply to every system size
-#writedlm(cont_dir*"global_params_Ns_g.txt",global_params)
+writedlm(cont_dir*"global_params_Ns_g.txt",global_params)
 
 #-----------initial conditions-----------------
 #define well-controlled initial condition for each system size

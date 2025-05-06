@@ -18,7 +18,7 @@ mkpath(od_dir)
 
 n = 100 # nr of points for each param value
 plane = (3,1.0) #poincare plane 
-comp = [1,2] #save components x1 of the points on the poincare surface
+comp = 1 #save components x1 of the points on the poincare surface
 p_index = 2
 #Δw = 0.0005 param step size
 nw = 50 #param resolution in w
@@ -56,7 +56,7 @@ for (i,N) in enumerate(Ns)
     #include u0=u0 to reset every time to u0
     #init cond is the last state from the last param
     od = orbitdiagram(pmap, comp, p_index, w_values;n=n, Ttr=Ttr, show_progress=true)  
-    writedlm(od_dir*"od_N$N"*".txt",vcat(w_values',stack(od)))
+    writedlm(od_dir*"od_N$N"*"x_$comp.txt",vcat(w_values',stack(od)))
     push!(orbit_diag_data_allN,od)
 end
 
