@@ -70,32 +70,35 @@ atr1 = attractors[1]
 atr2 = attractors[2]
 
 #plot attractors
-pp = Plots.plot(atr1[:,1],atr1[:,3],lw=2,lc=:purple,markershape=:circle,
-    ms=8,mc=:purple,markerstrokewidth=0.0,xlabel=L"x_1",ylabel=L"x_2")
-Plots.plot!(pp,atr2[:,1],atr2[:,3],lw=2,lc=:blue,markershape=:utriangle,
-    ms=8,mc=:blue,markerstrokewidth=0.0)
+pp = Plots.plot(atr1[:,1],atr1[:,3];lw=2,lc=:purple,markershape=:circle,
+    ms=8,mc=:purple,markerstrokewidth=0.0,xlabel=L"x_1",ylabel=L"x_2",label=L"1",DEFAULTS...)
+Plots.plot!(pp,atr2[:,1],atr2[:,3],lw=2,lc=:blue,markershape=:utriangle,label=L"2",
+    ms=8,mc=:blue,markerstrokewidth=0.0,leftmargin=8Plots.mm)
 
 #plot time series
 traj1,t1 = trajectory(ds,100,u1;Ttr=1000)
 traj2,t2 = trajectory(ds,100,u2;Ttr=1000)
 
-ts1 = Plots.plot(t1[1:1:100],Matrix(traj1[1:1:100,[1,3,5]]),lc=:purple,lw=5,markershape=:circle,
-    ms=0,mc=:purple,markerstrokewidth=0.0,
-    ls=[:solid :dash :dot],xformatter=:none,
-    labels=[L"x_1" L"x_2" L"x_3"])
+ts1 = Plots.plot(t1[1:1:100],Matrix(traj1[1:1:100,[1,3,5]]);lc=:purple,lw=5,markershape=:circle,
+    ms=0,mc=:purple,markerstrokewidth=0.0,ylabel=L"x_i",
+    ls=:solid,xformatter=:none,la=[1.0 0.5 0.2],
+    labels=[L"x_1" L"x_2" L"x_3"],DEFAULTS...)
+#ls=[:solid :dash :dot]
 #plot attractor markers
-plot!(ts1,t1[1:5:100],Matrix(traj1[1:5:100,[1,3,5]]),st=:scatter,markershape=:circle,
-    ms=8,mc=:purple,markerstrokewidth=0.0,label="")
+plot!(ts1,t1[1:5:100],Matrix(traj1[1:5:100,[1,3,5]]);st=:scatter,markershape=:circle,
+    ms=8,mc=:purple,markerstrokewidth=0.0,label="",ma=[1.0 0.5 0.2])
 
-ts2 = Plots.plot(t2[1:1:100],Matrix(traj2[1:1:100,[1,3,5]]),lc=:blue,
-    ls=[:solid :dash :dot],lw=5,markershape=:utriangle,
+ts2 = Plots.plot(t2[1:1:100],Matrix(traj2[1:1:100,[1,3,5]]);lc=:blue,
+    lw=5,markershape=:utriangle,
     ms=0,mc=:blue,markerstrokewidth=0.0,
-    labels=[L"x_1" L"x_2" L"x_3"],
-    xlabel=L"t",ylabel=L"x_i")
+    labels=[L"x_1" L"x_2" L"x_3"],la=[1.0 0.5 0.2],
+    xlabel=L"t",ylabel=L"x_i",DEFAULTS...)
+
+#ls=[:solid :dash :dot]
 #plot attractor markers
 plot!(ts2,t2[1:5:100],Matrix(traj2[1:5:100,[1,3,5]]),st=:scatter,markershape=:utriangle,
-    ms=8,mc=:blue,markerstrokewidth=0.0,label="")
+    ms=8,mc=:blue,markerstrokewidth=0.0,label="",ma=[1.0 0.5 0.2])
 
-pl_ts = Plots.plot(ts1,ts2,layout=(2,1)) 
-pl = Plots.plot(pp,pl_ts,layout=(1,2),size=(1200,600))
+pl_ts = Plots.plot(ts1,ts2,layout=(2,1))
+pl = Plots.plot(pp,pl_ts,layout=(1,2),size=fig_size,bottom_margin=5Plots.mm)
 savefig(pl,figs_dir*"N3_multistable.png")

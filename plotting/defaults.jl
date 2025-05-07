@@ -2,13 +2,12 @@ using Plots
 
 guide_fontsize = 18
 tick_fontsize = 12
-legend_fontsize = 10
+legend_fontsize = 15
 fig_size = (1200,600)
 
-DEFAULTS = (xguidefontsize=guide_fontsize,yguidefontsize=guide_fontsize,legend=false,
-    legendfontsize=legend_fontsize,tickfontsize=tick_fontsize,aspect_ratio=:auto,lw=1,
-    la=1,ls=:solid,st=:path,mc=:gray10,ms=2,grid=true,widen=true,
-    right_margin = 15Plots.mm,yguidefontrotation=0,dpi=300)
+DEFAULTS = (xguidefontsize=guide_fontsize,yguidefontsize=guide_fontsize,
+    legendfontsize=legend_fontsize,tickfontsize=tick_fontsize,aspect_ratio=:auto,
+    grid=true,widen=true,dpi=300)
 
 HEATMAP_DEFAULTS = (xguidefontsize=guide_fontsize,yguidefontsize=guide_fontsize,
     c=cgrad(:seismic, rev = false), clims=(-1/2,1/2),colorbar=true,framestyle=:box,

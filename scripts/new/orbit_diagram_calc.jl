@@ -13,7 +13,7 @@ include("bif_floq_od_method_parameters.jl")
 #----------define local parameters------------
 
 #dir for od and lyapunovs
-od_dir = "../../orbit_diagram_data_gN5/"
+od_dir = "../../orbit_diagram_data_gN5_210/"
 mkpath(od_dir)
 
 n = 100 # nr of points for each param value
@@ -42,7 +42,7 @@ for (i,N) in enumerate(Ns)
     #params for continuation
     w_min = w_min_ratio_od * wc1
     #w_max = w_max_ratio * wc2
-    w_max = 0.4
+    w_max = 0.35
     w_values = range(w_max,w_min;length=nw) 
     @show length(w_values)
 
@@ -78,7 +78,7 @@ for (i,N) in enumerate(Ns)
     #params for continuation
     w_min = 1.01 * wc1
     #w_max = 0.9 * wc2
-    w_max = 0.4
+    w_max = 0.35
     w_values = range(w_max,w_min;length=nw) 
     @show length(w_values)
 

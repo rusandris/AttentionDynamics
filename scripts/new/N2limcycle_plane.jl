@@ -74,15 +74,15 @@ for i in 1:length(w_values)
 	end
 
 	#plot ts
-	ts = plot(t[:],Matrix(cycle[:,[1,3]]),lc=:gray10,lw=3,
+	ts = plot(t[:],Matrix(cycle[:,[1,3]]);lc=[:gray10 :gray50],lw=3,
     	ms=0,mc=:purple,markerstrokewidth=0.0,
-    	ls=[:solid :dot],xformatter=:none, ylabel=L"x_i",
-    	labels=[L"x_1" L"x_2"])
+    	ls=:solid,xformatter=:none, ylabel=L"x_i",
+    	labels=[L"x_1" L"x_2"],DEFAULTS...)
 
 	#plot velocity 
-	ts_vel = plot(t[:],velocity_magnitudes[:],lc=:gray10,lw=3,
+	ts_vel = plot(t[:],velocity_magnitudes[:];lc=:gray10,lw=3,
 		markerstrokewidth=0.0,legend=false,
-		ylabel=L"$\left|\dot{\mathbf{s}}\right|$",xlabel="t")
+		ylabel=L"$\left|\dot{\mathbf{s}}\right|$",xlabel=L"t",DEFAULTS...)
 
 	#combine the two
 	ts_comb = plot(ts,ts_vel,layout=(2,1))

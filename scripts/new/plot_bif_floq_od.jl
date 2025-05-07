@@ -9,7 +9,7 @@ include("../../plotting/defaults.jl")
 include("bif_floq_od_method_parameters.jl")
 
 #data dirs
-od_dir = "../../orbit_diagram_data_gN5/"
+od_dir = "../../orbit_diagram_data_gN5_210/"
 cont_dir = "../../bifkit_data_gN5_210/"
 #cont_dir = "../../bifkit_data_gN5/"
 
@@ -18,7 +18,7 @@ figs_dir = "../../paper_figs/"
 mkpath(figs_dir)
 
 #xlims=(0.5,0.65)
-xlims=(0.1,0.4)
+xlims_pl=(0.1,0.4)
 plot_srate = 1
 
 od_lyap_files = readdir(od_dir)
@@ -39,7 +39,7 @@ for (i,N) in enumerate(Ns)
     wc1 = (N-1)/g
     wc2 = (N-1)/N
 
-    pl = plot_orbit_diagram(ps,od;OD_DEFAULTS...,ma=0.4,ms=0.5,tickfontsize=8,ylabel="",xlims=xlims,widen=false)
+    pl = plot_orbit_diagram(ps,od;OD_DEFAULTS...,ma=0.4,ms=0.5,tickfontsize=8,ylabel="",xlims=xlims_pl,widen=false)
     i == 1 && ylabel!(pl,L"x_1 pmap")
 
     vline!([wc1],ls=:dash,lc=:gray10)
@@ -47,7 +47,7 @@ for (i,N) in enumerate(Ns)
 
     push!(plots_od,pl)
 end
-pl_od=plot(plots_od...,layout=(1,5),size=(1200,300),left_margin=8Plots.mm,bottom_margin=5Plots.mm);
+pl_od=plot(plots_od...,layout=(1,length(Ns)),left_margin=8Plots.mm,bottom_margin=5Plots.mm);
 
 #----------------plot each branch of periodic orbits---------------------
 
@@ -100,7 +100,7 @@ for (i,N) in enumerate(Ns)
     #-------------------plot fixed point results----------------------
     pl = plot(params, xs, lc=:gray10,legend=false,guidefontsize=guide_fontsize,
         title=L"N=%$N"*"\n"*L"g/(N-1)=%$(round(gval_phase_diag;digits=2))",
-        ls=linestyle,lw=linewidth,xformatter=:none,xlims=xlims)
+        ls=linestyle,lw=linewidth,xformatter=:none,xlims=xlims_pl)
 
     display(pl)
     @show length(contres_fp_bifp)
@@ -119,16 +119,14 @@ for (i,N) in enumerate(Ns)
     params = contres_sols[:,1]
     maxs = contres_sols[:,3]
     mins = contres_sols[:,2]
-    @show extrema(maxs)
     stability = Bool.(contres_sols[:,end])
-    @show extrema(stability)
 
     linestyle = [stb ? :solid : :dot for stb in stability]
     linewidth = [stb ? 2 : 1 for stb in stability]
     #sol_sampling = [stb ? 1 : 20 for stb in stability]
 
     plot!(pl,params[1:plot_srate:end], maxs[1:plot_srate:end],lc=:gray10,legend=false,guidefontsize=guide_fontsize,
-    ls=linestyle[1:plot_srate:end],lw=linewidth[1:plot_srate:end],xformatter=:none,xlims=xlims)
+    ls=linestyle[1:plot_srate:end],lw=linewidth[1:plot_srate:end],xformatter=:none,xlims=xlims_pl)
 
     #=
 
@@ -137,10 +135,10 @@ for (i,N) in enumerate(Ns)
     maxs_unstable = maxs[.!(stability)] #negation
 
     plot!(pl,params[stability][1:plot_srate:end], maxs_stable[1:plot_srate:end], lc=:gray10,legend=false,guidefontsize=guide_fontsize,
-        ls=:solid,lw=1,xformatter=:none,xlims=xlims)
+        ls=:solid,lw=1,xformatter=:none,xlims=xlims_pl)
 
     plot!(pl,params[.!(stability)][1:plot_srate:end], maxs_unstable[1:plot_srate:end], mc=:gray10,legend=false,guidefontsize=guide_fontsize,
-        st=:scatter,ms=1,xformatter=:none,xlims=xlims)
+        st=:scatter,ms=1,xformatter=:none,xlims=xlims_pl)
 
     =#
 
@@ -166,7 +164,7 @@ for (i,N) in enumerate(Ns)
     push!(branch_plots,pl)
 end
 pl_bif = plot(branch_plots...,layout=(1,length(Ns)),
-    size=(1500,300),left_margin=8Plots.mm)#bottom_margin=reduced_bottom_margin)
+    left_margin=8Plots.mm)#bottom_margin=reduced_bottom_margin)
 
 #------------------------plot Floquet exponents/multipliers--------------------------
 #plot all non-unity floquet multis (real and imag parts)    
@@ -214,11 +212,11 @@ for (i,N) in enumerate(Ns)
     #floq maxreal
     @show length(params),length(realparts_max)
     pl_maxfloq = plot(params,realparts,mc=:gray10,xformatter=:none,guidefontsize=guide_fontsize,
-        ylims=(Inf,Inf),xlims=xlims,markershape=:cross,ms=1,lc=:gray10,markerstrokewidth=0.0,legend=false)
+        ylims=(Inf,Inf),xlims=xlims_pl,markershape=:cross,ms=1,lc=:gray10,markerstrokewidth=0.0,legend=false)
 
     #floq maximag
     #plot!(pl_maxfloq,params,imagpart,mc=:gray50,xlabel=L"w",guidefontsize=guide_fontsize,
-    #    xlims=xlims,markershape=:cross,ms=1,lc=:gray50,markerstrokewidth=0.0,legend=false)
+    #    xlims=xlims_pl,markershape=:cross,ms=1,lc=:gray50,markerstrokewidth=0.0,legend=false)
 
     #lyapunov LLE
     plot!(lyaps_params,lyaps,mc=:gray10,markershape=:circle,ms=1,lc=:red,markerstrokewidth=0.0,legend=false)
@@ -233,10 +231,10 @@ for (i,N) in enumerate(Ns)
 
 end
 pl_floq = plot(plots_maxfloq...,layout=(1,length(Ns)),
-    size=(1200,300),left_margin=8Plots.mm)#bottom_margin=reduced_bottom_margin)
+    left_margin=8Plots.mm)#bottom_margin=reduced_bottom_margin)
 
 
-pl = plot(pl_bif,pl_floq,pl_od,layout=(3,1),size=(1500,600),dpi=300)
+pl = plot(pl_bif,pl_floq,pl_od,layout=(3,1),size=fig_size,dpi=300)
 #savefig(pl,"../../continuation_test_maxreal.png")
-savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_od_Ttr20000_noreinit_g5_N26.png")
+savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_od_Ttr20000_noreinit_g5_N210.png")
 
