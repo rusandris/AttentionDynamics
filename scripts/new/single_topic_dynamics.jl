@@ -39,9 +39,56 @@ function att_din_single_topic!(du,u,p,t)
     du[2] = u[1] - u[2]
 end
 
+#plot eigenvalues of [1,1]
+#-(1+gw) \pm \sqrt{(1+gw)^2 - 4g}
+#eigenvalue not correct? TODO CHECK 
+#1/2(-1 \pm \sqrt{(1 - 4g} #correct
+λ12(g,w) = -(1+g*w) + sqrt( Complex((1+g*w)^2 - 4*g))
+#x value at fixed point
+#x^{*}(w,M,N) = \frac{1}{1 + \frac{wM}{N-1} - \frac{wN}{N-1}}, \quad M \neq 0.
+x_fp(w) = #M=1,N=1 
+
+ws = [0:0.01:1.0;]
+eigs1 = λ12.(1.0,ws)
+plot(ws,real.(eigs1),lw=1,lc=:gray10)
+plot!(ws,imag.(eigs1),lw=1,lc=:gray10)
+
+eigs5 = λ12.(5.0,ws)
+plot!(ws,real.(eigs5),lw=1,lc=:red)
+plot!(ws,imag.(eigs5),lw=1,lc=:red)
+
+eigs50 = λ12.(50.0,ws)
+plot!(ws,real.(eigs50),lw=1,lc=:blue)
+plot!(ws,imag.(eigs50),lw=1,lc=:blue)
+
 #create system
 ds = CoupledODEs(att_din_single_topic!,u0,p;diffeq=diffeq)
-set_parameter!(ds,2,0.8)
-set_parameter!(ds,1,20)
-traj,t = trajectory(ds,10,u0;Δt=0.001)
-plot(t,Matrix(traj[:,:]),lw=2,lc=[:gray10 :gray60],label=[L"x" L"y"],legendfontsize=14)
+#set_parameter!(ds,2,0.8)
+#set_parameter!(ds,1,20)
+
+set_parameter!(ds,1,1.0)
+set_parameter!(ds,2,0.5)
+traj1,t = trajectory(ds,10,u0;Δt=0.001)
+plot(traj1[:,1],traj1[:,2],lw=2,lc=:gray10,legendfontsize=14)
+
+set_parameter!(ds,1,5.0)
+set_parameter!(ds,2,0.5)
+traj5,t = trajectory(ds,10,u0;Δt=0.001)
+plot!(traj5[:,1],traj5[:,2],lw=2,lc=:red,legendfontsize=14)
+
+set_parameter!(ds,1,5.0)
+set_parameter!(ds,2,0.75)
+traj5,t = trajectory(ds,10,u0;Δt=0.001)
+plot!(traj5[:,1],traj5[:,2],lw=2,lc=:red,la=0.5,legendfontsize=14)
+
+
+set_parameter!(ds,1,50.0)
+set_parameter!(ds,2,0.5)
+traj50,t = trajectory(ds,10,u0;Δt=0.001)
+plot!(traj50[:,1],traj50[:,2],lw=2,lc=:blue,legendfontsize=14)
+
+
+set_parameter!(ds,1,50.0)
+set_parameter!(ds,2,0.1)
+traj50,t = trajectory(ds,10,u0;Δt=0.001)
+plot!(traj50[:,1],traj50[:,2],lw=2,lc=:blue,la=0.5,legendfontsize=14)
