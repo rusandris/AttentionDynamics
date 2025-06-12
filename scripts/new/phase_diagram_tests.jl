@@ -20,18 +20,27 @@ include("bif_floq_od_method_parameters.jl")
 
 data_dir = "../../phasediag_data_300/"
 mkpath(data_dir)
-diffeq = (alg = Tsit5(),dt = 1e-3,adaptive=true,dtmax=1e-2,maxiters=1e15)
+diffeq = (alg = Tsit5(),)
 N = 300
 ws = range(0.4,0.75;length=20)
 gs = range(1800,2000;length=20)
 
-wc1 = (N-1)/gs[end]
+#try original equations
+u0 = generate_initial_condition(N)
+rc=9.0;rp=9.0;K=1.0;c=2.4;α=0.005
+p = [rc,rp,K,c,α]
+ds = create_original_ds(u0,p)
+
+wc1 = (N-1)/gs[1]
 wc2 = (N-1)/N
+
+
+#=
 
 #generate standard init cond
 #u0 = rand(2N)
 u0 = generate_initial_condition(N)
-ds = create_ds(u0,[gs[1],0.285,N];diffeq=diffeq)
+ds = create_ds(u0,[5,0.5,N])
 T_fp = 100
 Ttr_fp = 100
 Δt_fp = 0.1
@@ -61,3 +70,4 @@ savefig(pl3,"../../N5_phasediagram_Ttr_max_$(Ttrs[3])"*".png")
 
 
 plot(ws,lyap_vals,ylims=(-0.2,Inf),labels = ["Ttrs=$(Ttrs[1])" "Ttrs=$(Ttrs[2])" "Ttrs=$(Ttrs[3])"])
+=#

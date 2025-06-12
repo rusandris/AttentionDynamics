@@ -1,8 +1,11 @@
-export att_din!,skipsum
+export att_din!,skipsum,create_original_ds,create_ds
 
-function skipsum(a,i)
-	x = a[1:2:end]
-    return sum(x) - a[i]
+function skipsum(u,i)
+    sum = 0.0
+    for j in 1:2:length(u)
+        sum += u[j]
+    end
+    return sum - u[i]
 end
 
 function att_din!(du,u,p,t)
@@ -12,9 +15,21 @@ function att_din!(du,u,p,t)
         du[i+1] = u[i] - u[i+1]
     end
 end
+
+function att_din_original!(du,u,p,t)
+    rp,rc,K,c,α = p
+    N = Int(length(u)/2)
+    for i in 1:2:(2*N)
+        du[i] = rp*u[i]*(1 - rc/K*u[i+1] - c*skipsum(u,i))
+        du[i+1] = u[i] - α*u[i+1]
+    end
+end
+
+
 diffeq_default =  (abstol = 1.0e-6, reltol = 1.0e-6)
 function create_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din!,u0,p;diffeq=diffeq) end
 function create_integrator(ds,diffeq) integrator(ds;diffeq) end
 
+function create_original_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din_original!,u0,p;diffeq=diffeq) end
 
 
