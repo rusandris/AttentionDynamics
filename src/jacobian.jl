@@ -88,7 +88,7 @@ function fixed_point_eigen_spectrum(N,M,p)
 	eigen_spectrum = []
 
 	#eigenvalues 
-	λ1 = -1 #type 1
+	λ1 = -1.0 #type 1
 	λ2 = g*(1 - w_M*s) #type 2
 	#type 3
 	λ3_1 = 0.5*( -(1 + a2) + sqrt(Complex((1+a2)^2 + 4(b-a2))) )
