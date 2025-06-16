@@ -99,19 +99,177 @@ imagparts_coex = stack(imag.(λ_specs_coex))'
 realparts_dom = stack(real.(λ_specs_dom))'
 imagparts_dom = stack(imag.(λ_specs_dom))'
 
+xlims = (ws[1],ws[end])
+ylims_bif = (0.0,4.0)
+
 #plot coexistence fixed point spectrum
-pl = plot(ws,realparts_coex[:,[1,2]],ylabel="eigen spectrum",xlabel=L"w",
+pl_eig = plot(ws,realparts_coex[:,[1,2]],ylabel="",xlabel=L"w",
     legend=false,
-    title="N=$(N),g=$(g)",lc=:orange,lw=2,
-    size=(800,300),
+    #markershape=:circle,
+    #title="N=$(N),g=$(g)",
+    mc=:orange,ms=3,
+    xlims=xlims,ylims=[-1.0,4.0],
+    lc=:orange,
     label="",guidefontsize=16,dpi=300)
-plot!(ws,realparts_dom[:,[2]],lc=:blue,lw=2,label="")
-hline!([0.0],ls=:dash,lw=2,lc=:gray10,)
+plot!(pl_eig,ws,imagparts_coex[:,[1,2]],lc=:orange,ms=3,lw=2,label="")
+plot!(pl_eig,ws,realparts_dom[:,[2]],lc=:blue,ms=3,mc=:blue,lw=2,label="")
+hline!(pl_eig,[0.0],ls=:dash,lw=2,lc=:gray10,)
 
 #plot critical values 
-vline!([wc1],ls=:dash,lw=2,lc=:gray10)
-vline!([wc2],ls=:dash,lw=2,lc=:gray10)
+vline!(pl_eig,[wc1],ls=:dash,lw=2,lc=:gray10)
+vline!(pl_eig,[wc2],ls=:dash,lw=2,lc=:gray10)
 
 #plot dominance fixed point spectrum 
 #plot!(ws,realparts_dom[:,[3,4]],ylims=ylims_spec,lc=:blue,lw=2,label="real type 4 dom")
 #plot!(ws,imagparts_dom[:,[3,4]],ylims=ylims_spec,lc=:blue,lw=2,ls=:dash,label="real type 4 dom")
+
+#--------------------lyapunov--------------------------
+d0 = 1e-9
+states = [u0,u0 .+ d0/sqrt(length(u0))]
+pds = ParallelDynamicalSystem(ds,states)
+@show N
+lyaps = zeros(length(ws))
+for (i,w) in enumerate(ws)
+    @show w
+    @show current_parameters(pds)
+    #@show current_states(pds)
+    reinit!(pds)
+    set_parameter!(pds,2,w)
+    lyaps[i] = lyapunov(pds,100;Ttr=200,Δt=1.0)
+    @show lyaps[i]
+end
+plot!(pl_eig,ws,lyaps,lw=5,lc=:gray10)
+
+
+#------------------------bifurcation diagram---------------------------------
+
+#data dirs
+cont_dir = "../../plotting/DDE25/bifkit_data_g5_N2/"
+#cont_dir = "../../bifkit_data_gN5/"
+
+#create dir for figs
+figs_dir = "./poster_figs/"
+mkpath(figs_dir)
+plot_srate = 1
+
+#saved params
+global_params = readdlm(cont_dir*"global_params_Ns_g.txt")
+Ns = Int.(global_params[1:end-1])
+N = Ns[1]
+g = global_params[end]
+
+contres_files = readdir(cont_dir)
+
+
+#read cont results
+
+#find files that match N 
+contres_files_N = contres_files[findall(f -> occursin("N$N",f),contres_files)]
+
+#limit cycle continuation results
+contres_sol_file = contres_files_N[findfirst(f -> occursin("contres_po_sols",f),contres_files_N)]
+contres_bifp_file = contres_files_N[findfirst(f -> occursin("contres_po_bifp",f),contres_files_N)]
+
+#read the matched files
+contres_sols = readdlm(cont_dir*contres_sol_file)
+contres_bifp = readdlm(cont_dir*contres_bifp_file)
+
+#critical values
+wc1 = (N-1)/g
+wc2 = (N-1)/N
+
+#--------------------plot bifdiagram------------------
+
+#-------------------plot fixed point results----------------------
+#use analytical results for fixed points
+xs_fp = ones(length(ws))
+
+stability_fp = Bool.( ws .< wc1 )
+stability_fp2 = Bool.( ws .> wc2 )
+
+linestyle_fp = [stb ? :solid : :dash for stb in stability_fp]
+linewidth_fp = [stb ? 2 : 1 for stb in stability_fp]
+
+linestyle_fp2 = [stb ? :solid : :dash for stb in stability_fp2]
+linewidth_fp2 = [stb ? 2 : 1 for stb in stability_fp2]
+
+
+pl_bif = plot(ws, xs_fp, lc=:gray10,
+    legend=false,guidefontsize=guide_fontsize,xlims=xlims,ylims=ylims_bif,
+    #title=L"N=%$N"*"\n"*L"g/(N-1)=%$(round(gval_phase_diag;digits=2))",
+    ls=linestyle_fp,lw=linewidth_fp,xformatter=:none)
+
+fp2(w) = 1/(1-w)
+xs_fp2 = fp2.(ws)
+
+plot!(ws, xs_fp2, lc=:gray10,
+    legend=false,guidefontsize=guide_fontsize,xlims=xlims,ylims=ylims_bif,
+    ls=linestyle_fp2,lw=linewidth_fp2)
+
+annotate!(pl_bif,0.15, 3.0, text("stable fixed point \n (coexistence)", :gray10, :center, 6))
+annotate!(pl_bif,0.55, 3.0, text("stable fixed point \n (dominance)", :gray10, :center, 6))
+
+
+@show length(contres_fp_bifp)
+#plot some (not all) bif points
+for bp in eachrow(contres_fp_bifp)
+    type,crit_param,idx = bp
+    if type == "ns"  
+        scatter!([crit_param], [xs[idx]],ms=3,mc=:orange,markerstrokewidth=0.0)
+    elseif type == "nd"
+        scatter!([crit_param], [xs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
+    end
+end
+
+#-------------------plot lim cycle results----------------------
+
+params = contres_sols[:,1]
+maxs = contres_sols[:,3]
+mins = contres_sols[:,2]
+stability = Bool.(contres_sols[:,end])
+
+linestyle = [stb ? :solid : :dot for stb in stability]
+linewidth = [stb ? 2 : 1 for stb in stability]
+#sol_sampling = [stb ? 1 : 20 for stb in stability]
+
+plot!(pl_bif,params[1:plot_srate:end], maxs[1:plot_srate:end],lc=:gray10,legend=false,guidefontsize=guide_fontsize,
+ls=linestyle[1:plot_srate:end],lw=linewidth[1:plot_srate:end])
+
+annotate!(pl_bif,0.35, 3.5, text("stable limit cycle", :gray10, :center, 8))
+
+#=
+
+#plot stable and unstable parts separately
+maxs_stable = maxs[stability]  #select stable 
+maxs_unstable = maxs[.!(stability)] #negation
+
+plot!(pl,params[stability][1:plot_srate:end], maxs_stable[1:plot_srate:end], lc=:gray10,legend=false,guidefontsize=guide_fontsize,
+    ls=:solid,lw=1,xformatter=:auto,xlims=xlims_pl)
+
+plot!(pl,params[.!(stability)][1:plot_srate:end], maxs_unstable[1:plot_srate:end], mc=:gray10,legend=false,guidefontsize=guide_fontsize,
+    st=:scatter,ms=1,xformatter=:auto,xlims=xlims_pl)
+
+=#
+
+#plot some (not all) bif points
+
+for bp in eachrow(contres_bifp)
+    type,crit_param,idx = bp
+    if type == "ns"  
+        scatter!([crit_param], [maxs[idx]],ms=3,mc=:orange,markerstrokewidth=0.0)
+    elseif type == "nd"
+        scatter!([crit_param], [maxs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
+    elseif type == "bp"
+        scatter!([crit_param], [maxs[idx]],ms=3,mc=:green,markerstrokewidth=0.0)
+    end
+end
+#plot!(pl,brpo,linewidthunstable=0,linewidthstable=0) #plot only bif points hack
+
+vline!(pl_bif,[wc1],ls=:dash,lw=2,lc=:gray10)
+vline!(pl_bif,[wc2],ls=:dash,lw=2,lc=:gray10)
+
+
+l = @layout [a{0.8h}; b{0.2h}]
+pl = plot(pl_bif,pl_eig,layout=l,size=(500,300))
+
+

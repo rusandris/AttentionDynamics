@@ -20,11 +20,6 @@ iszero_approx(z) = isapprox(real(z),0.0;atol=1e-3) && isapprox(imag(z),0.0;atol=
 #---------------------define system-----------------------
 #general so dimension can be changed
 
-function skipsum(a,i)
-	x = a[1:2:end]
-    return sum(x) - a[i]
-end
-
 function F_ad(u,p)
     dim = length(u)
     N = dim/2
@@ -86,8 +81,8 @@ for (i,N) in enumerate(Ns)
     #params for continuation
     #w_min = w_min_ratio * wc1
     #w_max = w_max_ratio * wc2
-    w_min = 0.205
-    w_max = 0.4
+    w_min = 0.1
+    w_max = 0.6
     @show w_min,w_max
     p = [g,w_min,N]
 
@@ -122,10 +117,16 @@ for (i,N) in enumerate(Ns)
         push!(bifpoints,[bp.type,bp.param,bp.idx])
     end
     writedlm(cont_dir*"contres_fp_bifp_N$N"*".txt",bifpoints)
-
     
     #------------------solve for a lim cycle---------------
     #take lim cycle closer to wc2
+
+    #params for continuation
+    #w_min = w_min_ratio * wc1
+    #w_max = w_max_ratio * wc2
+    w_min = 0.201
+    w_max = 0.49
+    @show w_min,w_max
 
     #generate standard init cond
     p = [g,w_max,N]
@@ -136,7 +137,7 @@ for (i,N) in enumerate(Ns)
     sol = DifferentialEquations.solve(prob_de, Rodas5())
 
     #higher precision, shorter traj (couple of periods)
-    prob_de = ODEProblem(att_din!, sol.u[end], (0,100.), p, reltol = 1e-8, abstol = 1e-10)
+    prob_de = ODEProblem(att_din!, sol.u[end], (0,800.), p, reltol = 1e-8, abstol = 1e-10)
     sol = DifferentialEquations.solve(prob_de, Rodas5(),saveat=Δt)
     #display(plot(sol))
 
@@ -220,4 +221,53 @@ for (i,N) in enumerate(Ns)
     push!(real_parts_allN,real_parts)
     =#
     
+
+
+    #-----------------dominance fixed point continuation-----------------
+    #follow coex fp up until the loss of stability (high d Hopf)
+
+    w_min = 0.51
+    w_max = 0.7
+    @show w_min,w_max
+    p = [g,w_max,N]
+
+    fp_guess = zeros(2N) #dominance fp
+    M_nr = 1
+    w_M = (w_max*M_nr)/(N-1)
+    w_N = (w_max*N)/(N-1)
+    s = 1/(1 + w_M - w_N) #fixed point value (nonzero)     
+    fp_guess = [s,s,0.0,0.0]
+    @show s
+
+    #def problem 
+    prob = BifurcationProblem(F_ad,
+        fp_guess, # initial condition x0
+        p, # set of parameters
+        2,     # parameter index for continuation
+        record_from_solution = (x, p; k...) -> x[1])
+
+    #p_min = 0.1, p_max = wc1+0.01
+    opts_fp_cont = ContinuationPar(p_min = w_min, p_max = w_max, ds = -ds,
+        newton_options = NewtonPar(;eigsolver=DefaultEig(;which=real)), save_to_file=false,
+        save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,
+        dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = max_steps, tol_stability = 1e-10)
+
+    brfp = continuation(prob, PALC(), opts_fp_cont; 
+	verbosity = 3 ,plot = false)
+
+    #-------------------extract data from continuation res-------------------------
+    #solution info: x1 of the solution for each param 
+    params = brfp.branch.param 
+    x = brfp.branch.x
+    stability = brfp.stable 
+
+    writedlm(cont_dir*"contres_fp2_sols_N$N"*".txt",hcat(params,x,stability))
+
+    #bifurcation point info:
+    bifpoints = []
+    for bp in brfp.specialpoint
+        push!(bifpoints,[bp.type,bp.param,bp.idx])
+    end
+    writedlm(cont_dir*"contres_fp2_bifp_N$N"*".txt",bifpoints)
+
 end
