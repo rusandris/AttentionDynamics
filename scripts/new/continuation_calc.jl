@@ -55,8 +55,8 @@ funcs_po = (record_from_solution = (x, p; k...) -> begin
 #----------define some local parameters------------
 
 #dir for cont result
-cont_dir = "../../bifkit_data_gN5_210/"  
-mkpath(cont_dir)
+#cont_dir = "../../bifkit_data_gN5_210/"  
+#mkpath(cont_dir)
 
 Δt = 1e-2 #lim cycle sol sampling
 dsmax = 0.01 #max step size along bif curve
@@ -74,7 +74,8 @@ for (i,N) in enumerate(Ns)
     @show N
     #select g for each N (system size)
     #so g/(N-1) is the same for each N
-    g = gval_phase_diag * (N-1)
+    #g = gval_phase_diag * (N-1)
+    g = 5.0
     wc1 = (N-1)/g
     wc2 = (N-1)/N
 
@@ -83,9 +84,10 @@ for (i,N) in enumerate(Ns)
     fp_guess = ones(2N) #coexistence fp     
 
     #params for continuation
-    w_min = w_min_ratio * wc1
+    #w_min = w_min_ratio * wc1
     #w_max = w_max_ratio * wc2
-    w_max = 0.35
+    w_min = 0.205
+    w_max = 0.4
     @show w_min,w_max
     p = [g,w_min,N]
 
@@ -97,7 +99,8 @@ for (i,N) in enumerate(Ns)
             record_from_solution = (x, p; k...) -> x[1])
 
 
-    opts_fp_cont = ContinuationPar(p_min = 0.1, p_max = wc1+0.01, ds = ds,
+    #p_min = 0.1, p_max = wc1+0.01
+    opts_fp_cont = ContinuationPar(p_min = w_min, p_max = w_max, ds = ds,
         newton_options = NewtonPar(;eigsolver=DefaultEig(;which=real)), save_to_file=false,
         save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,
         dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = max_steps, tol_stability = 1e-10)
