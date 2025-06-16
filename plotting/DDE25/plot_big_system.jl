@@ -10,25 +10,32 @@ include("../defaults.jl")
 figs_dir = "./poster_figs/"
 mkpath(figs_dir)
 
+#-----------initial conditions-----------------
+#define well-controlled initial condition for each system size
+
+function generate_initial_condition(N)
+    u0 = zeros(Float64,2N)
+    for i in 1:2:2N 
+        u0[i] = (i+1)/2
+        u0[i+1] = 0.0 
+    end
+    return u0
+end
+
 #-------------------------------plot big system--------------------------
 diffeq = (alg = Tsit5(),)
 N = 300
 
 #try original equations
 u0 = generate_initial_condition(N)
+u0 = rand(2N)
 rc=9.0;rp=9.0;K=1.0;c=2.4;α=0.005
 p = [rc,rp,K,c,α]
 ds = create_original_ds(u0,p)
 
-wc1 = (N-1)/gs[1]
-wc2 = (N-1)/N
-
-traj,t = trajectory(ds,100;Ttr=1000,Δt=0.01)
+traj,t = trajectory(ds,200;Ttr=0,Δt=0.01)
 timeseries = Matrix(traj[:,[1:2:2N;]])
-
-linecolors = fill(:gray50,N-1)
-#linecolors[1] = :gray10
-pl = plot(t,timeseries[:,1:end],legend=false,ylims=[0.0,0.02],xlims=(1050,1075),la=0.3)
+pl = plot(t,timeseries[:,1:end],legend=false,ylims=[0.0,0.1],xlims=(1000,1020),la=0.3)
 plot!(t,timeseries[:,50:90],legend=false,ylims=[0.0,0.02],la=1.0,lw=3)
 plot!(xlabel=L"t",ylabel=L"L_i",guidefontsize=26,
     xticks=[1055:5:1070;],yticks=[0.0,0.01,0.02],tickfontsize=22,
