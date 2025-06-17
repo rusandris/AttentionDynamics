@@ -31,7 +31,7 @@ w = 0.1
 p = [g,w,N]
 
 #u0 = generate_initial_condition(N)
-u0 = [0.5,0.0,1.3,0.0] 
+u0 = [1.5,0.0,0.3,0.0] 
 #u0 = rand(2N)
 ds = create_ds(u0,p)
 
@@ -57,7 +57,7 @@ traj,t = trajectory(ds,10;Ttr=0,Δt=0.01)
 timeseries = Matrix(traj[:,[1:2:2N;]])
 
 pl = plot(timeseries[:,1],timeseries[:,2],lc=:gray10,
-    xlabel=L"x_1",ylabel=L"x_2",
+    xlabel="",ylabel=L"x_2",
     guidefontsize=36,tickfontsize=20,
     aspect_ratio=1,
     size=(500,500),
@@ -78,11 +78,12 @@ traj1,t = trajectory(ds,10,u1;Ttr=0,Δt=0.01)
 traj2,t = trajectory(ds,10,u2;Ttr=0,Δt=0.01)
 
 pl2 = plot(traj1[:,1],traj1[:,3],lc=:gray10,
-    xlabel=L"x_1",ylabel="",
+    xlabel=L"x_1",ylabel=L"x_2",
     guidefontsize=36,tickfontsize=20,
     aspect_ratio=1,
     size=(500,500),
     dpi=300,title="Stable dominance \n"*L"w=%$(ds.integ.p[2])",
+    titlevspan=1.1,
     legend=false)
 
 plot!(traj1[120:121,1],traj1[120:121,3],arrow=:arrow,lw=3,lc=:gray10)
@@ -110,6 +111,6 @@ plot!([u_d1[1]],[u_d1[3]],st=:scatter,ms=ms,mc=:gray10,markerstrokecolor=:gray10
 plot!([u_d2[1]],[u_d2[3]],st=:scatter,ms=ms,mc=:gray10,markerstrokecolor=:gray10,markerstrokealpha=1.0)
 plot!([u_c[1]],[u_c[3]],st=:scatter,ms=ms,mc=:white,markerstrokecolor=:gray10,markerstrokealpha=1.0)
 
-plc = plot(pl,pl2,layout=(1,2),size=(1000,500),left_margin=6Plots.mm,bottom_margin=7Plots.mm)
+plc = plot(pl,pl2,layout=(2,1),size=(500,1000),left_margin=6Plots.mm,bottom_margin=3Plots.mm)
 
 savefig(plc,figs_dir*"system_stable_fixed_N$N"*"_g$g"*".pdf")

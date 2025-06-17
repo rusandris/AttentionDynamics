@@ -5,8 +5,6 @@ cd(@__DIR__)
 include("../../plotting/plot_functions/orbit_diagrams.jl")
 include("../../plotting/defaults.jl")
 #-----------------------plot od data-----------------------
-#include standard parameters and init conditions
-include("bif_floq_od_method_parameters.jl")
 
 #data dirs
 od_dir = "../../orbit_diagram_data_gN5_210/"
@@ -16,6 +14,11 @@ cont_dir = "../../bifkit_data_gN5_210/"
 #create dir for figs
 figs_dir = "../../paper_figs/"
 mkpath(figs_dir)
+
+#saved params
+global_params = readdlm(cont_dir*"global_params_Ns_g.txt")
+Ns = Int.(global_params[1:end-1])
+gval_phase_diag = global_params[end]
 
 #xlims=(0.5,0.65)
 xlims_pl=(0.1,0.4)
@@ -40,7 +43,7 @@ for (i,N) in enumerate(Ns)
     wc2 = (N-1)/N
 
     pl = plot_orbit_diagram(ps,od;OD_DEFAULTS...,ma=0.4,ms=0.5,tickfontsize=8,ylabel="",xlims=xlims_pl,widen=false)
-    i == 1 && ylabel!(pl,L"x_1 pmap")
+    i == 1 && ylabel!(pl,L"x_1")
 
     vline!([wc1],ls=:dash,lc=:gray10)
     vline!([wc2],ls=:dash,lc=:gray10)
@@ -50,11 +53,6 @@ end
 pl_od=plot(plots_od...,layout=(1,length(Ns)),left_margin=8Plots.mm,bottom_margin=5Plots.mm);
 
 #----------------plot each branch of periodic orbits---------------------
-
-#saved params
-global_params = readdlm(cont_dir*"global_params_Ns_g.txt")
-Ns = Int.(global_params[1:end-1])
-gval_phase_diag = global_params[end]
 
 contres_files = readdir(cont_dir)
 
@@ -102,7 +100,7 @@ for (i,N) in enumerate(Ns)
         title=L"N=%$N"*"\n"*L"g/(N-1)=%$(round(gval_phase_diag;digits=2))",
         ls=linestyle,lw=linewidth,xformatter=:none,xlims=xlims_pl)
 
-    display(pl)
+    #display(pl)
     @show length(contres_fp_bifp)
     #plot some (not all) bif points
     for bp in eachrow(contres_fp_bifp)
@@ -154,13 +152,13 @@ for (i,N) in enumerate(Ns)
             scatter!([crit_param], [maxs[idx]],ms=3,mc=:green,markerstrokewidth=0.0)
         end
     end
-    display(pl)
+    #display(pl)
     #plot!(pl,brpo,linewidthunstable=0,linewidthstable=0) #plot only bif points hack
 
     vline!(pl,[wc1],ls=:dash,lc=:gray10)
     vline!(pl,[wc2],ls=:dash,lc=:gray10)
     i == 1 && ylabel!(pl,L"max(x_1)")
-    display(pl)
+    #display(pl)
     push!(branch_plots,pl)
 end
 pl_bif = plot(branch_plots...,layout=(1,length(Ns)),
@@ -183,26 +181,34 @@ for (i,N) in enumerate(Ns)
     od_lyap_files_N = od_lyap_files[findall(f -> occursin("N$N",f),od_lyap_files)]
     lyaps_file = od_lyap_files_N[findfirst(f -> occursin("lyaps",f),od_lyap_files_N)]
 
+    @show contres_eig_file
     #read the matched files
     contres_eig = readdlm(cont_dir*contres_eig_file)
 
     #filter eig results
     #contains real and imag parts separately
-    #
+    #first N cols are real parts
+    #last N cols are imag parts
 
     realparts = contres_eig[:,1:2N]
     imagparts = contres_eig[:,(2N+1):end]
 
     #how to filter out zero exponents
-    
+    #only select floquet multipliers that cross zero 
+    extremas = vec(extrema(realparts;dims=1))
+    signs = [extremas[i][1]*extremas[i][2] for i in 1:2N]
+    realparts_sign_change = signs .< 0.0
+    @show realparts_sign_change
+
     realparts_max = maximum(realparts;dims=2)
 
-
+    @show cont_dir*contres_sol_file
     contres_sols = readdlm(cont_dir*contres_sol_file)
     lyaps = readdlm(od_dir*lyaps_file)[:,2]
     lyaps_params = readdlm(od_dir*lyaps_file)[:,1]
 
     params = contres_sols[:,1]
+    #@show params
 
     #critical values
     g = gval_phase_diag * (N-1)
@@ -211,7 +217,8 @@ for (i,N) in enumerate(Ns)
 
     #floq maxreal
     @show length(params),length(realparts_max)
-    pl_maxfloq = plot(params,realparts,mc=:gray10,xformatter=:none,guidefontsize=guide_fontsize,
+    #@show realparts[:,1]
+    pl_maxfloq = plot(params,realparts[:,realparts_sign_change],mc=:gray10,xformatter=:none,guidefontsize=guide_fontsize,
         ylims=(Inf,Inf),xlims=xlims_pl,markershape=:cross,ms=1,lc=:gray10,markerstrokewidth=0.0,legend=false)
 
     #floq maximag
@@ -236,5 +243,5 @@ pl_floq = plot(plots_maxfloq...,layout=(1,length(Ns)),
 
 pl = plot(pl_bif,pl_floq,pl_od,layout=(3,1),size=fig_size,dpi=300)
 #savefig(pl,"../../continuation_test_maxreal.png")
-savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_od_Ttr20000_noreinit_g5_N210.png")
+#savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_od_Ttr20000_noreinit_g5_N210_test.png")
 

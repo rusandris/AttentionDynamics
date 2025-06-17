@@ -208,9 +208,11 @@ plot!(ws, xs_fp2, lc=:gray10,
 
 annotate!(pl_bif,0.15, 3.0, text("stable fixed point \n (coexistence)", :gray10, :center, 6))
 annotate!(pl_bif,0.55, 3.0, text("stable fixed point \n (dominance)", :gray10, :center, 6))
+scatter!([wc1],[1.0],ms=3,mc=:gray10) #coexistence
+scatter!([wc2],[fp2(wc2)],ms=3,mc=:gray10) #dominance
 
+#=
 
-@show length(contres_fp_bifp)
 #plot some (not all) bif points
 for bp in eachrow(contres_fp_bifp)
     type,crit_param,idx = bp
@@ -220,6 +222,7 @@ for bp in eachrow(contres_fp_bifp)
         scatter!([crit_param], [xs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
     end
 end
+=#
 
 #-------------------plot lim cycle results----------------------
 
@@ -272,4 +275,4 @@ vline!(pl_bif,[wc2],ls=:dash,lw=2,lc=:gray10)
 l = @layout [a{0.8h}; b{0.2h}]
 pl = plot(pl_bif,pl_eig,layout=l,size=(500,300))
 
-
+savefig(pl,figs_dir*"system_small_N2_bifdiag.png")

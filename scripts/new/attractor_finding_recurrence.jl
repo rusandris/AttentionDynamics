@@ -71,8 +71,8 @@ atr2 = attractors[2]
 
 #plot attractors
 pp = Plots.plot(atr1[:,1],atr1[:,3];lw=2,lc=:purple,markershape=:circle,
-    ms=8,mc=:purple,markerstrokewidth=0.0,xlabel=L"x_1",ylabel=L"x_2",label=L"1",DEFAULTS...)
-Plots.plot!(pp,atr2[:,1],atr2[:,3],lw=2,lc=:blue,markershape=:utriangle,label=L"2",
+    ms=8,mc=:purple,markerstrokewidth=0.0,xlabel=L"x_1",ylabel=L"x_2",label="limit cycle " * L"1",DEFAULTS...)
+Plots.plot!(pp,atr2[:,1],atr2[:,3],lw=2,lc=:blue,markershape=:utriangle,label="limit cycle " * L"2",
     ms=8,mc=:blue,markerstrokewidth=0.0,leftmargin=8Plots.mm)
 
 #plot time series
