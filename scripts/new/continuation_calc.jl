@@ -70,7 +70,7 @@ for (i,N) in enumerate(Ns)
     #select g for each N (system size)
     #so g/(N-1) is the same for each N
     #g = gval_phase_diag * (N-1)
-    g = 5.0
+    g = g_rel*(N-1)
     wc1 = (N-1)/g
     wc2 = (N-1)/N
 
@@ -122,10 +122,10 @@ for (i,N) in enumerate(Ns)
     #take lim cycle closer to wc2
 
     #params for continuation
-    #w_min = w_min_ratio * wc1
+    w_min = w_min_ratio * wc1
     #w_max = w_max_ratio * wc2
-    w_min = 0.201
-    w_max = 0.49
+    #w_min = 0.201
+    w_max = 0.35
     @show w_min,w_max
 
     #generate standard init cond
@@ -137,7 +137,7 @@ for (i,N) in enumerate(Ns)
     sol = DifferentialEquations.solve(prob_de, Rodas5())
 
     #higher precision, shorter traj (couple of periods)
-    prob_de = ODEProblem(att_din!, sol.u[end], (0,800.), p, reltol = 1e-8, abstol = 1e-10)
+    prob_de = ODEProblem(att_din!, sol.u[end], (0,200.), p, reltol = 1e-8, abstol = 1e-10)
     sol = DifferentialEquations.solve(prob_de, Rodas5(),saveat=Δt)
     #display(plot(sol))
 
@@ -222,7 +222,7 @@ for (i,N) in enumerate(Ns)
     =#
     
 
-
+    #=
     #-----------------dominance fixed point continuation-----------------
     #follow coex fp up until the loss of stability (high d Hopf)
 
@@ -269,5 +269,6 @@ for (i,N) in enumerate(Ns)
         push!(bifpoints,[bp.type,bp.param,bp.idx])
     end
     writedlm(cont_dir*"contres_fp2_bifp_N$N"*".txt",bifpoints)
+    =#
 
 end

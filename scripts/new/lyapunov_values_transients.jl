@@ -14,7 +14,7 @@ g = gs[30]
 
 d0 = 1e-9
 T = 5000
-Ttr = 10^4
+Ttr = 10^5
 
 for (n,N) in enumerate(Ns)
     g_N = g * (N-1)
@@ -28,7 +28,7 @@ for (n,N) in enumerate(Ns)
     for (i,w) in enumerate(ws)
         @show w
         @show current_parameters(pds)
-        @show current_states(pds)
+        #@show current_states(pds)
         reinit!(pds)
         set_parameter!(pds,2,w)
         Λ[i,n] = lyapunov(pds,T;Ttr=Ttr,Δt=1.0)

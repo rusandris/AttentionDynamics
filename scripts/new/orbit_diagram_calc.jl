@@ -13,7 +13,7 @@ include("bif_floq_od_method_parameters.jl")
 #----------define local parameters------------
 
 #dir for od and lyapunovs
-od_dir = "../../orbit_diagram_data_gN5_210/"
+od_dir = "../../plotting/DDE25/orbit_diagram_data_gN5/"
 mkpath(od_dir)
 
 n = 100 # nr of points for each param value
@@ -30,7 +30,7 @@ for (i,N) in enumerate(Ns)
     @show N
     #select g for each N (system size)
     #so g/(N-1) is the same for each N
-    g = gval_phase_diag * (N-1)
+    g = g_rel * (N-1)
     wc1 = (N-1)/g
     wc2 = (N-1)/N
 
@@ -39,10 +39,10 @@ for (i,N) in enumerate(Ns)
     u0 = generate_initial_condition(N)
     @show u0
 
-    #params for continuation
+    #params for od
     w_min = w_min_ratio_od * wc1
     #w_max = w_max_ratio * wc2
-    w_max = 0.35
+    w_max = 0.4
     w_values = range(w_max,w_min;length=nw) 
     @show length(w_values)
 
@@ -66,7 +66,7 @@ for (i,N) in enumerate(Ns)
     @show N
     #select g for each N (system size)
     #so g/(N-1) is the same for each N
-    g = gval_phase_diag * (N-1)
+    g = g_rel * (N-1)
     wc1 = (N-1)/g
     wc2 = (N-1)/N
 
@@ -75,10 +75,13 @@ for (i,N) in enumerate(Ns)
     u0 = generate_initial_condition(N)
     @show u0
 
-    #params for continuation
-    w_min = 1.01 * wc1
+    #w_min = 1.01 * wc1
     #w_max = 0.9 * wc2
-    w_max = 0.35
+    #params for lyaps 
+    w_min = w_min_ratio_od * wc1
+    #w_max = w_max_ratio * wc2
+
+    w_max = 0.4
     w_values = range(w_max,w_min;length=nw) 
     @show length(w_values)
 
