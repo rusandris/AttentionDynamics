@@ -14,28 +14,27 @@ include("bif_floq_od_method_parameters.jl")
 #N=6 it dissapears for shorter transients
 
 #read w and g params
-#ws_saved = readdlm("../../plotting/data/N=10.0_wvalues.txt")
-#gs_saved = readdlm("../../plotting/data/N=10.0_gvalues.txt")
+ws_saved = readdlm("../../plotting/data/N=10.0_wvalues.txt")
+gs_saved = readdlm("../../plotting/data/N=10.0_gvalues.txt")
 #gs = gs_saved / (10-1)
 
-data_dir = "../../phasediag_data_300/"
+
+data_dir = "../../phasediag_data_N10/"
 mkpath(data_dir)
 diffeq = (alg = Tsit5(),)
-N = 300
-ws = range(0.4,0.75;length=20)
-gs = range(1800,2000;length=20)
-
+N = 10
+ws = range(0.4,1.0;length=20)
+g_rel = 5
+gs = range(4.0,6.0;length=20) .* 5
+#=
 #try original equations
 u0 = generate_initial_condition(N)
 rc=9.0;rp=9.0;K=1.0;c=2.4;α=0.005
 p = [rc,rp,K,c,α]
 ds = create_original_ds(u0,p)
-
+=#
 wc1 = (N-1)/gs[1]
 wc2 = (N-1)/N
-
-
-#=
 
 #generate standard init cond
 #u0 = rand(2N)
@@ -45,22 +44,18 @@ T_fp = 100
 Ttr_fp = 100
 Δt_fp = 0.1
 fp_settings = [T_fp,Ttr_fp,Δt_fp]
-Ttrs = [1000]
-T = 5000
+Ttrs = [Ttr]
+#T = 5000
 lyap_vals = []
 
 @time for (i,Ttr) in enumerate(Ttrs)
     @show Ttr
-    @time Λ = lyapunov_diagram(ds,gs,ws; T=T, Ttr=Ttr, Δt=1.0, fp_settings=fp_settings, 
+    @time Λ = lyapunov_diagram(ds,gs,ws; T=T, Ttr=Ttr, Δt=0.5, fp_settings=fp_settings, 
         d0=1e-9, ut=1e-6, lt=1e-12,save=false,realtime_plotting=false,parallelize=false)
     push!(lyap_vals,Λ)
 end
 
-for (i,Λ) in enumerate(lyap_vals)
-    writedlm("../../N5_phasediagram_test_Ttr_max_$(Ttrs[i])"*".txt",Λ)
-
-end
-writedlm("../../N5_phasediag_params.txt",hcat(ws,gs))
+writedlm(data_dir*"phasediag_params.txt",hcat(ws,gs))
 pl1 = plot_phase_diagram(lyap_vals[1],ws[:],gs[:],5;HEATMAP_DEFAULTS...)
 pl2 = plot_phase_diagram(lyap_vals[2],ws_saved[:],gs_N[:],5;HEATMAP_DEFAULTS...)
 pl3 = plot_phase_diagram(lyap_vals[3],ws_saved[:],gs_N[:],5;HEATMAP_DEFAULTS...)
@@ -70,4 +65,3 @@ savefig(pl3,"../../N5_phasediagram_Ttr_max_$(Ttrs[3])"*".png")
 
 
 plot(ws,lyap_vals,ylims=(-0.2,Inf),labels = ["Ttrs=$(Ttrs[1])" "Ttrs=$(Ttrs[2])" "Ttrs=$(Ttrs[3])"])
-=#

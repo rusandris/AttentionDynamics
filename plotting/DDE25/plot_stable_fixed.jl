@@ -56,17 +56,19 @@ u_c = ones(4)
 traj,t = trajectory(ds,10;Ttr=0,Δt=0.01)
 timeseries = Matrix(traj[:,[1:2:2N;]])
 
-pl = plot(timeseries[:,1],timeseries[:,2],lc=:gray10,
+pl = plot(timeseries[:,1],timeseries[:,2],lc=logocolors.red,
     xlabel="",ylabel=L"x_2",
     guidefontsize=36,tickfontsize=20,
     aspect_ratio=1,
     size=(500,500),
+    ylims=(-0.1,4),
+    xlims=(-0.1,4),
     dpi=300,title="Stable coexistence \n"*L"w=%$(ds.integ.p[2]),1/\epsilon=%$g",
-    legend=false)
-plot!(timeseries[80:81,1],timeseries[80:81,2],arrow=:arrow,lw=3,lc=:gray10)
-plot!([u_d1[1]],[u_d1[3]],st=:scatter,ms=ms,mc=:white,markerstrokecolor=:gray10,markerstrokealpha=1.0)
-plot!([u_d2[1]],[u_d2[3]],st=:scatter,ms=ms,mc=:white,markerstrokecolor=:gray10,markerstrokealpha=1.0)
-plot!([u_c[1]],[u_c[3]],st=:scatter,ms=ms,mc=:gray10)
+    label=L"w=%$w")
+plot!(timeseries[80:81,1],timeseries[80:81,2],arrow=:arrow,lw=5,lc=logocolors.red)
+#plot!([u_d1[1]],[u_d1[3]],st=:scatter,ms=ms,mc=logocolors.blue,markerstrokecolor=logocolors.blue,markerstrokealpha=1.0)
+#plot!([u_d2[1]],[u_d2[3]],st=:scatter,ms=ms,mc=logocolors.blue,markerstrokecolor=logocolors.blue,markerstrokealpha=1.0)
+plot!([u_c[1]],[u_c[3]],st=:scatter,ms=ms,mc=logocolors.red)
 
 
 #plot stable dominance
@@ -77,19 +79,19 @@ u2 = [1.0,0.0,2.0,0.0]
 traj1,t = trajectory(ds,10,u1;Ttr=0,Δt=0.01)
 traj2,t = trajectory(ds,10,u2;Ttr=0,Δt=0.01)
 
-pl2 = plot(traj1[:,1],traj1[:,3],lc=:gray10,
+plot!(pl,traj1[:,1],traj1[:,3],lc=logocolors.blue,
     xlabel=L"x_1",ylabel=L"x_2",
     guidefontsize=36,tickfontsize=20,
     aspect_ratio=1,
     size=(500,500),
     dpi=300,title="Stable dominance \n"*L"w=%$(ds.integ.p[2])",
     titlevspan=1.1,
-    legend=false)
+    label=L"w=%$w")
 
-plot!(traj1[120:121,1],traj1[120:121,3],arrow=:arrow,lw=3,lc=:gray10)
+plot!(pl,traj1[120:121,1],traj1[120:121,3],arrow=:arrow,lw=5,lc=logocolors.blue)
 
-plot!(traj2[:,1],traj2[:,3],lc=:gray10)
-plot!(traj2[120:121,1],traj2[120:121,3],arrow=:arrow,lw=3,lc=:gray10)
+plot!(pl,traj2[:,1],traj2[:,3],lc=logocolors.blue)
+plot!(pl,traj2[120:121,1],traj2[120:121,3],arrow=:arrow,lw=5,lc=logocolors.blue)
 
 
 #plot fixed points
@@ -106,11 +108,11 @@ u_d2 = [0,0,x,x]
 #M=2: coexistence
 u_c = ones(4)
 
-#plot!(timeseries[50:51,1],timeseries[50:51,2],arrow=:arrow,lw=3,lc=:gray10)
-plot!([u_d1[1]],[u_d1[3]],st=:scatter,ms=ms,mc=:gray10,markerstrokecolor=:gray10,markerstrokealpha=1.0)
-plot!([u_d2[1]],[u_d2[3]],st=:scatter,ms=ms,mc=:gray10,markerstrokecolor=:gray10,markerstrokealpha=1.0)
-plot!([u_c[1]],[u_c[3]],st=:scatter,ms=ms,mc=:white,markerstrokecolor=:gray10,markerstrokealpha=1.0)
+#plot!(timeseries[50:51,1],timeseries[50:51,2],arrow=:arrow,lw=5,lc=:gray10)
+plot!([u_d1[1]],[u_d1[3]],st=:scatter,ms=ms,mc=logocolors.blue,markerstrokecolor=logocolors.blue,markerstrokealpha=1.0)
+plot!([u_d2[1]],[u_d2[3]],st=:scatter,ms=ms,mc=logocolors.blue,markerstrokecolor=logocolors.blue,markerstrokealpha=1.0)
+#plot!([u_c[1]],[u_c[3]],st=:scatter,ms=ms,mc=:white,markerstrokecolor=:gray10,markerstrokealpha=1.0)
 
-plc = plot(pl,pl2,layout=(2,1),size=(500,1000),left_margin=6Plots.mm,bottom_margin=3Plots.mm)
+plc = plot(pl,pl2,layout=(2,1),size=(500,1000),left_margin=-10Plots.mm,bottom_margin=-6Plots.mm)
 
-savefig(plc,figs_dir*"system_stable_fixed_N$N"*"_g$g"*".pdf")
+#savefig(plc,figs_dir*"system_stable_fixed_N$N"*"_g$g"*".pdf")
