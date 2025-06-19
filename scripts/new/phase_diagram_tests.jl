@@ -21,11 +21,14 @@ gs_saved = readdlm("../../plotting/data/N=10.0_gvalues.txt")
 
 data_dir = "../../phasediag_data_N10/"
 mkpath(data_dir)
-diffeq = (alg = Tsit5(),)
+figs_dir = "../../plotting/DDE25/poster_figs/"
+mkpath(figs_dir)
+
+diffeq = (alg = Tsit5(),dt = 1e-3,dtmax=1e-2,adaptive=true,maxiters=1e15)
 N = 10
-ws = range(0.4,1.0;length=20)
+ws = range(0.5,1.0;length=40)
 g_rel = 5
-gs = range(4.0,6.0;length=20) .* 5
+gs = range(1.2,2.0;length=40) .* (N-1)
 #=
 #try original equations
 u0 = generate_initial_condition(N)
@@ -39,7 +42,7 @@ wc2 = (N-1)/N
 #generate standard init cond
 #u0 = rand(2N)
 u0 = generate_initial_condition(N)
-ds = create_ds(u0,[5,0.5,N])
+ds = create_ds(u0,[5,0.5,N];diffeq)
 T_fp = 100
 Ttr_fp = 100
 Δt_fp = 0.1
@@ -50,16 +53,18 @@ lyap_vals = []
 
 @time for (i,Ttr) in enumerate(Ttrs)
     @show Ttr
-    @time Λ = lyapunov_diagram(ds,gs,ws; T=T, Ttr=Ttr, Δt=0.5, fp_settings=fp_settings, 
+    @time Λ = lyapunov_diagram(ds,gs,ws; T=T, Ttr=Ttr, Δt=0.1, fp_settings=fp_settings, 
         d0=1e-9, ut=1e-6, lt=1e-12,save=false,realtime_plotting=false,parallelize=false)
     push!(lyap_vals,Λ)
 end
 
 writedlm(data_dir*"phasediag_params.txt",hcat(ws,gs))
-pl1 = plot_phase_diagram(lyap_vals[1],ws[:],gs[:],5;HEATMAP_DEFAULTS...)
-pl2 = plot_phase_diagram(lyap_vals[2],ws_saved[:],gs_N[:],5;HEATMAP_DEFAULTS...)
-pl3 = plot_phase_diagram(lyap_vals[3],ws_saved[:],gs_N[:],5;HEATMAP_DEFAULTS...)
-savefig(pl1,"../../N5_phasediagram_Ttr_max_$(Ttrs[1])"*".png")
+writedlm(data_dir*"lyap_values.txt",lyap_vals)
+
+pl1 = plot_phase_diagram(lyap_vals[1],ws[:],gs[:],N;HEATMAP_DEFAULTS...,ylabel=L"1/(\epsilon(N-1))")
+pl2 = plot_phase_diagram(lyap_vals[2],ws_saved[:],gs_N[:],N;HEATMAP_DEFAULTS...)
+pl3 = plot_phase_diagram(lyap_vals[3],ws_saved[:],gs_N[:],N;HEATMAP_DEFAULTS...)
+savefig(pl1,figs_dir*"N10_phasediagram_Ttr_max_$(Ttrs[1])"*".png")
 savefig(pl2,"../../N5_phasediagram_Ttr_max_$(Ttrs[2])"*".png")
 savefig(pl3,"../../N5_phasediagram_Ttr_max_$(Ttrs[3])"*".png")
 

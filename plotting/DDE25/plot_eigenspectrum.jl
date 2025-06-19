@@ -36,6 +36,178 @@ u0 = [0.5,0.0,1.3,0.0]
 #u0 = rand(2N)
 ds = create_ds(u0,p)
 
+
+#------------------------bifurcation diagram---------------------------------
+
+#data dirs
+cont_dir = "../../plotting/DDE25/bifkit_data_g5_N2/"
+#cont_dir = "../../bifkit_data_gN5/"
+
+#create dir for figs
+figs_dir = "./poster_figs/"
+mkpath(figs_dir)
+plot_srate = 1
+
+#saved params
+global_params = readdlm(cont_dir*"global_params_Ns_g.txt")
+Ns = Int.(global_params[1:end-1])
+N = Ns[1]
+g = global_params[end]
+
+contres_files = readdir(cont_dir)
+
+#xlims = (ws[1],ws[end])
+ylims_bif = (0.0,4.0)
+
+
+#read cont results
+
+#find files that match N 
+contres_files_N = contres_files[findall(f -> occursin("N$N",f),contres_files)]
+
+#limit cycle continuation results
+contres_sol_file = contres_files_N[findfirst(f -> occursin("contres_po_sols",f),contres_files_N)]
+contres_bifp_file = contres_files_N[findfirst(f -> occursin("contres_po_bifp",f),contres_files_N)]
+
+#read the matched files
+contres_sols = readdlm(cont_dir*contres_sol_file)
+contres_bifp = readdlm(cont_dir*contres_bifp_file)
+
+ws = [0.1:0.01:0.6;]
+#critical values
+wc1 = (N-1)/g
+wc2 = (N-1)/N
+
+#--------------------plot bifdiagram------------------
+
+#-------------------plot fixed point results----------------------
+#use analytical results for fixed points
+xs_fp = ones(length(ws))
+
+stability_fp = Bool.( ws .< wc1 )
+stability_fp2 = Bool.( ws .> wc2 )
+
+linestyle_fp = [stb ? :solid : :dash for stb in stability_fp]
+linewidth_fp = [stb ? 4 : 2 for stb in stability_fp]
+
+linestyle_fp2 = [stb ? :solid : :dash for stb in stability_fp2]
+linewidth_fp2 = [stb ? 4 : 2 for stb in stability_fp2]
+
+
+pl_bif = plot(ws, xs_fp, lc=:gray10,
+    legend=false,guidefontsize=guide_fontsize,
+    xlims=xlims,ylims=ylims_bif,
+    #title=L"N=%$N"*"\n"*L"g/(N-1)=%$(round(gval_phase_diag;digits=2))",
+    ls=linestyle_fp,lw=linewidth_fp,
+    size=(800,500),
+    xformatter=:auto,)
+
+fp2(w) = 1/(1-w)
+xs_fp2 = fp2.(ws)
+
+plot!(ws, xs_fp2, lc=:gray10,
+    legend=false,guidefontsize=guide_fontsize,xlims=xlims,ylims=ylims_bif,
+    ls=linestyle_fp2,lw=linewidth_fp2)
+
+annotate!(pl_bif,0.15, 3.0, text("coexistence", :gray10, :center, 12))
+annotate!(pl_bif,0.55, 3.0, text("dominance", :gray10, :center, 12))
+
+
+#-------------------------plot bif points--------------------------
+scatter!([wc1],[1.0],ms=8,mc=logocolors.red) #coexistence
+scatter!([wc2],[fp2(wc2)],ms=8,mc=logocolors.blue) #dominance
+
+
+#=
+
+#plot some (not all) bif points
+for bp in eachrow(contres_fp_bifp)
+    type,crit_param,idx = bp
+    if type == "ns"  
+        scatter!([crit_param], [xs[idx]],ms=3,mc=:orange,markerstrokewidth=0.0)
+    elseif type == "nd"
+        scatter!([crit_param], [xs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
+    end
+end
+=#
+
+#-------------------plot lim cycle results----------------------
+
+params = contres_sols[:,1]
+maxs = contres_sols[:,3]
+mins = contres_sols[:,2]
+stability = Bool.(contres_sols[:,end])
+
+linestyle = [stb ? :solid : :dot for stb in stability]
+linewidth = [stb ? 4 : 2 for stb in stability]
+#sol_sampling = [stb ? 1 : 20 for stb in stability]
+
+plot!(pl_bif,params[1:plot_srate:end], maxs[1:plot_srate:end],lc=:gray10,legend=false,guidefontsize=guide_fontsize,
+ls=linestyle[1:plot_srate:end],lw=linewidth[1:plot_srate:end])
+
+annotate!(pl_bif,0.35, 2.5, text("stable limit cycle", :gray10, :center, 12))
+
+#=
+
+#plot stable and unstable parts separately
+maxs_stable = maxs[stability]  #select stable 
+maxs_unstable = maxs[.!(stability)] #negation
+
+plot!(pl,params[stability][1:plot_srate:end], maxs_stable[1:plot_srate:end], lc=:gray10,legend=false,guidefontsize=guide_fontsize,
+    ls=:solid,lw=1,xformatter=:auto,xlims=xlims_pl)
+
+plot!(pl,params[.!(stability)][1:plot_srate:end], maxs_unstable[1:plot_srate:end], mc=:gray10,legend=false,guidefontsize=guide_fontsize,
+    st=:scatter,ms=1,xformatter=:auto,xlims=xlims_pl)
+
+=#
+
+#plot some (not all) bif points
+
+for bp in eachrow(contres_bifp)
+    type,crit_param,idx = bp
+    if type == "ns"  
+        scatter!([crit_param], [maxs[idx]],ms=3,mc=:orange,markerstrokewidth=0.0)
+    elseif type == "nd"
+        scatter!([crit_param], [maxs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
+    elseif type == "bp"
+        scatter!([crit_param], [maxs[idx]],ms=3,mc=:green,markerstrokewidth=0.0)
+    end
+end
+#plot!(pl,brpo,linewidthunstable=0,linewidthstable=0) #plot only bif points hack
+
+#--------------------------plot critical values------------------------
+
+rectangle(w, h, x, y) = Shape(x .+ [0,w,w,0], y .+ [0,0,h,h])
+plot!(rectangle(0.1,4,0.1,0), opacity=.2,c=logocolors.red)
+plot!(rectangle(0.1,4,0.5,0), opacity=.2,c=logocolors.blue)
+
+
+vline!(pl_bif,[wc1],ls=:dash,lw=3,lc=logocolors.red)
+vline!(pl_bif,[wc2],ls=:dash,lw=3,lc=logocolors.blue)
+
+annotate!(wc1+0.01, 3.5, text(L"w_c^{(1)} = \epsilon (N-1)", logocolors.red, :center, 20))
+annotate!(wc2+0.02, 3.5, text(L"w_c^{(2)} = (N-1)/N", logocolors.blue, :center, 20))
+
+#-------------------------------bif points----------------------------
+annotate!(0.22, 0.8, text("HOPF", :gray10, :center, 12))
+annotate!(0.55, 1.7, text("HOMOCLINIC", :gray10, :center, 10))
+
+
+#plot!(inset = (1, bbox(1.0,1.0,0.5,1.0)), subplot = 2)
+#plot!(inset = (1, bbox(0.0,0.85,1.0,0.1)), subplot = 2)
+pl_bif
+#savefig(pl_bif,figs_dir*"system_small_N2_bifdiag.png")
+
+
+#l = @layout [a{0.8h}; b{0.2h}]
+#pl = plot(pl_bif,pl_eig,layout=l,size=(500,300))
+
+#savefig(pl,figs_dir*"system_small_N2_bifdiag.png")
+
+
+#---------------------------------eigvals,lyap----------------------------------------
+
+
 #eigval spectrum
 #coexistence fixed point 
 u = ones(2N)
@@ -76,9 +248,9 @@ J = build_jacobian(u,p)
 numerical_spectrum =  eigvals!(J)
 analytical_spectrum = fixed_point_eigen_spectrum(N,2,p)
 
-
+#=
 #---------------------calculate eigenvalues for a range of ws--------------------
-ws = [0.1:0.01:0.6;]
+
 
 #reals,imags=eigen_spectrum(J,ws)
 λ_specs_coex = []
@@ -99,8 +271,7 @@ imagparts_coex = stack(imag.(λ_specs_coex))'
 realparts_dom = stack(real.(λ_specs_dom))'
 imagparts_dom = stack(imag.(λ_specs_dom))'
 
-xlims = (ws[1],ws[end])
-ylims_bif = (0.0,4.0)
+
 
 #plot coexistence fixed point spectrum
 pl_eig = plot(ws,realparts_coex[:,[1,2]],ylabel="",xlabel=L"w",
@@ -139,140 +310,6 @@ for (i,w) in enumerate(ws)
     @show lyaps[i]
 end
 plot!(pl_eig,ws,lyaps,lw=5,lc=:gray10)
-
-
-#------------------------bifurcation diagram---------------------------------
-
-#data dirs
-cont_dir = "../../plotting/DDE25/bifkit_data_g5_N2/"
-#cont_dir = "../../bifkit_data_gN5/"
-
-#create dir for figs
-figs_dir = "./poster_figs/"
-mkpath(figs_dir)
-plot_srate = 1
-
-#saved params
-global_params = readdlm(cont_dir*"global_params_Ns_g.txt")
-Ns = Int.(global_params[1:end-1])
-N = Ns[1]
-g = global_params[end]
-
-contres_files = readdir(cont_dir)
-
-
-#read cont results
-
-#find files that match N 
-contres_files_N = contres_files[findall(f -> occursin("N$N",f),contres_files)]
-
-#limit cycle continuation results
-contres_sol_file = contres_files_N[findfirst(f -> occursin("contres_po_sols",f),contres_files_N)]
-contres_bifp_file = contres_files_N[findfirst(f -> occursin("contres_po_bifp",f),contres_files_N)]
-
-#read the matched files
-contres_sols = readdlm(cont_dir*contres_sol_file)
-contres_bifp = readdlm(cont_dir*contres_bifp_file)
-
-#critical values
-wc1 = (N-1)/g
-wc2 = (N-1)/N
-
-#--------------------plot bifdiagram------------------
-
-#-------------------plot fixed point results----------------------
-#use analytical results for fixed points
-xs_fp = ones(length(ws))
-
-stability_fp = Bool.( ws .< wc1 )
-stability_fp2 = Bool.( ws .> wc2 )
-
-linestyle_fp = [stb ? :solid : :dash for stb in stability_fp]
-linewidth_fp = [stb ? 2 : 1 for stb in stability_fp]
-
-linestyle_fp2 = [stb ? :solid : :dash for stb in stability_fp2]
-linewidth_fp2 = [stb ? 2 : 1 for stb in stability_fp2]
-
-
-pl_bif = plot(ws, xs_fp, lc=:gray10,
-    legend=false,guidefontsize=guide_fontsize,xlims=xlims,ylims=ylims_bif,
-    #title=L"N=%$N"*"\n"*L"g/(N-1)=%$(round(gval_phase_diag;digits=2))",
-    ls=linestyle_fp,lw=linewidth_fp,xformatter=:none)
-
-fp2(w) = 1/(1-w)
-xs_fp2 = fp2.(ws)
-
-plot!(ws, xs_fp2, lc=:gray10,
-    legend=false,guidefontsize=guide_fontsize,xlims=xlims,ylims=ylims_bif,
-    ls=linestyle_fp2,lw=linewidth_fp2)
-
-annotate!(pl_bif,0.15, 3.0, text("stable fixed point \n (coexistence)", :gray10, :center, 6))
-annotate!(pl_bif,0.55, 3.0, text("stable fixed point \n (dominance)", :gray10, :center, 6))
-scatter!([wc1],[1.0],ms=3,mc=:gray10) #coexistence
-scatter!([wc2],[fp2(wc2)],ms=3,mc=:gray10) #dominance
-
-#=
-
-#plot some (not all) bif points
-for bp in eachrow(contres_fp_bifp)
-    type,crit_param,idx = bp
-    if type == "ns"  
-        scatter!([crit_param], [xs[idx]],ms=3,mc=:orange,markerstrokewidth=0.0)
-    elseif type == "nd"
-        scatter!([crit_param], [xs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
-    end
-end
 =#
 
-#-------------------plot lim cycle results----------------------
 
-params = contres_sols[:,1]
-maxs = contres_sols[:,3]
-mins = contres_sols[:,2]
-stability = Bool.(contres_sols[:,end])
-
-linestyle = [stb ? :solid : :dot for stb in stability]
-linewidth = [stb ? 2 : 1 for stb in stability]
-#sol_sampling = [stb ? 1 : 20 for stb in stability]
-
-plot!(pl_bif,params[1:plot_srate:end], maxs[1:plot_srate:end],lc=:gray10,legend=false,guidefontsize=guide_fontsize,
-ls=linestyle[1:plot_srate:end],lw=linewidth[1:plot_srate:end])
-
-annotate!(pl_bif,0.35, 3.5, text("stable limit cycle", :gray10, :center, 8))
-
-#=
-
-#plot stable and unstable parts separately
-maxs_stable = maxs[stability]  #select stable 
-maxs_unstable = maxs[.!(stability)] #negation
-
-plot!(pl,params[stability][1:plot_srate:end], maxs_stable[1:plot_srate:end], lc=:gray10,legend=false,guidefontsize=guide_fontsize,
-    ls=:solid,lw=1,xformatter=:auto,xlims=xlims_pl)
-
-plot!(pl,params[.!(stability)][1:plot_srate:end], maxs_unstable[1:plot_srate:end], mc=:gray10,legend=false,guidefontsize=guide_fontsize,
-    st=:scatter,ms=1,xformatter=:auto,xlims=xlims_pl)
-
-=#
-
-#plot some (not all) bif points
-
-for bp in eachrow(contres_bifp)
-    type,crit_param,idx = bp
-    if type == "ns"  
-        scatter!([crit_param], [maxs[idx]],ms=3,mc=:orange,markerstrokewidth=0.0)
-    elseif type == "nd"
-        scatter!([crit_param], [maxs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
-    elseif type == "bp"
-        scatter!([crit_param], [maxs[idx]],ms=3,mc=:green,markerstrokewidth=0.0)
-    end
-end
-#plot!(pl,brpo,linewidthunstable=0,linewidthstable=0) #plot only bif points hack
-
-vline!(pl_bif,[wc1],ls=:dash,lw=2,lc=:gray10)
-vline!(pl_bif,[wc2],ls=:dash,lw=2,lc=:gray10)
-
-
-l = @layout [a{0.8h}; b{0.2h}]
-pl = plot(pl_bif,pl_eig,layout=l,size=(500,300))
-
-savefig(pl,figs_dir*"system_small_N2_bifdiag.png")

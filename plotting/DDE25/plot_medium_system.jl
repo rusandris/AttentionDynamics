@@ -29,19 +29,23 @@ w = 0.4
 
 p = [g,w,N]
 
-u0 = generate_initial_condition(N)
-#u0 = rand(2N)
+#u0 = generate_initial_condition(N)
+u0 = rand(2N)
 ds = create_ds(u0,p)
+T = 10
+Ttr = 1000
 
-traj,t = trajectory(ds,200;Ttr=0,Δt=0.01)
+traj,t = trajectory(ds,T;Ttr=Ttr,Δt=0.01)
 timeseries = Matrix(traj[:,[1:2:2N;]])
-pl = plot(t,timeseries[:,1:end],legend=false,xlims=(100,110),la=0.4,ylims=(0,12))
+pl = plot(t,timeseries[:,1:end],legend=false,xlims=(Ttr,Ttr+T),la=0.6,ylims=(0,8))
 
 logocolors = Colors.JULIA_LOGO_COLORS
-plot!(t,timeseries[:,1:3],lw=3,lc=[logocolors.red logocolors.green logocolors.purple])
+plot!(t,timeseries[:,1:3],lw=4,lc=[logocolors.red logocolors.green logocolors.purple])
 plot!(xlabel=L"t",ylabel=L"x_i",guidefontsize=36,
     tickfontsize=20,
-    size=(1000,500),left_margin=6Plots.mm,bottom_margin=6Plots.mm,
+    xticks=[1000:5:1010;],
+    size=(1000,500),left_margin=6Plots.mm,bottom_margin=6Plots.mm,right_margin=10Plots.mm,
     dpi=300)
-
+pl
 savefig(pl,figs_dir*"system_N$N"*"_w$w"*"_g$g"*".png")
+pl

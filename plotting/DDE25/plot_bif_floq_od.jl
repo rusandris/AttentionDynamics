@@ -29,9 +29,9 @@ plot_srate = 1
 od_lyap_files = readdir(od_dir)
 plots_od = []
 tickfontsize_od_bif = 10
-yticks_od = [[0:0.2:1;],[0:0.2:1;],[0:5:15;]]
+yticks_od = [[0:0.5:1;],[0:0.5:1;],[0:5:15;]]
 ylims_od = [(0,1.1),(0,1.2),(0,15)]
-reduced_margin = -10Plots.mm
+reduced_margin = -7Plots.mm
 
 for (i,N) in enumerate(Ns)
 
@@ -53,8 +53,8 @@ for (i,N) in enumerate(Ns)
         ylabel="",xlims=xlims_pl,widen=true,
         xformatter=:none,xlabel="",ylims=ylims_od[i],
         yticks=yticks_od[i],bottom_margin = reduced_margin,
-        tickfontsize=tickfontsize_od_bif,yformatter=:auto,
-        title=L"N=%$N"*"\n"*L"g/(N-1)=%$(round(gval_phase_diag;digits=2))")
+        tickfontsize=tick_fontsize,yformatter=:auto,
+        title=L"N=%$N"*"\n"*L"\epsilon(N-1)=%$(round(gval_phase_diag;digits=0))")
     i == 1 && ylabel!(pl,L"x_1")
 
     vline!([wc1],ls=:dash,lc=:red,lw=2)
@@ -67,7 +67,7 @@ pl_od=plot(plots_od...,layout=(1,length(Ns)));
 #----------------plot each branch of periodic orbits---------------------
 
 contres_files = readdir(cont_dir)
-yticks_bif = [[0:2:8;],[0:6:12;],[0:5:25;]]
+yticks_bif = [[0.0:2.0:8.0;],[0.0:6.0:12.0;],[0:5:25;]]
 branch_plots = []
 for (i,N) in enumerate(Ns)
     #read cont results
@@ -112,7 +112,7 @@ for (i,N) in enumerate(Ns)
         ls=linestyle,lw=linewidth,bottom_margin = reduced_margin,
         top_margin = reduced_margin,
         xformatter=:none,xlims=xlims_pl,yticks=yticks_bif[i],widen=true,
-        DEFAULTS...,tickfontsize=tickfontsize_od_bif,yformatter=:auto)
+        DEFAULTS...,tickfontsize=tick_fontsize,yformatter=:auto)
 
     #display(pl)
     @show length(contres_fp_bifp)
@@ -275,7 +275,10 @@ pl_floq = plot(plots_maxfloq...,layout=(1,length(Ns)))#bottom_margin=reduced_bot
 
 #l = @layout [a{0.5h}; b{0.25h}; c{0.25h} ]
 
-pl = plot(pl_od,pl_bif,pl_floq,layout=(3,1),size=(1000,500),dpi=300,left_margin=7Plots.mm,bottom_margin=7Plots.mm)
+pl = plot(plots_od...,branch_plots...,plots_maxfloq...,layout=(3,3),size=(1000,500),
+    dpi=300,left_margin=7Plots.mm,bottom_margin=7Plots.mm)
+
+#pl = plot(pl_od,pl_bif,pl_floq,layout=(3,1),size=(1000,500),dpi=300,left_margin=7Plots.mm,bottom_margin=7Plots.mm)
 #savefig(pl,"../../continuation_test_maxreal.png")
 savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_od_Ttr20000_noreinit_g5_N310_test.png")
 
