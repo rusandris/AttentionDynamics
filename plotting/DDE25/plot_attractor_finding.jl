@@ -39,6 +39,7 @@ grid = (
 
 #repeat attractor finding many times
 
+#=
 attractor_finding_results = []
     
 for (n,N) in enumerate(Ns)
@@ -80,15 +81,24 @@ for (n,N) in enumerate(Ns)
     end
     push!(attractor_finding_results,found_attractors)
 end
+=#
+
+#read attractor finding results
+nr_atrs_avgs = readdlm("attractor_finding/attractor_finding_Ns345.txt")
+method_params = readdlm("attractor_finding/attractor_finding_method_params.txt")
+Ns = Int.(method_params[1:3])
 
 #--------------------------------plot attractor finding----------------------------
 lcolors = [logocolors.red,logocolors.green,logocolors.purple]
 pl_atr = plot(;ylabel="# attractors",xlabel="# initial conditions",
-    legend=:bottomright,legend_columns=-1,DEFAULTS...)
+    legend=:bottomright,legend_columns=-1,DEFAULTS...,legendfontsize=legend_fontsize+5)
 
 
-nr_atrs_avgs = []
-for (i,results) in enumerate(attractor_finding_results)
+#nr_atrs_avgs = []
+#for (i,results) in enumerate(attractor_finding_results)
+for (i,N) in enumerate(Ns)
+
+    #=
     #take average of many runs
     nr_atrs_avg = zeros(max_ensemble)
     for j in 1:length(results)
@@ -97,16 +107,24 @@ for (i,results) in enumerate(attractor_finding_results)
         nr_atrs_avg .+= nr_atrs
     end
     push!(nr_atrs_avgs,nr_atrs_avg ./ length(results))
+    =#
+
+    nr_atrs_avg = nr_atrs_avgs[:,i]
     #------------------plot----------------------------
     nr_atr_max = factorial(Ns[i]-1)
-    annotate!(70, nr_atr_max*1.2, text(L"(N-1)! = %$nr_atr_max", lcolors[i], :center, 18))
-    plot!(nr_atrs_avg ./ length(results),lw=4,lc=lcolors[i],label=L"N=%$(Ns[i])")
-    hline!([nr_atr_max],lw=2,ls=:dash,lc=lcolors[i],label="")
+    annotate!(70, nr_atr_max*1.2, text(L"(N-1)! = %$nr_atr_max", lcolors[i], :center, 28))
+    #plot!(nr_atrs_avg ./ length(results),lw=4,lc=lcolors[i],label=L"N=%$(Ns[i])")
+    plot!(nr_atrs_avg,lw=6,lc=lcolors[i],label=L"N=%$(Ns[i])")
+    hline!([nr_atr_max],lw=3,ls=:dash,lc=lcolors[i],label="")
 end
-ylims!(pl_atr,(1,30),yticks=[1,10^0.5,10],yaxis=:log)
+ylims!(pl_atr,(1,30),yticks=[1,10^0.5,10],yaxis=:log,tickfontsize=tick_fontsize_large+5,guidefontsize=guide_fontsize_large+5)
 plot!(size=(800,700))
+
+
 savefig(pl_atr,figs_dir*"system_multistability_nr_attractors.png")
+#=
 data_dir = "./attractor_finding/" 
 mkpath(data_dir)
 writedlm(data_dir*"attractor_finding_Ns345.txt",stack(nr_atrs_avgs))
 writedlm(data_dir*"attractor_finding_method_params.txt",[Ns...,g_rel,w,cons_recurrences,locate_steps,max_ensemble,nr_runs])
+=#

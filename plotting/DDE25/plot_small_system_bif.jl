@@ -31,6 +31,12 @@ w = 0.1
 
 p = [g,w,N]
 
+
+ws = [0.1:0.005:0.6;]
+#critical values
+wc1 = (N-1)/g
+wc2 = (N-1)/N
+
 #u0 = generate_initial_condition(N)
 u0 = [0.5,0.0,1.3,0.0] 
 #u0 = rand(2N)
@@ -56,8 +62,8 @@ g = global_params[end]
 
 contres_files = readdir(cont_dir)
 
-#xlims = (ws[1],ws[end])
-ylims_bif = (0.0,4.0)
+xlims_bif = (ws[1],ws[end])
+ylims_bif = (0.5,4.1)
 
 
 #read cont results
@@ -73,10 +79,6 @@ contres_bifp_file = contres_files_N[findfirst(f -> occursin("contres_po_bifp",f)
 contres_sols = readdlm(cont_dir*contres_sol_file)
 contres_bifp = readdlm(cont_dir*contres_bifp_file)
 
-ws = [0.1:0.01:0.6;]
-#critical values
-wc1 = (N-1)/g
-wc2 = (N-1)/N
 
 #--------------------plot bifdiagram------------------
 
@@ -84,38 +86,44 @@ wc2 = (N-1)/N
 #use analytical results for fixed points
 xs_fp = ones(length(ws))
 
-stability_fp = Bool.( ws .< wc1 )
-stability_fp2 = Bool.( ws .> wc2 )
+stability_fp = Bool.( ws .<= wc1 )
+stability_fp2 = Bool.( ws .>= wc2 )
 
-linestyle_fp = [stb ? :solid : :dash for stb in stability_fp]
+linestyle_fp = [stb ? :solid : :dot for stb in stability_fp]
 linewidth_fp = [stb ? 4 : 2 for stb in stability_fp]
 
-linestyle_fp2 = [stb ? :solid : :dash for stb in stability_fp2]
+linestyle_fp2 = [stb ? :solid : :dot for stb in stability_fp2]
 linewidth_fp2 = [stb ? 4 : 2 for stb in stability_fp2]
 
 
 pl_bif = plot(ws, xs_fp, lc=:gray10,
-    legend=false,guidefontsize=guide_fontsize,
-    xlims=xlims,ylims=ylims_bif,
+    legend=false,
+    xlims=xlims_bif,ylims=ylims_bif,
+    tickfontsize=tick_fontsize_large,
+    guidefontsize=guide_fontsize_large,
+    xlabel=L"w",
+    ylabel=L"\mathrm{max}(x_1)",
     #title=L"N=%$N"*"\n"*L"g/(N-1)=%$(round(gval_phase_diag;digits=2))",
     ls=linestyle_fp,lw=linewidth_fp,
     size=(800,500),
-    xformatter=:auto,)
+    xformatter=:auto,
+    right_margin=6Plots.mm,
+    dpi=300)
 
 fp2(w) = 1/(1-w)
 xs_fp2 = fp2.(ws)
 
 plot!(ws, xs_fp2, lc=:gray10,
-    legend=false,guidefontsize=guide_fontsize,xlims=xlims,ylims=ylims_bif,
+    legend=false,xlims=xlims_bif,ylims=ylims_bif,
     ls=linestyle_fp2,lw=linewidth_fp2)
 
-annotate!(pl_bif,0.15, 3.0, text("coexistence", :gray10, :center, 12))
-annotate!(pl_bif,0.55, 3.0, text("dominance", :gray10, :center, 12))
+annotate!(pl_bif,0.15, 3.8, text("coexistence", :gray10, :center, 15))
+annotate!(pl_bif,0.55, 3.8, text("dominance", :gray10, :center, 15))
 
 
 #-------------------------plot bif points--------------------------
-scatter!([wc1],[1.0],ms=8,mc=logocolors.red) #coexistence
-scatter!([wc2],[fp2(wc2)],ms=8,mc=logocolors.blue) #dominance
+scatter!([wc1],[1.0],ms=9,mc=:gray10) #coexistence
+scatter!([wc2],[fp2(wc2)],ms=9,mc=:gray10) #dominance
 
 
 #=
@@ -142,10 +150,10 @@ linestyle = [stb ? :solid : :dot for stb in stability]
 linewidth = [stb ? 4 : 2 for stb in stability]
 #sol_sampling = [stb ? 1 : 20 for stb in stability]
 
-plot!(pl_bif,params[1:plot_srate:end], maxs[1:plot_srate:end],lc=:gray10,legend=false,guidefontsize=guide_fontsize,
+plot!(pl_bif,params[1:plot_srate:end], maxs[1:plot_srate:end],lc=:gray10,legend=false,
 ls=linestyle[1:plot_srate:end],lw=linewidth[1:plot_srate:end])
 
-annotate!(pl_bif,0.35, 2.5, text("stable limit cycle", :gray10, :center, 12))
+annotate!(pl_bif,0.35, 2.5, text("stable limit cycle", :gray10, :center, 15))
 
 #=
 
@@ -154,10 +162,10 @@ maxs_stable = maxs[stability]  #select stable
 maxs_unstable = maxs[.!(stability)] #negation
 
 plot!(pl,params[stability][1:plot_srate:end], maxs_stable[1:plot_srate:end], lc=:gray10,legend=false,guidefontsize=guide_fontsize,
-    ls=:solid,lw=1,xformatter=:auto,xlims=xlims_pl)
+    ls=:solid,lw=1,xformatter=:auto,xlims=xlims_bif_pl)
 
 plot!(pl,params[.!(stability)][1:plot_srate:end], maxs_unstable[1:plot_srate:end], mc=:gray10,legend=false,guidefontsize=guide_fontsize,
-    st=:scatter,ms=1,xformatter=:auto,xlims=xlims_pl)
+    st=:scatter,ms=1,xformatter=:auto,xlims=xlims_bif_pl)
 
 =#
 
@@ -178,25 +186,52 @@ end
 #--------------------------plot critical values------------------------
 
 rectangle(w, h, x, y) = Shape(x .+ [0,w,w,0], y .+ [0,0,h,h])
-plot!(rectangle(0.1,4,0.1,0), opacity=.2,c=logocolors.red)
-plot!(rectangle(0.1,4,0.5,0), opacity=.2,c=logocolors.blue)
+plot!(rectangle(0.1,4,0.1,0), opacity=.2,c=:gray10)
+plot!(rectangle(0.1,4,0.5,0), opacity=.2,c=:gray10)
 
 
-vline!(pl_bif,[wc1],ls=:dash,lw=3,lc=logocolors.red)
-vline!(pl_bif,[wc2],ls=:dash,lw=3,lc=logocolors.blue)
+vline!(pl_bif,[wc1],ls=:dash,lw=3,lc=:gray10)
+vline!(pl_bif,[wc2],ls=:dash,lw=3,lc=:gray10)
 
-annotate!(wc1+0.01, 3.5, text(L"w_c^{(1)} = \epsilon (N-1)", logocolors.red, :center, 20))
-annotate!(wc2+0.02, 3.5, text(L"w_c^{(2)} = (N-1)/N", logocolors.blue, :center, 20))
+#w_c^{(1)} = \epsilon (N-1)
+#w_c^{(2)} = \frac{N-1}{N}
+annotate!(wc1+0.03, 3.8, text(L"w_c^{(1)}", :gray10, :center, 22))
+annotate!(wc2-0.03, 3.8, text(L"w_c^{(2)}", :gray10, :center, 22))
+
 
 #-------------------------------bif points----------------------------
-annotate!(0.22, 0.8, text("HOPF", :gray10, :center, 12))
-annotate!(0.55, 1.7, text("HOMOCLINIC", :gray10, :center, 10))
+annotate!(0.22, 0.8, text("HOPF", :gray10, :center, 13))
+annotate!(0.45, 1.5, text("HOMOCLINIC", :gray10, :center, 13))
+
+annotate!(0.15,0.8, text(L"u^{*}_c", :gray10, :center, 22))
+annotate!(0.55,1.8, text(L"u_d^{*}", :gray10, :center, 22))
+
+#--------------------------plot inset----------------------------
+
+#--------------------coexistence---------------------
+set_parameter!(ds,2,0.15)
+traj1,t = trajectory(ds,10;Ttr=0)
+plot!(inset = (1, bbox(0.05,0.15,0.25,0.25)), subplot = 2)
+hline!(pl_bif[2],[1.0],lw=2,lc=:gray10,ls=:dash,xlabel="",label="")
+plot!(pl_bif[2],t,traj1[:,1],lw=3,label=L"x_1",
+    legend_columns=-1,legend=:bottom,legendfontsize=legend_fontsize-5)
+plot!(pl_bif[2],t,traj1[:,2],lw=3,label=L"x_2")
+annotate!(pl_bif[2],10, 0.15, text(L"t", :gray10, :center, 12))
 
 
-#plot!(inset = (1, bbox(1.0,1.0,0.5,1.0)), subplot = 2)
-#plot!(inset = (1, bbox(0.0,0.85,1.0,0.1)), subplot = 2)
+#--------------------dominance---------------------
+set_parameter!(ds,2,0.55)
+traj2,t = trajectory(ds,10;Ttr=0)
+plot!(inset = (1, bbox(0.74,0.15,0.25,0.25)), subplot = 3)
+hline!(pl_bif[3],[1/(1-0.55)],lw=2,lc=:gray10,ls=:dash,label="") #xlabel=L"t")
+plot!(pl_bif[3],t,traj2[:,1],lw=3,legend=(0.45,0.28),label=L"x_1",
+    legend_columns=-1,legendfontsize=legend_fontsize-5)
+plot!(pl_bif[3],t,traj2[:,3],lw=3,label=L"x_2")
+annotate!(pl_bif[3],10, 0.3, text(L"t", :gray10, :center, 12))
+
+
 pl_bif
-#savefig(pl_bif,figs_dir*"system_small_N2_bifdiag.png")
+savefig(pl_bif,figs_dir*"system_small_N2_bifdiag_complicated.pdf")
 
 
 #l = @layout [a{0.8h}; b{0.2h}]
@@ -206,7 +241,7 @@ pl_bif
 
 
 #---------------------------------eigvals,lyap----------------------------------------
-
+#=
 
 #eigval spectrum
 #coexistence fixed point 
@@ -247,6 +282,7 @@ J = build_jacobian(u,p)
 #test if results are correct
 numerical_spectrum =  eigvals!(J)
 analytical_spectrum = fixed_point_eigen_spectrum(N,2,p)
+=#
 
 #=
 #---------------------calculate eigenvalues for a range of ws--------------------
@@ -279,7 +315,7 @@ pl_eig = plot(ws,realparts_coex[:,[1,2]],ylabel="",xlabel=L"w",
     #markershape=:circle,
     #title="N=$(N),g=$(g)",
     mc=:orange,ms=3,
-    xlims=xlims,ylims=[-1.0,4.0],
+    xlims=xlims_bif,ylims=[-1.0,4.0],
     lc=:orange,
     label="",guidefontsize=16,dpi=300)
 plot!(pl_eig,ws,imagparts_coex[:,[1,2]],lc=:orange,ms=3,lw=2,label="")

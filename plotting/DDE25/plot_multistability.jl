@@ -29,13 +29,13 @@ end
 
 
 #parameters from phase diagram 
-gs_N10 = vec(readdlm("../../plotting/data/N=10.0_gvalues.txt"))
-gs = gs_N10 ./(10-1)
-g_N = gs[30]
+#gs_N10 = vec(readdlm("../../plotting/data/N=10.0_gvalues.txt"))
+#gs = gs_N10 ./(10-1)
+#g_N = gs[30]
 
 
 #--------------------parameters for attractor finding via recurrences---------------
-grid_size = 200 #phase space grid cell size
+grid_size = 500 #phase space grid cell size
 T_test = 1000 #test trajectory for grid edges 
 Ttr = 1000 #transient time
 cons_recurrences = 500 #nr of recurrences 
@@ -48,14 +48,14 @@ max_ensemble = 50 #nr of initial conditions
 #system parameters
 #N = 4 
 N = 3 
-g = g_N * (N-1) 
+g = 3.5 #g_N * (N-1) 
 #g = 4.0
 #critical values
 wc1 = (N-1)/g
 wc2 = (N-1)/N
 ws = [wc1+0.02:0.01:wc2-0.01;] 
 w = wc1 + (wc2-wc1)/2 
-w = 0.55
+w = 0.6
 diffeq = (alg = Rodas5(),dt = 1e-3,adaptive=true,reltol = 1e-8, abstol = 1e-10,maxiters=1e15)
 #diffeq = (alg = Tsit5(),dt = 1e-3,adaptive=true,maxiters=1e15)
 ds = create_ds(rand(2N),[g,w,N];diffeq=diffeq)
@@ -77,7 +77,9 @@ mapper = AttractorsViaRecurrences(ds, grid;Ttr=Ttr,
 
 u1 = generate_initial_condition(N)
 u2 = generate_initial_condition(N)
-u2[1] = 2.0; u2[3] = 1.0
+u2[1] = 2.0; u2[3] = 0.5
+#u1=rand(6)
+#u2=rand(6)
 mapper(u1)
 mapper(u2)
 
@@ -87,34 +89,58 @@ atr1 = attractors[1]
 atr2 = attractors[2]
 
 #plot time series
-traj1,t1 = trajectory(ds,100,u1;Ttr=1000)
-traj2,t2 = trajectory(ds,100,u2;Ttr=1000)
+traj1,t1 = trajectory(ds,100,u1;Ttr=100)
+traj2,t2 = trajectory(ds,100,u2;Ttr=100)
 
-#plot attractors
-pp = Plots.plot(atr1[:,1],atr1[:,3];lw=2,lc=:purple,markershape=:circle,legend_columns=2,
-    ms=8,mc=:purple,markerstrokewidth=0.0,xlabel=L"x_1",ylabel=L"x_2",label="limit cycle " * L"1",DEFAULTS...)
-Plots.plot!(pp,atr2[:,1],atr2[:,3],lw=2,lc=:blue,markershape=:utriangle,label="limit cycle " * L"2",
-    ms=8,mc=:blue,markerstrokewidth=0.0,leftmargin=3Plots.mm)
+#---------------------------plot attractors---------------------------
+ms=10
+pp = Plots.plot(atr1[:,1],atr1[:,3];lw=2,lc=:purple,
+    markershape=:circle,legend_columns=2,
+    tickfontsize=tick_fontsize_large+5,
+    guidefontsize=guide_fontsize_large+5,
+    legendfontsize=legend_fontsize,
+    ms=10,mc=:purple,markerstrokewidth=0.0,
+    xlabel=L"x_1",ylabel=L"x_2",
+    label="limit cycle " * L"1")
+Plots.plot!(pp,atr2[:,1],atr2[:,3],lw=2,lc=:green,
+    markershape=:utriangle,label="limit cycle " * L"2",
+    ms=8,mc=:green,markerstrokewidth=0.0,
+    leftmargin=1Plots.mm,
+    bottommargin=5Plots.mm)
 
 
 #plot timeseries as inset 
-plot!(inset = (1, bbox(0.5,0.2,0.4,0.2)), subplot = 2)
-plot!(pp[2],t1[1:1:100],Matrix(traj1[1:1:100,[1,3,5]]);lc=:purple,la=1,markershape=:circle,
-    ms=0,mc=:purple,markerstrokewidth=0.0,ylabel=L"x_i",legend=:outertopright,
-    ls=:solid,xformatter=:none,lw=[5.0 3.0 1.0],
-    labels=[L"x_1" L"x_2" L"x_3"],DEFAULTS...,tickfontsize=4,
-    guidefontsize=10,xguidefontsize=10,legendfontsize=10)
+lws = [6.0 3.0 0.5]
+lw = 3
+ls = [:solid :dash :solid] 
 
-plot!(inset = (1, bbox(0.5,0.42,0.4,0.2)), subplot = 2)
-plot!(pp[3],t2[1:1:100],Matrix(traj2[1:1:100,[1,3,5]]);lc=:blue,
-    la=1,markershape=:utriangle,
-    ms=0,mc=:blue,markerstrokewidth=0.0, 
-    labels=[L"x_1" L"x_2" L"x_3"],lw=[5.0 3.0 1.0],legend=:outertopright,
-    xlabel=L"t",ylabel=L"x_i",DEFAULTS...,tickfontsize=4,
-    guidefontsize=10,xguidefontsize=10,legendfontsize=10)
+plot!(inset = (1, bbox(0.5,0.15,0.5,0.2)), subplot = 2)
+plot!(pp[2],t1[1:200],Matrix(traj1[1:200,[1,3,5]]);lc=:purple,la=1,
+    ms=0,mc=:purple,markerstrokewidth=0.0,ylabel=L"x_i",legend=false,
+    xformatter=:none,lw=lws,ls=ls,
+    labels=[L"x_1" L"x_2" L"x_3"],DEFAULTS...,tickfontsize=tick_fontsize,
+    guidefontsize=guide_fontsize+2)
+
+annotate!(pp[2],103, 1.5, text(L"x_1", :gray10, :center, 20))
+annotate!(pp[2],107, 1.5, text(L"x_2", :gray10, :center, 20))
+annotate!(pp[2],111, 1.5, text(L"x_3", :gray10, :center, 20))
+
+
+plot!(inset = (1, bbox(0.5,0.4,0.5,0.2)), subplot = 2)
+plot!(pp[3],t2[1:200],Matrix(traj2[1:200,[1,3,5]]);lc=:green,
+    la=1,
+    ms=0,mc=:green,markerstrokewidth=0.0, ls=ls,
+    labels=[L"x_1" L"x_2" L"x_3"],lw=lws,legend=false,
+    xlabel=L"t",ylabel=L"x_i",DEFAULTS...,tickfontsize=tick_fontsize,
+    guidefontsize=guide_fontsize+2)
+
+annotate!(pp[3],103.5, 1.5, text(L"x_3", :gray10, :center, 20))
+annotate!(pp[3],107.5, 1.5, text(L"x_2", :gray10, :center, 20))
+annotate!(pp[3],111.5, 1.5, text(L"x_1", :gray10, :center, 20))
 
 plot!(size=(800,700))
-savefig(pp,figs_dir*"N3_multistable_inset.png")
+pp
+#savefig(pp,figs_dir*"N3_multistable_inset.png")
 
 #=    
 #=
@@ -127,9 +153,9 @@ ts1 = Plots.plot(t1[1:1:100],Matrix(traj1[1:1:100,[1,3,5]]);lc=:purple,la=1,mark
 plot!(ts1,t1[1:5:100],Matrix(traj1[1:5:100,[1,3,5]]);st=:scatter,markershape=:circle,
     ma=1,mc=:purple,markerstrokewidth=0.0,label="",ms=[8 4 2])
 
-ts2 = Plots.plot(t2[1:1:100],Matrix(traj2[1:1:100,[1,3,5]]);lc=:blue,
+ts2 = Plots.plot(t2[1:1:100],Matrix(traj2[1:1:100,[1,3,5]]);lc=:green,
     la=1,markershape=:utriangle,
-    ms=0,mc=:blue,markerstrokewidth=0.0,
+    ms=0,mc=:green,markerstrokewidth=0.0,
     labels=[L"x_1" L"x_2" L"x_3"],lw=[5.0 3.0 1.0],
     xlabel=L"t",ylabel=L"x_i",DEFAULTS...)
 =#
@@ -137,7 +163,7 @@ ts2 = Plots.plot(t2[1:1:100],Matrix(traj2[1:1:100,[1,3,5]]);lc=:blue,
 #ls=[:solid :dash :dot]
 #plot attractor markers
 plot!(ts2,t2[1:5:100],Matrix(traj2[1:5:100,[1,3,5]]),st=:scatter,markershape=:utriangle,
-    ma=1,mc=:blue,markerstrokewidth=0.0,label="",ms=[8 4 2])
+    ma=1,mc=:green,markerstrokewidth=0.0,label="",ms=[8 4 2])
 
 pl_ts = Plots.plot(ts1,ts2,layout=(2,1))
 
