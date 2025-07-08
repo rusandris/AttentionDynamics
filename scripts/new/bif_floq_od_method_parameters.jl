@@ -7,7 +7,8 @@ w_max_ratio = 0.6 #w_max/wc_2 for continuation
 w_min_ratio_od = 1.005 #w_min/wc_1 for orbit diag
 
 #Ns = [2:6;] #nr of competitors dim = 2N 
-Ns = [3,5,10] #[2] #[2,5,10]#[10] #
+#Ns = [3,5,10] #[2] #[2,5,10]#[10] #
+Ns = [2] 
 
 #select g value from the phase diagram
 #gs_N10 = vec(readdlm("../../plotting/data/N=10.0_gvalues.txt"))
@@ -17,7 +18,7 @@ Ns = [3,5,10] #[2] #[2,5,10]#[10] #
 g_rel = 5.0
 global_params = [Ns...,g_rel]
 
-cont_dir = "../../plotting/DDE25/bifkit_data_g5/"
+cont_dir = "../../plotting/DDE25/bifkit_data_g5_N2/"
 mkpath(cont_dir)
 #save params that apply to every system size
 writedlm(cont_dir*"global_params_Ns_g.txt",global_params)

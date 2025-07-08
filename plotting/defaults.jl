@@ -1,7 +1,11 @@
 using Plots
 
-guide_fontsize = 18
-tick_fontsize = 12
+guide_fontsize_medium = 18
+guide_fontsize = guide_fontsize_medium
+guide_fontsize_large = 25
+tick_fontsize_small = 8
+tick_fontsize = tick_fontsize_small
+tick_fontsize_large = 15
 legend_fontsize = 15
 fig_size = (1200,600)
 

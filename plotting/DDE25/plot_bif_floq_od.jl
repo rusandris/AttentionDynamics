@@ -31,7 +31,10 @@ plots_od = []
 tickfontsize_od_bif = 10
 yticks_od = [[0:0.5:1;],[0:0.5:1;],[0:5:15;]]
 ylims_od = [(0,1.1),(0,1.2),(0,15)]
-reduced_margin = -7Plots.mm
+reduced_margin = -9Plots.mm
+reduced_margin_side = -2Plots.mm
+ms_bp = 5 
+annotation_size = 12
 
 for (i,N) in enumerate(Ns)
 
@@ -53,11 +56,11 @@ for (i,N) in enumerate(Ns)
         ylabel="",xlims=xlims_pl,widen=true,
         xformatter=:none,xlabel="",ylims=ylims_od[i],
         yticks=yticks_od[i],bottom_margin = reduced_margin,
-        tickfontsize=tick_fontsize,yformatter=:auto,
+        tickfontsize=tick_fontsize+3,yformatter=:auto,
         title=L"N=%$N"*"\n"*L"\epsilon(N-1)=%$(round(gval_phase_diag;digits=0))")
     i == 1 && ylabel!(pl,L"x_1")
 
-    vline!([wc1],ls=:dash,lc=:red,lw=2)
+    vline!([wc1],ls=:dash,lc=:gray10,lw=2)
     vline!([wc2],ls=:dash,lc=:blue,lw=2)
 
     push!(plots_od,pl)
@@ -109,10 +112,10 @@ for (i,N) in enumerate(Ns)
 
     #-------------------plot fixed point results----------------------
     pl = plot(params, xs; lc=:gray10,legend=false,guidefontsize=guide_fontsize,
-        ls=linestyle,lw=linewidth,bottom_margin = reduced_margin,
-        top_margin = reduced_margin,
+        ls=linestyle,lw=linewidth,bottom_margin = reduced_margin,top_margin = reduced_margin,
+        left_margin=reduced_margin_side,right_margin=reduced_margin_side,
         xformatter=:none,xlims=xlims_pl,yticks=yticks_bif[i],widen=true,
-        DEFAULTS...,tickfontsize=tick_fontsize,yformatter=:auto)
+        DEFAULTS...,tickfontsize=tick_fontsize+3,yformatter=:auto)
 
     #display(pl)
     @show length(contres_fp_bifp)
@@ -120,9 +123,9 @@ for (i,N) in enumerate(Ns)
     for bp in eachrow(contres_fp_bifp)
         type,crit_param,idx = bp
         if type == "ns"  
-            scatter!([crit_param], [xs[idx]],ms=3,mc=:orange,markerstrokewidth=0.0)
+            scatter!([crit_param], [xs[idx]],ms=ms_bp,mc=:orange,markerstrokewidth=0.0)
         elseif type == "nd"
-            scatter!([crit_param], [xs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
+            #scatter!([crit_param], [xs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
         end
     end
 
@@ -134,7 +137,7 @@ for (i,N) in enumerate(Ns)
     stability = Bool.(contres_sols[:,end])
 
     linestyle = [stb ? :solid : :dot for stb in stability]
-    linewidth = [stb ? 2 : 1 for stb in stability]
+    linewidth = [stb ? 4 : 1 for stb in stability]
     #sol_sampling = [stb ? 1 : 20 for stb in stability]
 
     plot!(pl,params[1:plot_srate:end], maxs[1:plot_srate:end],
@@ -160,31 +163,37 @@ for (i,N) in enumerate(Ns)
     for bp in eachrow(contres_bifp)
         type,crit_param,idx = bp
         if type == "ns"  
-            scatter!([crit_param], [maxs[idx]],ms=3,mc=:orange,markerstrokewidth=0.0)
+            scatter!([crit_param], [maxs[idx]],ms=ms_bp,mc=:orange,markerstrokewidth=0.0)
         elseif type == "nd"
-            scatter!([crit_param], [maxs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
+            #scatter!([crit_param], [maxs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
         elseif type == "bp"
-            scatter!([crit_param], [maxs[idx]],ms=3,mc=:green,markerstrokewidth=0.0)
+            #scatter!([crit_param], [maxs[idx]],ms=3,mc=:green,markerstrokewidth=0.0)
         end
     end
     #display(pl)
     #plot!(pl,brpo,linewidthunstable=0,linewidthstable=0) #plot only bif points hack
 
-    vline!([wc1],ls=:dash,lc=:red,lw=2)
+    vline!([wc1],ls=:dash,lc=:gray10,lw=2)
     vline!([wc2],ls=:dash,lc=:blue,lw=2)
-    i == 1 && ylabel!(pl,L"x_1")
+    i == 1 && ylabel!(pl,L"\mathrm{max}(x_1)")
 
     #annotations
     if i == 1 
-        annotate!(0.3, 4.0 , text("limit cycles", :gray10, :center, 10))
+        annotate!(0.3, 4.0 , text("limit cycles", :gray10, :center, annotation_size))
     elseif i == 2
-        annotate!(0.35, 8.0 , text("limit cycles", :gray10, :center, 10))
-        annotate!(0.25, 3.0 , text("tori", :gray10, :center, 10))
-        annotate!(0.25, 12.0 , text("shorter chaotic \n transients", :gray10, :center, 6))
+        annotate!(0.35, 8.0 , text("limit \n cycles", :gray10, :center, annotation_size))
+        annotate!(0.25, 3.0 , text("tori", :gray10, :center, annotation_size))
+        annotate!(0.25, 12.0 , text("NS", :gray10, :center, annotation_size))
+
+        #annotate!(0.25, 12.0 , text("shorter chaotic \n transients", :gray10, :center, annotation_size))
     elseif i == 3
-        annotate!(0.35, 20.0 , text("limit cycles", :gray10, :center, 10))
-        annotate!(0.28, 10.0 , text("tori", :gray10, :center, 10))
-        annotate!(0.25, 24.0 , text("longer chaotic \n transients", :gray10, :center, 6))
+        annotate!(0.32, 29.0 , text("NS", :gray10, :center, annotation_size))
+        annotate!(0.28, 26.0 , text("NS", :gray10, :center, annotation_size))
+        annotate!(0.22, 19.0 , text("NS", :gray10, :center, annotation_size))
+
+        annotate!(0.38, 20.0 , text("limit \n cycles", :gray10, :center, annotation_size))
+        annotate!(0.28, 10.0 , text("tori", :gray10, :center, annotation_size))
+        #annotate!(0.25, 24.0 , text("longer chaotic \n transients", :gray10, :center, annotation_size))
     end
     push!(branch_plots,pl)
 end
@@ -249,26 +258,43 @@ for (i,N) in enumerate(Ns)
     #floq maxreal
     #@show length(params),length(realparts_max)
     #@show realparts[:,1]
-    pl_maxfloq = plot(params,realparts;mc=:gray10,xformatter=:auto,
+    labels = []
+    pl_maxfloq = plot(params,realparts[:,1];xformatter=:auto,
         guidefontsize=guide_fontsize,xlabel=L"w",widen=true,
         bottom_margin = reduced_margin,top_margin = reduced_margin,
-        ylims=ylims_floq,xlims=xlims_pl,markershape=:cross,ms=1,
-        lc=:gray10,markerstrokewidth=0.0,label="",DEFAULTS...,yformatter=:auto)
+        left_margin=reduced_margin_side,right_margin=reduced_margin_side,
+        ylims=ylims_floq,xlims=xlims_pl,ms=1, lw=2,
+        legend_columns=2,legend=:bottomright,
+        lc=:gray50,markerstrokewidth=0.0,label=L"\mu_i",DEFAULTS...,
+        yformatter=:auto,tickfontsize=tick_fontsize+3)
 
+    plot!(params,realparts[:,2:end],label="",lc=:gray50)
     #floq maximag
     #plot!(pl_maxfloq,params,imagpart,mc=:gray50,xlabel=L"w",guidefontsize=guide_fontsize,
     #    xlims=xlims_pl,markershape=:cross,ms=1,lc=:gray50,markerstrokewidth=0.0,legend=false)
 
     #lyapunov LLE
-    plot!(lyaps_params,lyaps,lw=2,mc=:gray10,lc=:red,markerstrokewidth=0.0,label=L"\lambda")
+    plot!(lyaps_params,lyaps,lw=2,mc=:gray10,lc=:gray10,markerstrokewidth=0.0,label=L"\lambda")
 
-    vline!([wc1],ls=:dash,lc=:red,lw=2,label="")
-    vline!([wc2],ls=:dash,lc=:blue,lw=2,label="")
+    vline!([wc1],ls=:dash,lc=:gray10,lw=2,label="")
+    #vline!([wc2],ls=:dash,lc=:blue,lw=2,label="")
 
     hline!([0.0],ls=:dash,lc=:gray10,lw=0.5,label="")
     i == 1 && ylabel!(pl_maxfloq,L"\mathrm{Re}(\mu),\lambda")
     yticks!([-1,0,1])
+
+    #annotations
+    if i == 1 
+        #annotate!(0.3, 4.0 , text("limit cycles", :gray10, :center, annotation_size))
+    elseif i == 2
+        annotate!(0.35, 0.3 , text("shorter chaotic \n transients", :gray10, :center, annotation_size-5))
+    elseif i == 3
+        annotate!(0.37, 0.3 , text("longer chaotic \n transients", :gray10, :center, annotation_size-5))
+    end
+
     push!(plots_maxfloq,pl_maxfloq)
+
+
 
 end
 pl_floq = plot(plots_maxfloq...,layout=(1,length(Ns)))#bottom_margin=reduced_bottom_margin)
@@ -276,7 +302,7 @@ pl_floq = plot(plots_maxfloq...,layout=(1,length(Ns)))#bottom_margin=reduced_bot
 #l = @layout [a{0.5h}; b{0.25h}; c{0.25h} ]
 
 pl = plot(plots_od...,branch_plots...,plots_maxfloq...,layout=(3,3),size=(1000,500),
-    dpi=300,left_margin=7Plots.mm,bottom_margin=7Plots.mm)
+    dpi=300,left_margin=6Plots.mm,bottom_margin=7Plots.mm)
 
 #pl = plot(pl_od,pl_bif,pl_floq,layout=(3,1),size=(1000,500),dpi=300,left_margin=7Plots.mm,bottom_margin=7Plots.mm)
 #savefig(pl,"../../continuation_test_maxreal.png")

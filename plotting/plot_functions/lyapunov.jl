@@ -67,7 +67,7 @@ function plot_phase_diagram(Λ,wvalues,gvalues,N;plot_critical_curve=true,plot_w
 	pl = heatmap(wvalues,gvalues/(N-1),Λ;kwargs...)
 	
 	#plot bifurcation curves
-	plot_critical_curve && plot!(pl,wvalues,critical_curve_adim.(wvalues);kwargs...,ls=:solid,label="") #label=L"g_c(w)")
+	plot_critical_curve && plot!(pl,wvalues,critical_curve_adim.(wvalues);kwargs...,ls=:dash,label="") #label=L"g_c(w)")
 	plot_wg_dep && plot!(pl,wvalues,w_g_dependence_curve_adim.(wvalues);kwargs...,ls=:solid,lc=:green,label=L"g(w)_{r_c=r_p}")
 	plot!(pl,[(N-1)/N,(N-1)/N],[gvalues[1],gvalues[end]]./(N-1);kwargs...,ls=:dash,label="")#label=L"w_{d}=(N-1)/N")	
 	plot!(ylims=(gvalues[1]/(N-1),gvalues[end]/(N-1)),xlims=(wvalues[1],wvalues[end]))
