@@ -1,4 +1,4 @@
-export build_jacobian,eigval_maxrealparts,eigen_spectrum,fixed_point_eigen_spectrum
+export build_jacobian,eigval_maxrealparts,eigen_spectrum,fixed_point_eigen_spectrum,contraction_rate
 
 function skipsum(a,i,N)
 	x = @view a[1:N]
@@ -118,3 +118,10 @@ function fixed_point_eigen_spectrum(N,M,p)
 	return eigen_spectrum
 end
 
+#phase space volume contraction rate
+function contraction_rate(u,p)
+	g,w,N = p
+	sum_x = sum(u[1:2:end])
+	sum_y = sum(u[2:2:end])
+	return g*N - g* sum_y - g*w*(sum_x-sum_y) - N
+end
