@@ -1,4 +1,4 @@
-function simple_transient_time(ds,T,state=current_state(ds); threshold, ϵ, return_ts = false)
+function simple_transient_time(ds,state=current_state(ds); Tmax=1000, threshold, period_tol=1e-3, max_tol=1e-3, return_ts = false)
 	reinit!(ds, state) #reinitialize integrator
 	previous_period = 0	      #init previous time between peaks of limcycle
 	previous_max_timepoint = 0     #init timepoint of previous peak
@@ -31,8 +31,15 @@ function simple_transient_time(ds,T,state=current_state(ds); threshold, ϵ, retu
 	
 			elseif  max_timepoint != previous_max_timepoint	#check if the integrator left a peak and the timepoints of peaks haven't been updated 
 				period = max_timepoint - previous_max_timepoint  
-				
-				if abs(previous_period - period) < ϵ && abs(max_of_limit_cycle - prev_max_of_limit_cycle) < ϵ #check for convergence of peak value and period
+				period_diff = abs(previous_period - period)
+				peak_diff = abs(max_of_limit_cycle - prev_max_of_limit_cycle)
+				#@show period_diff
+				#@show peak_diff
+				#@show previous_period
+				#@show period
+				#@show prev_max_of_limit_cycle
+				#@show max_of_limit_cycle 
+				if period_diff < period_tol && peak_diff < max_tol #check for convergence of peak value and period
 					transient = current_time(ds)
 					found_transient = true
 				end

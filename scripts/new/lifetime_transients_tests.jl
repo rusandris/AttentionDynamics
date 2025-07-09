@@ -23,14 +23,14 @@ include("transient_functions.jl")
 #-> second test: plot phase space contraction rate to see if it fluctuates
 #-> 2.test recurrence (on poincare plane)
 
-diffeq = (alg = Tsit5(),dt = 1e-3,dtmax=1e-2,adaptive=true,maxiters=1e15)
+diffeq = (alg = Tsit5(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
 #N = 10
 #g = 18.0
 #w = 0.66
 
 N = 5
 g = 20.0
-w = 0.28
+w = 0.21
 u0 = rand(2N)
 
 ds = create_ds(u0,[g,w,N];diffeq=diffeq)
@@ -47,14 +47,22 @@ for _ in 1:6500
 end
 plot(xs,st=:scatter,ms=3)
 
-traj,t = trajectory(ds,4000,initial_state(ds);Ttr=0,Δt=0.1)
+traj,t = trajectory(ds,200,initial_state(ds);Ttr=0,Δt=0.001)
 crs = [contraction_rate(traj[i],current_parameters(ds)) for i in 1:length(traj)]
+simple_transient_time(ds,T,initial_state(ds); threshold=1.5, period_tol=1e-4, max_tol=Inf, return_ts = false)
 
+plot(t[:],traj[:,1])
+plot!(xlims=(600,800))
 
-plot(t[1:4000],traj[1:4000,1])
+lyapunov(ds,500;u0=initial_state(ds),Ttr=1000)
 
 plot(t,traj[:,1])
 
 plot!(crs)
 
-simple_transient_time(ds,T,initial_state(ds); threshold=0.5, ϵ=1e-2, return_ts = false)
+lifetimes = []
+for i in 1:100
+    @show i
+    lt = simple_transient_time(ds,T,rand(2N); threshold=1.5, ϵ=1e-4, return_ts = false)
+    push!(lifetimes,lt)
+end
