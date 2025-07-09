@@ -259,7 +259,7 @@ for (i,N) in enumerate(Ns)
     #@show length(params),length(realparts_max)
     #@show realparts[:,1]
     labels = []
-    pl_maxfloq = plot(params,realparts[:,1];xformatter=:auto,
+    pl_maxfloq = plot(params,realparts[:,1];xformatter=:none,
         guidefontsize=guide_fontsize,xlabel=L"w",widen=true,
         bottom_margin = reduced_margin,top_margin = reduced_margin,
         left_margin=reduced_margin_side,right_margin=reduced_margin_side,
@@ -301,10 +301,46 @@ pl_floq = plot(plots_maxfloq...,layout=(1,length(Ns)))#bottom_margin=reduced_bot
 
 #l = @layout [a{0.5h}; b{0.25h}; c{0.25h} ]
 
-pl = plot(plots_od...,branch_plots...,plots_maxfloq...,layout=(3,3),size=(1000,500),
+
+
+#plot transient lifetimes 
+
+tr_data_dir = "../../transient_lifetimes/"
+transient_lifetime_files = readdir(tr_data_dir)
+plots_trs = []
+ylims_trs = (0,1800)
+
+for (i,N) in enumerate(Ns)
+    trs_file_N = transient_lifetime_files[findall(f -> occursin("N$N",f),transient_lifetime_files)][1]
+    transient_data = readdlm(tr_data_dir*trs_file_N) 
+    ws = transient_data[:,1]
+    transient_avgs = transient_data[:,2]
+
+    pl = plot(reverse(ws),reverse(transient_avgs);
+        xlabel=L"w",ylabel="",xformatter=:auto,
+        guidefontsize=guide_fontsize,widen=true,
+        ms=1, lw=2,xlims=xlims_pl,ylims=ylims_trs,
+        legend_columns=2,legend=false,
+        bottom_margin = reduced_margin,top_margin = reduced_margin,
+        left_margin=reduced_margin_side,right_margin=reduced_margin_side,
+        lc=:gray10,markerstrokewidth=0.0,DEFAULTS...,
+        yformatter=:auto,tickfontsize=tick_fontsize+3)
+
+    i == 1 && ylabel!(pl,L"\langle \tau \rangle")
+
+
+    vline!([0.2],ls=:dash,lc=:gray10,lw=2,label="")
+    push!(plots_trs,pl)
+
+end
+#pl_trs = plot(plots_trs...,layout=(1,length(Ns)))#bottom_margin=reduced_bottom_margin)
+
+
+
+pl = plot(plots_od...,branch_plots...,plots_maxfloq...,plots_trs...,layout=(4,3),size=(1000,700),
     dpi=300,left_margin=6Plots.mm,bottom_margin=7Plots.mm)
 
 #pl = plot(pl_od,pl_bif,pl_floq,layout=(3,1),size=(1000,500),dpi=300,left_margin=7Plots.mm,bottom_margin=7Plots.mm)
 #savefig(pl,"../../continuation_test_maxreal.png")
-savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_od_Ttr20000_noreinit_g5_N310_test.png")
+savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_trans_od_Ttr20000_noreinit_g5_N310_test.png")
 
