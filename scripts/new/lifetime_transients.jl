@@ -8,6 +8,8 @@ cd(@__DIR__)
 include("../../plotting/defaults.jl")
 include("../../plotting/plot_functions/lyapunov.jl")
 include("bif_floq_od_method_parameters.jl")
+include("transient_functions.jl")
+
 
 #old comments for parameter setting
 #N=7 chaotic regime (g,w,N =  [10.051282051282051, 0.65, 7.0]) dissapears for Ttr = 10^7
@@ -28,7 +30,7 @@ diffeq = (alg = Tsit5(),dt = 1e-3,dtmax=1e-2,adaptive=true,maxiters=1e15)
 
 N = 5
 g = 20.0
-w = 0.24
+w = 0.28
 u0 = rand(2N)
 
 ds = create_ds(u0,[g,w,N];diffeq=diffeq)
@@ -45,13 +47,14 @@ for _ in 1:6500
 end
 plot(xs,st=:scatter,ms=3)
 
-traj,t = trajectory(ds,1000,initial_state(ds);Ttr=0,Δt=0.1)
+traj,t = trajectory(ds,4000,initial_state(ds);Ttr=0,Δt=0.1)
 crs = [contraction_rate(traj[i],current_parameters(ds)) for i in 1:length(traj)]
 
 
-plot(t[1:1000],traj[1:1000,1])
+plot(t[1:4000],traj[1:4000,1])
 
 plot(t,traj[:,1])
 
 plot!(crs)
 
+simple_transient_time(ds,T,initial_state(ds); threshold=0.5, ϵ=1e-2, return_ts = false)
