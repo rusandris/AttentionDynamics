@@ -33,7 +33,7 @@ function simple_transient_time(ds,state=current_state(ds); Tmax=1000, threshold,
 				period = max_timepoint - previous_max_timepoint  
 				period_diff = abs(previous_period - period)
 				peak_diff = abs(max_of_limit_cycle - prev_max_of_limit_cycle)
-				#@show period_diff
+				@show period_diff
 				#@show peak_diff
 				#@show previous_period
 				#@show period

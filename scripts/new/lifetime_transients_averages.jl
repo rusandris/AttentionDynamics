@@ -24,12 +24,22 @@ g = 45.0
 ws = [0.4:-0.01:0.21;]
 u0 = rand(2N)
 
-ds = create_ds(u0,[g,w,N];diffeq=diffeq)
+ds = create_ds(u0,[g,ws[1],N];diffeq=diffeq)
 
 Tmax = 10000
 ensemble_size = 100
 lifetimes_avg = zeros(length(ws))
 lyaps_avg = zeros(length(ws))
+
+lt = simple_transient_time(ds,u0;Tmax=Tmax, threshold=1.5,
+    period_tol=1e-4,max_tol=1e-2,return_ts = false)
+
+traj,t = trajectory(ds,300,u0;Ttr=lt-100,Δt = 1e-3)
+lyapunov(ds,1400;Ttr=100,u0=current_state(ds))
+traj,t = trajectory(ds,200,current_state(ds) .+ 1e-4 .* rand(2N);Ttr=0,Δt = 1e-3)
+
+plot(t,traj[:,1])
+
 
 for (j,w) in enumerate(ws)
     set_parameter!(ds,2,w)
