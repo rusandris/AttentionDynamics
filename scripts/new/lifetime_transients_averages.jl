@@ -36,7 +36,7 @@ lt = simple_transient_time(ds,u0;Tmax=Tmax, threshold=1.5,
 
 traj,t = trajectory(ds,300,u0;Ttr=lt-100,Δt = 1e-3)
 lyapunov(ds,1400;Ttr=100,u0=current_state(ds))
-traj,t = trajectory(ds,200,current_state(ds) .+ 1e-4 .* rand(2N);Ttr=0,Δt = 1e-3)
+#traj,t = trajectory(ds,200,current_state(ds) .+ 1e-4 .* rand(2N);Ttr=0,Δt = 1e-3)
 
 plot(t,traj[:,1])
 
