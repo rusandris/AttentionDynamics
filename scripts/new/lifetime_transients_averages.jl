@@ -21,54 +21,59 @@ g = 45.0
 
 #N = 5
 #g = 20.0
-ws = [0.4:-0.01:0.21;]
+
+#N=10 first NS bif at w = 0.329206866618409 
+ws = [0.4:-0.001:0.362;]
 u0 = rand(2N)
 
 ds = create_ds(u0,[g,ws[1],N];diffeq=diffeq)
 
-Tmax = 10000
-ensemble_size = 100
-lifetimes_avg = zeros(length(ws))
-lyaps_avg = zeros(length(ws))
+Tmax = 20000
+ensemble_size = 10000
+threshold = 1.5
 
-lt = simple_transient_time(ds,u0;Tmax=Tmax, threshold=1.5,
-    period_tol=1e-4,max_tol=1e-2,return_ts = false)
+fig_dir = "../../lifetime_distribs/"
+mkpath(fig_dir)
 
-traj,t = trajectory(ds,300,u0;Ttr=lt-100,Δt = 1e-3)
-lyapunov(ds,1400;Ttr=100,u0=current_state(ds))
-#traj,t = trajectory(ds,200,current_state(ds) .+ 1e-4 .* rand(2N);Ttr=0,Δt = 1e-3)
+avgs = zeros(length(ws))
+stds = similar(avgs)
+nr_infs = similar(avgs)
+mins = similar(avgs)
+maxs = similar(avgs)
 
-plot(t,traj[:,1])
+data_dir = "../../transient_lifetimes/"
+mkpath(data_dir)
 
+file_name = data_dir*"transient_lifetime_avg_ens$ensemble_size"*"N$N"*"g_$g"*".txt"
 
 for (j,w) in enumerate(ws)
     set_parameter!(ds,2,w)
     @show w
-    lifetimes = Float64[]
-    lyaps = Float64[]
+    init_states = [rand(20) .* 10 for i in 1:ensemble_size]
 
-    for i in 1:ensemble_size
-        @show i
+    lts = transient_lifetime_statistics(ds,init_states;
+        Tmax=Tmax, period_tol=1e-3, max_tol=1e-3)
 
-        #calc lifetime
-        lt = simple_transient_time(ds,rand(2N);Tmax=Tmax, threshold=1.5,
-            period_tol=1e-4,max_tol=Inf,return_ts = false)
-        push!(lifetimes,lt)
+    #plot distribution
+    pl = histogram(lts;bins=100,xlims=(0,6000),ylabel="",xlabel=L"\tau")
+    savefig(pl,fig_dir*"lifetime_distrib_w$w"*".png")
 
-        #calc lyap 
-        #l = lyapunov(ds,lt;u0=initial_state(ds),Ttr=0)
-        #push!(lyaps,l)
+
+    #save lifetime statistics
+    avgs[j] = mean(lts) 
+    stds[j] = std(lts)
+    nr_infs[j] = count(x -> isinf(x),lts)
+    min,max = extrema(lts)
+    mins[j] = min
+    maxs[j] = max
+
+    open(file_name, "a") do f
+        write(f, "$(avgs[j]) \t $(stds[j]) \t $(mins[j]) \t $(maxs[j]) \t $(nr_infs[j]) \n")
     end
-    lifetimes_noinf = filter(x->!(isinf(x)),lifetimes) #filter Infs
-    @show length(lifetimes_noinf)
-    lifetimes_avg[j] = mean(lifetimes_noinf)
-    #lyaps_avg[j] = mean(lyaps)
 end
 
-plot(reverse(ws),reverse(lyaps_avg),lc=:gray10)
-plot(reverse(ws),reverse(lifetimes_avg),lc=:gray10,xlabel=L"w",ylabel=L"\langle \tau \rangle")
-vline!([0.2],lc=:gray10,ls=:dash)
+#plot(reverse(ws),reverse(lyaps_avg),lc=:gray10)
+#plot(reverse(ws),reverse(lifetimes_avg),lc=:gray10,xlabel=L"w",ylabel=L"\langle \tau \rangle")
+#vline!([0.2],lc=:gray10,ls=:dash)
 
-data_dir = "../../transient_lifetimes/"
-mkpath(data_dir)
-writedlm(data_dir*"transient_lifetime_avg_ens$ensemble_size"*"N$N"*"g_$g"*".txt",hcat(ws,lifetimes_avg))
+

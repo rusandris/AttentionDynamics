@@ -1,7 +1,7 @@
 function simple_transient_time(ds,state=current_state(ds); Tmax=1000, threshold, period_tol=1e-3, max_tol=1e-3)
 
 	reinit!(ds, state) #reinitialize integrator
-	println("id=$(Threads.threadid()): i got " * "$(state[1])" * " and was set" * "$(current_state(ds)[1])" * "my initial time is " * "$(current_time(ds))" )
+	#println("id=$(Threads.threadid()): i got " * "$(state[1])" * " and was set" * "$(current_state(ds)[1])" * "my initial time is " * "$(current_time(ds))" )
 	previous_period = 0	      #init previous time between peaks of limcycle
 	previous_max_timepoint = 0     #init timepoint of previous peak
 	prev_max_of_limit_cycle = 0    #init previous peak
@@ -46,7 +46,7 @@ function simple_transient_time(ds,state=current_state(ds); Tmax=1000, threshold,
 		end
 		found_transient && break      #break if transient is found
 	end
-	println("id=$(Threads.threadid()) finished : final state is " * "$(current_state(ds)[1])")
+	#println("id=$(Threads.threadid()) finished : final state is " * "$(current_state(ds)[1])")
 	return transient
 end
 
@@ -55,27 +55,18 @@ function transient_lifetime_statistics(ds,init_states;
 		 Tmax=10000, threshold=1.0, period_tol=1e-3, max_tol=1e-3)
 	
 	ensemble_size = length(init_states)
-	#make copies of ds 
-	#equal to the number of threads
-	ds_copies = [deepcopy(ds) for i in 1:Threads.nthreads()]
-
-	#set different initial conditions to each
-	#for	i in 1:length(ds_copies) 
-	#	reinit!(ds_copies,init_states[i])
-	#end	
 
 	lifetimes = zeros(ensemble_size)
 	#calc lifetimes using multithreaded loop
 	Threads.@threads for i in 1:ensemble_size
 		local id = Threads.threadid()
-		println("id : $(id)" ) #* "state: $(current_state(ds_copies[id]))")
+		#println("id : $(id) , i = $i" ) #* "state: $(current_state(ds_copies[id]))")
 
-		lifetimes[i] = simple_transient_time(ds_copies[id],init_states[i];Tmax=Tmax, threshold=threshold,
-        	period_tol=period_tol,max_tol=max_tol)
-
-		@show current_time(ds_copies[id])
-		@show current_parameters(ds_copies[id])
+		local ds_copy = deepcopy(ds)
 		
+		lifetimes[i] = simple_transient_time(ds_copy,init_states[i];Tmax=Tmax,
+			threshold=threshold, period_tol=period_tol,max_tol=max_tol)
+
 	end
 	return lifetimes
 end

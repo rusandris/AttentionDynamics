@@ -24,9 +24,9 @@ include("transient_functions.jl")
 #-> 2.test recurrence (on poincare plane)
 
 diffeq = (alg = Tsit5(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
-#N = 10
-#g = 18.0
-#w = 0.66
+N = 10
+g = 45.0
+w = 0.66
 
 N = 5
 g = 20.0
