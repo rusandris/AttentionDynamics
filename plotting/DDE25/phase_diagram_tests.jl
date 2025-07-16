@@ -7,7 +7,7 @@ using Plots,LaTeXStrings
 cd(@__DIR__)
 include("../../plotting/defaults.jl")
 include("../../plotting/plot_functions/lyapunov.jl")
-include("bif_floq_od_method_parameters.jl")
+include("../../scripts/new/bif_floq_od_method_parameters.jl")
 
 
 #N=7 chaotic regime (g,w,N =  [10.051282051282051, 0.65, 7.0]) dissapears for Ttr = 10^7
@@ -78,8 +78,13 @@ pl1 = plot_phase_diagram(lyap_vals[1],ws,gs,N;HEATMAP_DEFAULTS...,
     tickfontsize=tick_fontsize_large,
     guidefontsize=guide_fontsize_large,
     xguidefontsize=guide_fontsize_large)
-pl2 = plot_phase_diagram(lyap_vals[2],ws_saved[:],gs_N[:],N;HEATMAP_DEFAULTS...)
-pl3 = plot_phase_diagram(lyap_vals[3],ws_saved[:],gs_N[:],N;HEATMAP_DEFAULTS...)
+
+#read in NS values
+readdir("../../")
+ns_bifpoints_data = readdlm("../../data/NS_bifpoints_data_gN10/contres_po_bifp_ns.txt")
+plot!(pl1,ns_bifpoints_data[:,2],gs[1:6] ./ 9,lc=:gray10,mc=:gray10,ms=2)
+#pl2 = plot_phase_diagram(lyap_vals[2],ws_saved[:],gs_N[:],N;HEATMAP_DEFAULTS...)
+#pl3 = plot_phase_diagram(lyap_vals[3],ws_saved[:],gs_N[:],N;HEATMAP_DEFAULTS...)
 savefig(pl1,figs_dir*"N10_phasediagram_Ttr_max_$(Ttrs[1])"*".png")
 savefig(pl2,"../../N5_phasediagram_Ttr_max_$(Ttrs[2])"*".png")
 savefig(pl3,"../../N5_phasediagram_Ttr_max_$(Ttrs[3])"*".png")
