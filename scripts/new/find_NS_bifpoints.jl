@@ -66,8 +66,7 @@ dsmax = 0.1 #max step size along bif curve
 ds = 0.01 #initial step along bif curve
 detect_bifurcation = 2 #detection level
 max_steps = 50 #max nr of continuation steps
-M = 600 #discretization for trapezoid method
-Ttr=1000
+Ttr=4000
 
 #nev (nr of eigs) needs to be set every time? to 2N
 
@@ -98,10 +97,10 @@ for (i,g) in enumerate(gs)
     #take lim cycle closer to wc2
 
     #params for continuation
-    w_min = wc1 + 0.1
+    w_min = wc1 + 0.01
     #w_max = w_max_ratio * wc2
     #w_min = 0.201
-    w_max = 0.45
+    w_max = 0.35
     @show w_min,w_max
 
     #generate standard init cond
@@ -120,7 +119,7 @@ for (i,g) in enumerate(gs)
     sol = DifferentialEquations.solve(prob_de, Rodas5())
 
     #higher precision, shorter traj (couple of periods)
-    prob_de = ODEProblem(att_din!, sol.u[end], (0,200.), p, reltol = 1e-8, abstol = 1e-10)
+    prob_de = ODEProblem(att_din!, sol.u[end], (0,20.), p, reltol = 1e-8, abstol = 1e-10)
     sol = DifferentialEquations.solve(prob_de, Rodas5(),saveat=Δt)
     #display(plot(sol))
 
@@ -132,17 +131,17 @@ for (i,g) in enumerate(gs)
 
     #setup for periodic orbit (lim cycle) continuation
     #------periodic orbit continuation parameters---------
+    probsh, cish = generate_ci_problem( ShootingProblem(M=1),
+	prob, prob_de, sol, T_period; alg = Rodas5(), reltol = 1e-8, abstol = 1e-10)
+
     opts_po_cont = ContinuationPar(p_min = w_min, p_max = w_max, ds = -ds,
         newton_options = NewtonPar(;eigsolver=DefaultEig(;which=abs)), save_to_file=false,
         save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,nev=2N,
         dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = max_steps, tol_stability = 1e-10)
-    
-    #trapezoid method continuation 
-    probtrap, orbit_guess = generate_ci_problem(PeriodicOrbitTrapProblem(M = M),prob, sol, T_period)
-    
+
     #save max of x1
     #perform continuation wc_max -> w_min direction (backwards)
-    brpo = continuation(probtrap, orbit_guess, PALC(), opts_po_cont,; 
+    brpo = continuation(probsh, cish, PALC(), opts_po_cont,; 
 	verbosity = 3,filename=cont_dir*"limit_cycle_branch_N$N" ,plot = false,
     finalise_solution = fin_sol,funcs_po...)
 
@@ -166,8 +165,5 @@ for (i,g) in enumerate(gs)
     open(cont_dir*"contres_po_bifp_ns"*".txt", "a") do io
         writedlm(io, [brpo.specialpoint[1].type brpo.specialpoint[1].param])
     end
-  
-
-
 
 end
