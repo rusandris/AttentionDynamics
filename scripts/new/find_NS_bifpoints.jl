@@ -66,12 +66,13 @@ dsmax = 0.1 #max step size along bif curve
 ds = 0.01 #initial step along bif curve
 detect_bifurcation = 2 #detection level
 max_steps = 50 #max nr of continuation steps
-M = 400 #discretization for trapezoid method
+M = 600 #discretization for trapezoid method
+Ttr=1000
 
 #nev (nr of eigs) needs to be set every time? to 2N
 
 N = 10 #system size 
-phase_diag_params = readdlm("../../data/phasediag_data_N10_zoomed/phasediag_params.txt") #read from phase diagram params
+phase_diag_params = readdlm("../../data/phasediag_data_N10_zoomed_test/phasediag_params.txt") #read from phase diagram params
 gs = phase_diag_params[end:-1:1,2]
 #gs = range(2.0,3.0;length=50) .* (N-1)
 gs_norm = gs ./ (N-1) 
@@ -100,7 +101,7 @@ for (i,g) in enumerate(gs)
     w_min = wc1 + 0.1
     #w_max = w_max_ratio * wc2
     #w_min = 0.201
-    w_max = 0.55
+    w_max = 0.45
     @show w_min,w_max
 
     #generate standard init cond
