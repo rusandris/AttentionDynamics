@@ -9,7 +9,7 @@ cd(@__DIR__)
 include("bif_floq_od_method_parameters.jl")
 
 
-diffeq = (alg = Tsit5(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
+diffeq = (alg = Rodas5(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
 N = 10
 g = 45.0
 #w = 0.66
@@ -36,8 +36,8 @@ ds = create_ds(u0,[g,ws[1],N];diffeq=diffeq)
 ds_reinit = create_ds(u0,[g,ws[1],N];diffeq=diffeq)
 
 T = 500
-#Ttrs = [0,100,1000,5000,10000]
-Ttrs = [5000,10000,15000,20000]
+Ttrs = [0,100,1000,5000] #10000]
+#Ttrs = [5000,10000,15000,20000]
 
 lyap_allN = [] #save lyaps here
 pl = plot()
@@ -95,8 +95,8 @@ plot_pp = plot(plots_pp...,layout=(1,length(ws_examples)),size=(1200,400))
 pl_examples = plot(plots_ts...,plots_pp...,layout=(2,length(ws_examples)),size=(1200,800))
 
 
-savefig(pl_lyap,"lyap_curves_N$(N)_g$g"*"long_trans_comparison.png")
-savefig(pl_examples,"dynamics_examples_N$(N)_g$g"*"long_trans_comparison.png")
+savefig(pl_lyap,"lyap_curves_N$(N)_g$g"* "T$T" * "Rodas_comparison.png")
+savefig(pl_examples,"dynamics_examples_N$(N)_g$g" * "T$T" * "Rodas_comparison.png")
 
 #=
 #threaded version 

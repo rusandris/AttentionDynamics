@@ -58,10 +58,10 @@ end
 #w = 0.5
 
 N = 10 
-g = 45
-w = 0.35
+g = 45.0
+w = 0.4
 
-Ttr = 2500
+Ttr = 5000
 T = 100
 #generate standard init cond
 p = [g,w,N]
@@ -97,10 +97,10 @@ display(plot(sol.t,x1_ts,label="N=$N"))
 T_period = estimate_period(x1_ts,:ac,sol.t;L=length(x1_ts)÷3,ϵ=0.2)
 @show T_period
 
-probsh, cish = generate_ci_problem( ShootingProblem(M=1),
+probsh, cish = generate_ci_problem( ShootingProblem(M=100),
 	prob, prob_de, sol, T_period; alg = Rodas5(), reltol = 1e-8, abstol = 1e-10)
 
-opts_po_cont = ContinuationPar(p_min = 0.21, p_max = 0.35, ds = -ds,
+opts_po_cont = ContinuationPar(p_min = 0.35, p_max = 0.4, ds = -ds,
         newton_options = NewtonPar(;eigsolver=DefaultEig(;which=abs)), save_to_file=false,
         save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,nev=2N,
         dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = max_steps, tol_stability = 1e-10)

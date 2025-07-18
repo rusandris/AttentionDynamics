@@ -100,7 +100,7 @@ for (i,g) in enumerate(gs)
     w_min = wc1 + 0.01
     #w_max = w_max_ratio * wc2
     #w_min = 0.201
-    w_max = 0.35
+    w_max = 0.4
     @show w_min,w_max
 
     #generate standard init cond
