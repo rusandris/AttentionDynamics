@@ -9,7 +9,7 @@ cd(@__DIR__)
 include("bif_floq_od_method_parameters.jl")
 
 
-diffeq = (alg = Rodas5(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
+diffeq = (alg = Vern9(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
 N = 10
 g = 45.0
 #w = 0.66
