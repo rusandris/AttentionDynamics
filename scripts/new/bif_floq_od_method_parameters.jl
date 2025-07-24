@@ -23,14 +23,3 @@ mkpath(cont_dir)
 #save params that apply to every system size
 writedlm(cont_dir*"global_params_Ns_g.txt",global_params)
 
-#-----------initial conditions-----------------
-#define well-controlled initial condition for each system size
-
-function generate_initial_condition(N)
-    u0 = zeros(Float64,2N)
-    for i in 1:2:2N 
-        u0[i] = (i+1)/2
-        u0[i+1] = 0.0 
-    end
-    return u0
-end

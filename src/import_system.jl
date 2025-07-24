@@ -1,4 +1,4 @@
-export att_din!,skipsum,create_original_ds,create_ds
+export att_din!,skipsum,create_original_ds,create_ds,generate_initial_condition
 
 function skipsum(u,i)
     sum = 0.0
@@ -33,3 +33,14 @@ function create_integrator(ds,diffeq) integrator(ds;diffeq) end
 function create_original_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din_original!,u0,p;diffeq=diffeq) end
 
 
+#-----------initial conditions-----------------
+#define well-controlled initial condition for each system size
+
+function generate_initial_condition(N)
+    u0 = zeros(Float64,2N)
+    for i in 1:2:2N 
+        u0[i] = (i+1)/2
+        u0[i+1] = 0.0 
+    end
+    return u0
+end
