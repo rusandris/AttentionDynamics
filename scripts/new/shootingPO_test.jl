@@ -28,6 +28,7 @@ function F_ad(u,p)
     du
 end
 
+F_ad_proj(u,p) = F_ad(u,p)[end-N+1:end]
 #-------------------helper recording and plotter functions---------------------
 
 funcs_po = (record_from_solution = (x, p; k...) -> begin
@@ -83,13 +84,26 @@ prob = BifurcationProblem(F_ad,
         2,     # parameter index for continuation
         record_from_solution = (x, p; k...) -> x[1])
 
+prob_proj = BifurcationProblem(F_ad_proj,
+        ones(N), # initial condition x0
+        p, # set of parameters
+        2,     # parameter index for continuation
+        record_from_solution = (x, p; k...) -> x[1])
+
+
+
 #transient
 prob_de = ODEProblem(att_din!, u0, (0,Ttr), p;saveat=[Ttr])
 sol = DifferentialEquations.solve(prob_de, Rodas5())
 
 #higher precision, shorter traj (couple of periods)
 prob_de = ODEProblem(att_din!, sol.u[end], (0,200.), p, reltol = 1e-8, abstol = 1e-10)
+prob_de_proj = ODEProblem(att_din_proj, u0, (0,Ttr), p;saveat=[Ttr])
+
 sol = DifferentialEquations.solve(prob_de, Rodas5(),saveat=Δt)
+
+proj_sol(t) = sol(t)[end-N+1:end]
+
 #display(plot(sol))
 
 #approximate period 

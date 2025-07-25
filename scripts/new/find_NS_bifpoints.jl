@@ -63,7 +63,7 @@ mkpath(cont_dir)
 
 Δt = 1e-3 #lim cycle sol sampling
 dsmax = 0.1 #max step size along bif curve
-ds = 0.01 #initial step along bif curve
+ds = 0.001 #initial step along bif curve
 detect_bifurcation = 2 #detection level
 max_steps = 50 #max nr of continuation steps
 Ttr=4000
@@ -72,11 +72,11 @@ Ttr=4000
 
 N = 10 #system size 
 phase_diag_params = readdlm("../../data/phasediag_data_N10_zoomed_test/phasediag_params.txt") #read from phase diagram params
-gs = phase_diag_params[end:-1:1,2]
-#gs = range(2.0,3.0;length=50) .* (N-1)
-gs_norm = gs ./ (N-1) 
-#gs = gs[7:end]
-#s = range(1.2,2.0;length=40) .* (N-1)
+#gs = phase_diag_params[end:-1:1,2]
+#gs = gs[23:50]
+gs = [12:1:20;]
+gs = reverse(gs)
+wc1s = (N-1) ./ gs 
 
 g_critical_curve(w,N) = (N-1)/w
 fp_guess = ones(2N) #coexistence fp
@@ -100,7 +100,7 @@ for (i,g) in enumerate(gs)
     w_min = wc1 + 0.01
     #w_max = w_max_ratio * wc2
     #w_min = 0.201
-    w_max = 0.4
+    w_max = wc1 + 0.3
     @show w_min,w_max
 
     #generate standard init cond
@@ -119,29 +119,31 @@ for (i,g) in enumerate(gs)
     sol = DifferentialEquations.solve(prob_de, Rodas5())
 
     #higher precision, shorter traj (couple of periods)
-    prob_de = ODEProblem(att_din!, sol.u[end], (0,20.), p, reltol = 1e-8, abstol = 1e-10)
+    prob_de = ODEProblem(att_din!, sol.u[end], (0,200.), p, reltol = 1e-8, abstol = 1e-10)
     sol = DifferentialEquations.solve(prob_de, Rodas5(),saveat=Δt)
     #display(plot(sol))
 
     #approximate period 
     x1_ts = [sol.u[i][1] for i in 1:length(sol)]
-    #display(plot(sol.t,x1_ts,label="N=$N"))
+    display(plot(sol.t,x1_ts,label="g=$(g) w=$w_max"))
     T_period = estimate_period(x1_ts,:ac,sol.t;L=length(x1_ts)÷3,ϵ=0.2)
     @show T_period
 
     #setup for periodic orbit (lim cycle) continuation
     #------periodic orbit continuation parameters---------
-    probsh, cish = generate_ci_problem( ShootingProblem(M=1),
-	prob, prob_de, sol, T_period; alg = Rodas5(), reltol = 1e-8, abstol = 1e-10)
+    probcoll, orbitguess = generate_ci_problem(
+        PeriodicOrbitOCollProblem(30, 5;meshadapt=true),
+	    prob, sol, T_period)
+
 
     opts_po_cont = ContinuationPar(p_min = w_min, p_max = w_max, ds = -ds,
         newton_options = NewtonPar(;eigsolver=DefaultEig(;which=abs)), save_to_file=false,
-        save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,nev=2N,
-        dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = max_steps, tol_stability = 1e-10)
+        save_eigenvectors=false,nev=2N,dsmax = dsmax,detect_bifurcation=detect_bifurcation, 
+        max_steps = max_steps, tol_stability = 1e-5)
 
     #save max of x1
     #perform continuation wc_max -> w_min direction (backwards)
-    brpo = continuation(probsh, cish, PALC(), opts_po_cont,; 
+    brpo = continuation(probcoll, orbitguess, PALC(), opts_po_cont,; 
 	verbosity = 3,filename=cont_dir*"limit_cycle_branch_N$N" ,plot = false,
     finalise_solution = fin_sol,funcs_po...)
 
