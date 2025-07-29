@@ -23,8 +23,8 @@ end
 
 #plot reinit
 lyaps_N5_reinit = readdlm(data_dir*"lyapunovs_reinit_g_20.0_N_5.txt")
-params = lyaps_N5_reinit[:,1]
-lyaps = lyaps_N5_reinit[:,2:3] 
+params = lyaps_N5_reinit[end:-1:1,1]
+lyaps = lyaps_N5_reinit[end:-1:1,2:3] 
 pl_N5_reinit = plot(params,lyaps_N5_reinit[:,2:3],
     label = [L"5 \times 10^4" L"10^5" L"2 \times 10^5"],
     lc = [:gray50 :gray30 :gray10],xlabel=L"w",ylabel=L"\lambda")
@@ -44,20 +44,21 @@ for (i,file) in enumerate(data_files_N10)
     params = data[:,1]
     lyaps = data[:,2]
     
-    plot!(params,lyaps,lc=colors[i],label=Ttrs_strings[i])
+    plot!(params,lyaps,lc=colors[i],label=Ttrs_strings[i],legend=:topleft)
 end
 
 #plot reinit
 lyaps_N10_reinit = readdlm(data_dir*"lyapunovs_reinit_g_45.0_N_10.txt")
-params = lyaps_N10_reinit[:,1]
-lyaps = lyaps_N10_reinit[:,2:4] 
+params = lyaps_N10_reinit[end:-1:1,1]
+lyaps = lyaps_N10_reinit[end:-1:1,2:4] 
 pl_N10_reinit = plot(params,lyaps_N10_reinit[:,2:4],
     label = [L"5 \times 10^4" L"10^5" L"2 \times 10^5"],
-    lc = [:gray50 :gray30 :gray10],xlabel=L"w",ylabel=L"\lambda")
+    lc = [:gray50 :gray30 :gray10],xlabel=L"w",ylabel=L"\lambda",
+    legend=:topleft)
 
 pl = plot(pl_N5_noreinit,pl_N5_reinit,pl_N10_noreinit,pl_N10_reinit;
     layout=(2,2),size=(1000,600),guidefontsize=20,
-    legendfontsize=15)
+    legendfontsize=12)
 
 figs_dir = "../../paper_figs/"
 savefig(pl,figs_dir*"lyap_curves_N10_N5.png")

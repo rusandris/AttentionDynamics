@@ -2,6 +2,7 @@ using Revise
 using DynamicalSystems
 using DelimitedFiles
 using AttentionDynamics
+using Plots,LaTeXStrings
 cd(@__DIR__)
 include("../../plotting/defaults.jl")
 include("../../plotting/plot_functions/lyapunov.jl")
