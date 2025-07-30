@@ -50,11 +50,22 @@ end
 #plot reinit
 lyaps_N10_reinit = readdlm(data_dir*"lyapunovs_reinit_g_45.0_N_10.txt")
 params = lyaps_N10_reinit[end:-1:1,1]
-lyaps = lyaps_N10_reinit[end:-1:1,2:4] 
-pl_N10_reinit = plot(params,lyaps_N10_reinit[:,2:4],
-    label = [L"5 \times 10^4" L"10^5" L"2 \times 10^5"],
-    lc = [:gray50 :gray30 :gray10],xlabel=L"w",ylabel=L"\lambda",
+lyaps = lyaps_N10_reinit[end:-1:1,2:end]
+Ttrs = [100,500,1000,5000,10000,50000,100000] 
+colors = distinguishable_colors(7)
+
+pl_N10_reinit = plot(xlabel=L"w",ylabel=L"\lambda",
     legend=:topleft)
+labels = ["100", "500", "1000", "5000", "10000", "50000", "100000"]
+
+for i in 5:7#1:size(lyaps)[2]
+
+    plot!(params,lyaps[:,i],
+        label=labels[i],linecolor=colors[i],
+        xlabel=L"w",ylabel=L"\lambda",
+        legend=:topleft)
+end
+pl_N10_reinit
 
 pl = plot(pl_N5_noreinit,pl_N5_reinit,pl_N10_noreinit,pl_N10_reinit;
     layout=(2,2),size=(1000,600),guidefontsize=20,

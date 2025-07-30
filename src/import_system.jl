@@ -1,4 +1,4 @@
-export att_din!,skipsum,create_original_ds,create_ds,generate_initial_condition
+export att_din!,skipsum,create_original_ds,create_ds,generate_initial_condition,rescaled_params
 
 function skipsum(u,i)
     sum = 0.0
@@ -39,9 +39,10 @@ end
 diffeq_default =  (abstol = 1.0e-6, reltol = 1.0e-6)
 function create_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din!,u0,p;diffeq=diffeq) end
 function create_integrator(ds,diffeq) integrator(ds;diffeq) end
-
 function create_original_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din_original!,u0,p;diffeq=diffeq) end
 
+#convert original params to rescaled
+rescaled_params(rp,rc,K,c,α,N) = ( 1/(1 + rc/(α*K*c*(N-1))), rp/α )
 
 #-----------initial conditions-----------------
 #define well-controlled initial condition for each system size

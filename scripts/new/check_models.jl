@@ -4,12 +4,9 @@ using Plots,LaTeXStrings
 using AttentionDynamics
 using OrdinaryDiffEq
 
-#convert original params to rescaled
-rescaled_params(rp,rc,K,c,α,N) = ( 1/(1 + rc/(α*K*c*(N-1))), rp/α )
-
 #original params
 N = 10
-rp = 1.0;rc = 1.0;K = 1.0;c = 2.0;α = 5*1e-2
+rp = 1.0;rc = 1.0;K = 1.0;c = 3.0;α = 5*1e-2
 p_orig = [rp,rc,K,c,α]
 
 #plot param conversion function
@@ -35,6 +32,7 @@ savefig(pl_param_conversion,figs_dir*"pl_param_conversion_test.png")
 
 #rescaled params
 w,g = rescaled_params(rp,rc,K,c,α,N)
+g_normed = g/(N-1)
 p = [g,w,10]
 
 #initialize systems
