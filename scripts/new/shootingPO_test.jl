@@ -28,6 +28,7 @@ function F_ad(u,p)
     du
 end
 
+F_ad_proj(u,p) = F_ad(u,p)[end-N+1:end]
 #-------------------helper recording and plotter functions---------------------
 
 funcs_po = (record_from_solution = (x, p; k...) -> begin
@@ -53,13 +54,14 @@ function fin_sol(z, tau, step, br; k...)
 end
 
 
-#N = 3 
-#g = 5
-#w = 0.5
+N = 3 
+g = 5
+w = 0.5
 
-N = 10 
-g = 45.0
-w = 0.4
+#N = 10 
+#g = 100.0
+#w = 0.25
+wc1 = (N-1)/g
 
 Ttr = 5000
 T = 100
@@ -82,22 +84,39 @@ prob = BifurcationProblem(F_ad,
         2,     # parameter index for continuation
         record_from_solution = (x, p; k...) -> x[1])
 
+prob_proj = BifurcationProblem(F_ad_proj,
+        ones(N), # initial condition x0
+        p, # set of parameters
+        2,     # parameter index for continuation
+        record_from_solution = (x, p; k...) -> x[1])
+
+
+
 #transient
 prob_de = ODEProblem(att_din!, u0, (0,Ttr), p;saveat=[Ttr])
 sol = DifferentialEquations.solve(prob_de, Rodas5())
 
 #higher precision, shorter traj (couple of periods)
 prob_de = ODEProblem(att_din!, sol.u[end], (0,200.), p, reltol = 1e-8, abstol = 1e-10)
+prob_de_proj = ODEProblem(att_din_proj, u0, (0,Ttr), p;saveat=[Ttr])
+
 sol = DifferentialEquations.solve(prob_de, Rodas5(),saveat=Δt)
+
+proj_sol(t) = sol(t)[end-N+1:end]
+
 #display(plot(sol))
 
 #approximate period 
 x1_ts = [sol.u[i][1] for i in 1:length(sol)]
-display(plot(sol.t,x1_ts,label="N=$N"))
+x2_ts = [sol.u[i][2] for i in 1:length(sol)]
+pl = plot(sol.t[1:2000],x1_ts[1:2000],label="N=$N")
+plot!(sol.t[1:2000],x2_ts[1:2000],label="N=$N")
+
+
 T_period = estimate_period(x1_ts,:ac,sol.t;L=length(x1_ts)÷3,ϵ=0.2)
 @show T_period
 
-probsh, cish = generate_ci_problem( ShootingProblem(M=100),
+probsh, cish = generate_ci_problem( ShootingProblem(M=200),
 	prob, prob_de, sol, T_period; alg = Rodas5(), reltol = 1e-8, abstol = 1e-10)
 
 opts_po_cont = ContinuationPar(p_min = 0.35, p_max = 0.4, ds = -ds,
