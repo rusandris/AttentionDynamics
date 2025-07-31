@@ -4,7 +4,7 @@ using AttentionDynamics
 using OrdinaryDiffEq
 using StatsBase
 using DelimitedFiles
-using Plots,LaTeXStrings
+#using Plots,LaTeXStrings
 cd(@__DIR__)
 
 #calculate lyapunov curves for `ws` values of w 
@@ -52,7 +52,7 @@ function calc_lyapunov_curves_reinit(ds,ws,Ttrs,T;u0=current_state(u0))
             w = ws[i]
             id = Threads.threadid()
             println("Id: $id" * " Ttr: $Ttr" * " w = $w")
-            pds = ParallelDynamicalSystem(ds,[u0,u0 .+ 1e-9 .* randn(2N)])
+            pds = ParallelDynamicalSystem(deepcopy(ds),[u0,u0 .+ 1e-9 .* randn(2N)])
             set_parameter!(pds,2,w)
             lyaps[i] = lyapunov(pds,T;Ttr=Ttr)
         end
@@ -62,13 +62,13 @@ function calc_lyapunov_curves_reinit(ds,ws,Ttrs,T;u0=current_state(u0))
 end
 
 #wc1 = (N-1)/g
-T = 200
+T = 2000
 w_min = 0.21
 w_max = 0.4
-nw = 20
+nw = 100
 ws = range(w_max,w_min;length=nw) 
 
-savedir = "./data/"
+savedir = "./data_highres/"
 mkpath(savedir)
 
 diffeq = (alg = Tsit5(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
@@ -84,8 +84,8 @@ u0 = generate_initial_condition(N)
 ds = create_ds(u0,[g,ws[1],N];diffeq=diffeq)
 
 
-Ttrs = [5000,10000,20000]
-@time calc_lyapunov_curves(ds,ws,Ttrs,T;u0=u0,save_dir=savedir)
+Ttrs = [100,500,1000,5000,10000,500000,100000]
+#@time calc_lyapunov_curves(ds,ws,Ttrs,T;u0=u0,save_dir=savedir)
 @time λs = calc_lyapunov_curves_reinit(ds,ws,Ttrs,T;u0=u0)
 filename_reinit = savedir*"lyapunovs_reinit_g_$g"*"_N_$N"*".txt"
 writedlm(filename_reinit,hcat(ws,stack(λs)) ) 
