@@ -65,11 +65,9 @@ end
 T = 2000
 w_min = 0.21
 w_max = 0.4
-<<<<<<< HEAD
+
 nw = 100
-=======
-nw = 10
->>>>>>> a1b00a4a648ed138c646ee9b0d6e65c73cb53a87
+
 ws = range(w_max,w_min;length=nw) 
 
 savedir = "./data_highres/"
@@ -88,11 +86,8 @@ u0 = generate_initial_condition(N)
 ds = create_ds(u0,[g,ws[1],N];diffeq=diffeq)
 
 
-<<<<<<< HEAD
 Ttrs = [100,500,1000,5000,10000,500000,100000]
-=======
-Ttrs = [500,1000,2000]
->>>>>>> a1b00a4a648ed138c646ee9b0d6e65c73cb53a87
+
 #@time calc_lyapunov_curves(ds,ws,Ttrs,T;u0=u0,save_dir=savedir)
 @time λs = calc_lyapunov_curves_reinit(ds,ws,Ttrs,T;u0=u0)
 filename_reinit = savedir*"lyapunovs_reinit_g_$g"*"_N_$N"*".txt"
