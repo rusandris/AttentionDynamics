@@ -1,0 +1,102 @@
+using Plots,LaTeXStrings
+using DynamicalSystems
+using AttentionDynamics
+using OrdinaryDiffEq
+using Attractors
+
+#traj
+diffeq = (alg = Tsit5(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
+N = 10
+g = 45.0
+w = 0.4
+p = [g,w,N]
+u0 = rand(2N)
+ds = create_ds(u0,p;diffeq=diffeq)
+
+T_limit_cycle = 50
+T_total = 1000 
+Δt = 0.001
+
+#check if two distinct limit cycles can be visualized
+#---------------------find two attractors to show as examples----------------------------
+
+cons_recurrences = 500 #nr of recurrences 
+locate_steps = 10000 #nr of steps after detection
+max_ensemble = 50 #nr of initial conditions
+
+#test trajectory for efficient phase space grid choice
+traj,_ = trajectory(ds,T_total;Ttr=500,Δt=1e-3)
+Plots.plot(traj[:,1],traj[:,2])
+#need max finding along each dim
+max_values = maximum(Matrix(traj);dims=1) #ugly max finding
+grid_size = 100 #phase space grid cell size
+
+grid = Tuple([range(0.0,max_values[i];length=grid_size) for i in 1:2N])
+
+mapper = AttractorsViaRecurrences(ds, grid;Ttr=1000,
+    consecutive_recurrences = cons_recurrences, 
+    attractor_locate_steps = locate_steps)
+
+u0s_rand = [rand(2N) for _ in 1:10]
+attrs = mapper.(u0s_rand)
+
+attrs_to_plot = [1,2]
+#----------------------------plot-------------------------  
+colors = [:green,:purple]
+pl = plot(xlabel=L"x_1-x_2",ylabel=L"y_1-y_2",
+        guidefontsize=20,legend=false)
+
+for (i,attr) in enumerate(attrs_to_plot)
+    u0 = u0s_rand[attr]
+    traj_total,t = trajectory(ds,T_total,u0;Δt = Δt)
+
+    x1 = traj_total[:,1]
+    x2 = traj_total[:,3]
+    y1 = traj_total[:,2]
+    y2 = traj_total[:,4]
+
+    #plot transient
+    transient_part = 1:Int(length(t)-T_limit_cycle/Δt)
+    plot!(x1[transient_part] .- x2[transient_part],
+        y1[transient_part] .- y2[transient_part],
+        lc=colors[i],lw=1,la=0.2)
+
+    #plot limc
+    lim_part = Int(length(t)-T_limit_cycle/Δt):length(t)
+    plot!(x1[lim_part].-x2[lim_part],
+        y1[lim_part].-y2[lim_part],
+        lc=colors[i],lw=3,la=1.0)
+
+
+end
+pl
+
+#=
+attractors = extract_attractors(mapper)
+#plot_attractors(attractors,access=[1,3],framestyle=:auto)
+atr1 = attractors[1]
+atr2 = attractors[3]
+x11 = atr1[:,1] 
+x21 = atr1[:,3]
+y21 = atr1[:,4] 
+y11 = atr1[:,2]
+x12 = atr2[:,1]
+x22 = atr2[:,3] 
+y12 = atr2[:,2]
+y22 = atr2[:,4]
+
+plot(atr1[:,1],atr1[:,2],
+    lc=:gray80,lw=1,la=1.0,
+    xlabel=L"x_1",ylabel=L"y_1",
+    guidefontsize=20,legend=false)
+
+plot(x11.-x21,y11.-y21,
+    lc=:green,lw=1,la=1.0,
+    xlabel=L"x_1-x_2",ylabel=L"y_1-y_2",
+    guidefontsize=20,legend=false)
+
+plot!(x12.-x22,y12.-y22,
+    lw=1,la=1.0,label="2",
+    lc=:purple,
+    guidefontsize=20,legend=false)
+=#
