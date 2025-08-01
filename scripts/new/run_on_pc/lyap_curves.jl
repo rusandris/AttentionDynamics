@@ -82,7 +82,7 @@ function ensemble_average_lyapunov(ds,ws,T,Ttr,nr_ens;u0=current_state(ds),
 
         Threads.@threads for e in 1:nr_ens
             id = Threads.threadid()
-            println("Id: $id" * " Ttr: $Ttr" * " w = $w")
+            println("Id: $id" * " Ttr: $Ttr_init_traj" * " w = $w")
 
             #initialize from previously computed traj
             ic_idx = rand(1:length(traj))
@@ -129,7 +129,11 @@ Ttrs = [100,500,1000,5000,10000,500000,100000]
 #filename_reinit = savedir*"lyapunovs_reinit_g_$g"*"_N_$N"*".txt"
 #writedlm(filename_reinit,hcat(ws,stack(λs)) ) 
 
-#test ensemble lyap calc 
-Ttr = 0.0
-λ_ens = ensemble_average_lyapunov(ds,ws,T,Ttr,100;u0=current_state(ds),
-        ensemble_init_param=0.3,T_init_traj = T,Ttr_init_traj = 1000,Δt = 0.01)
+#test ensemble lyap calc
+ens_res = [] 
+for Ttr in Ttrs[5:5]
+    @show Ttr
+    λ_ens = ensemble_average_lyapunov(ds,ws,T,0.0,100;u0=current_state(ds),
+        ensemble_init_param=0.3,T_init_traj = T,Ttr_init_traj = Ttr,Δt = 0.01)
+    push!(ens_res,λ_ens)
+end
