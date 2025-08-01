@@ -3,6 +3,8 @@ using DynamicalSystems
 using AttentionDynamics
 using OrdinaryDiffEq
 using Attractors
+cd(@__DIR__)
+figs_dir = "../../paper_figs/"
 
 #traj
 diffeq = (alg = Tsit5(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
@@ -13,8 +15,9 @@ p = [g,w,N]
 u0 = rand(2N)
 ds = create_ds(u0,p;diffeq=diffeq)
 
-T_limit_cycle = 50
-T_total = 1000 
+T_limit_cycle = 10
+T_plot_trans = 100
+Ttr_limc = 1000
 Δt = 0.001
 
 #check if two distinct limit cycles can be visualized
@@ -44,32 +47,39 @@ attrs_to_plot = [1,2]
 #----------------------------plot-------------------------  
 colors = [:green,:purple]
 pl = plot(xlabel=L"x_1-x_2",ylabel=L"y_1-y_2",
-        guidefontsize=20,legend=false)
+        guidefontsize=20,legend=:bottomright,dpi=300)
 
 for (i,attr) in enumerate(attrs_to_plot)
     u0 = u0s_rand[attr]
-    traj_total,t = trajectory(ds,T_total,u0;Δt = Δt)
-
-    x1 = traj_total[:,1]
-    x2 = traj_total[:,3]
-    y1 = traj_total[:,2]
-    y2 = traj_total[:,4]
 
     #plot transient
-    transient_part = 1:Int(length(t)-T_limit_cycle/Δt)
-    plot!(x1[transient_part] .- x2[transient_part],
-        y1[transient_part] .- y2[transient_part],
-        lc=colors[i],lw=1,la=0.2)
+    traj_tr,t_tr = trajectory(ds,T_plot_trans,u0;Δt = Δt)
+
+    x1 = traj_tr[:,1]
+    x2 = traj_tr[:,3]
+    y1 = traj_tr[:,2]
+    y2 = traj_tr[:,4]
+
+    plot!(x1 .- x2, y1 .- y2,
+        lc=colors[i],lw=1,la=0.2,
+        label="")
 
     #plot limc
-    lim_part = Int(length(t)-T_limit_cycle/Δt):length(t)
-    plot!(x1[lim_part].-x2[lim_part],
-        y1[lim_part].-y2[lim_part],
-        lc=colors[i],lw=3,la=1.0)
+    traj_limc,t_limc = trajectory(ds,T_limit_cycle,u0;Ttr=Ttr_limc,Δt = Δt)
+
+    x1 = traj_limc[:,1]
+    x2 = traj_limc[:,3]
+    y1 = traj_limc[:,2]
+    y2 = traj_limc[:,4]
+
+    plot!(x1 .- x2, y1 .- y2,
+        lc=colors[i],lw=3,la=1.0,dpi=300,
+        label="limit cycle $i",
+        title = L"N=%$N"*L", g=%$g"*L", w=%$w")
 
 
 end
-pl
+savefig(pl,figs_dir*"two_attractor_diff_proj_test_N$N"*"_g$g"*"_w$w"*".png")
 
 #=
 attractors = extract_attractors(mapper)

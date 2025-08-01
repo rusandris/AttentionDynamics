@@ -1,4 +1,106 @@
 export lyapunov_curve,lyapunov_curves,lyapunov_diagram,lyapunov_diagram!
+export calc_lyapunov_curves,calc_lyapunov_curves_reinit,ensemble_average_lyapunov
+
+#calculate lyapunov curves for `ws` values of w 
+#using several different Ttr transient times 
+#for the same g 
+#without reinit 
+function calc_lyapunov_curves(ds,ws,Ttrs,T;u0=current_state(u0),save_dir="./")
+
+    lyap_curves = [] #save lyaps here
+
+    for Ttr in Ttrs
+        g,_,N = current_parameters(ds)
+        N = Int(N)
+        #create pds 
+        pds = ParallelDynamicalSystem(ds,[u0,u0 .+ 1e-9 .* randn(2N)])
+        file_name = "lyapunovs_g_$g"*"_N_$N"*"_Ttr_$Ttr"*".txt"
+
+        for (i,w) in enumerate(ws)
+            println("Ttr: $Ttr" * " w = $w")
+            set_parameter!(pds,2,w)
+            λ = lyapunov(pds,T;Ttr=Ttr)
+            
+            open(save_dir*file_name, "a") do f
+                write(f, "$w \t $λ \n")
+            end
+
+        end
+    end
+end
+
+#calculate lyapunov curves for `ws` values of w 
+#using several different Ttr transient times 
+#for the same g 
+#with reinit
+#paralellized version 
+function calc_lyapunov_curves_reinit(ds,ws,Ttrs,T;
+        generate_u0 = dim -> generate_initial_condition(dim ÷ 2),d0=1e-9)
+
+    dim = dimension(ds)
+    lyap_curves = [] #save lyaps here
+
+    for Ttr in Ttrs
+        #save lyapunov exps for a transient time  
+        lyaps = zeros(length(ws))
+
+        #distribute parameter loop over threads
+        Threads.@threads for i in 1:length(ws)
+            
+            w = ws[i]
+            id = Threads.threadid()
+            println("Id: $id" * " Ttr: $Ttr" * " w = $w")
+
+            #make a pds for every param value
+            #to avoid races
+            #generate new initial condition 
+            u0 = generate_u0(dim)
+            pds = ParallelDynamicalSystem(deepcopy(ds),[u0,u0 .+ d0 .* randn(dim)])
+            set_parameter!(pds,2,w)
+            lyaps[i] = lyapunov(pds,T;Ttr=Ttr)
+        end
+        push!(lyap_curves,lyaps)
+    end
+
+    return lyap_curves
+end
+
+#initialize ensemble from the chaotic attractor?
+#for each parameter, take the average LLE  
+function ensemble_average_lyapunov(ds,ws,T,Ttr,nr_ens;u0=current_state(ds),
+        ensemble_init_param,T_init_traj = T,Ttr_init_traj = Ttr,Δt = 0.01)
+
+    lyap_avgs = zeros(length(ws)) #save lyap avgs here
+    
+
+    #init ensemble from a trajectory
+    set_parameter!(ds,2,ensemble_init_param)
+    traj,t = trajectory(ds,T_init_traj;Ttr=Ttr_init_traj)
+
+    for i in 1:length(ws)
+        w = ws[i]
+
+        #go over initial conditions (paralellized)
+        #select nr_ens init conds from traj
+        lyaps_ensemble = zeros(length(ws)) #save lyap avgs here
+
+        Threads.@threads for e in 1:nr_ens
+            id = Threads.threadid()
+            println("Id: $id" * " Ttr: $Ttr" * " w = $w")
+
+            #initialize from previously computed traj
+            ic_idx = rand(1:length(traj))
+            u0 = traj[ic_idx]
+            pds = ParallelDynamicalSystem(deepcopy(ds),[u0,u0 .+ 1e-9 .* randn(2N)])
+            set_parameter!(pds,2,w)
+            lyaps_ensemble[e] = lyapunov(pds,T;Ttr=Ttr)
+        end
+        lyap_avgs[i] = mean(lyaps_ensemble)
+    end
+
+    return lyap_avgs
+end
+
 function lyapunov_curve(pinteg,T,Ttr,param_interval;Δt, d0, ut, lt)
 	lyaps = []
 	for param in param_interval
