@@ -22,8 +22,8 @@ Ttrs = [100,500,1000,5000,10000,500000,100000]
 
 #----------------------system parameters----------------------
 w_min = 0.21
-w_max = 0.4
-nw = 10
+w_max = 0.35
+nw = 50
 ws = range(w_max,w_min;length=nw) 
 
 #-----------------------setup for dynamical system----------------------
@@ -34,15 +34,20 @@ p = [g,w_max,N]
 u0 = generate_initial_condition(N) #dummy init as [1,0,2,0,3...]
 ds = create_ds(u0,[g,ws[1],N];diffeq=diffeq)
 
+
+#--------------check if Tλ is enough to calc lyap exps----------------
 #random initial conditions
 random_u0(dim) = rand(dim) .* 10
 
-λs =  calc_lyapunov_curves_reinit(ds,ws,[1000],2000;
-        generate_u0 = random_u0,d0=1e-9)
+Tλs = [100,500,1000,2000,5000]	
+for Tλ in Tλs
+	@show Tλ 
+	λs = calc_lyapunov_curves_reinit(ds,ws,[10000],Tλ;
+	generate_u0 = random_u0,d0=1e-9)
 
-filename_reinit = savedir*"lyapunovs_reinit_g_$g"*"_N_$N"*".txt"
-writedlm(filename_reinit,hcat(ws,stack(λs)) ) 
-
+	filename_reinit = savedir*"lyapunovs_reinit_g_$g"*"_N_$N"* "Ttr_1e4" * "_T_$Tλ" * ".txt"
+	writedlm(filename_reinit,hcat(ws,stack(λs)) ) 
+end
 #@time calc_lyapunov_curves(ds,ws,Ttrs,T;u0=u0,save_dir=savedir)
 
 
