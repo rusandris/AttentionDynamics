@@ -8,6 +8,18 @@ cd(@__DIR__)
 figs_dir = "../../paper_figs/"
 mkpath(figs_dir)
 
+
+function plot_projection(traj;xlims=(-Inf,Inf),ylims=(-Inf,Inf))
+    x1 = traj[:,1]
+    x2 = traj[:,3]
+    y1 = traj[:,2]
+    y2 = traj[:,4]
+
+    pl = plot(x1 .- x2, y1 .- y2,
+        lw=1, la=1.0, ylims=ylims, xlims=xlims)
+
+end
+
 #traj
 diffeq = (alg = Tsit5(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
 N = 10
