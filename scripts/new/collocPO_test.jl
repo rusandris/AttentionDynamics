@@ -58,16 +58,16 @@ end
 #w = 0.5
 
 N = 10 
-g = 45.1836
+g = 45.0
 #w = 0.25
-w = 0.4
+w = 0.3
 wc1 = (N-1)/g
 
-Ttr = 5000
-T = 100
+Ttr = 1000
+T = 500
 #generate standard init cond
 p = [g,w,N]
-u0 = rand(2N)
+u0 = rand(2N) * 50
 fp_guess = ones(2N)
 Δt = 1e-2
 
@@ -88,16 +88,19 @@ prob = BifurcationProblem(F_ad,
 
 #transient
 prob_de = ODEProblem(att_din!, u0, (0,Ttr), p;saveat=[Ttr])
-sol = DifferentialEquations.solve(prob_de, Rodas5())
+sol = DifferentialEquations.solve(prob_de, Tsit5())
 
 #higher precision, shorter traj (couple of periods)
 prob_de = ODEProblem(att_din!, sol.u[end], (0,200.), p, reltol = 1e-8, abstol = 1e-10)
 
 sol = DifferentialEquations.solve(prob_de, Rodas5(),saveat=Δt)
 
-proj_sol(t) = sol(t)[end-N+1:end]
+#proj_sol(t) = sol(t)[end-N+1:end]
 
 #display(plot(sol))
+#find nonzero (active variables)
+us = stack(sol.u)'
+actives = findall(m -> m > 1,[maximum(us[:,i]) for i in 1:2N])
 
 #approximate period 
 x1_ts = [sol.u[i][1] for i in 1:length(sol)]
