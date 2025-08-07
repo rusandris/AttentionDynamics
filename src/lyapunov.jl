@@ -55,7 +55,7 @@ function calc_lyapunov_curves_reinit(ds,ws,Ttrs,T;
             #to avoid races
             #generate new initial condition 
             u0 = generate_u0(dim)
-            pds = ParallelDynamicalSystem(deepcopy(ds),[u0,u0 .+ d0 .* randn(dim)])
+            pds = ParallelDynamicalSystem(deepcopy(ds),[u0,u0 .+ d0 .* rand(dim)])
             set_parameter!(pds,2,w)
             lyaps[i] = lyapunov(pds,T;Ttr=Ttr)
         end

@@ -63,7 +63,7 @@ g = 45.0
 w = 0.3
 wc1 = (N-1)/g
 
-Ttr = 1000
+Ttr = 2000
 T = 500
 #generate standard init cond
 p = [g,w,N]
@@ -88,12 +88,14 @@ prob = BifurcationProblem(F_ad,
 
 #transient
 prob_de = ODEProblem(att_din!, u0, (0,Ttr), p;saveat=[Ttr])
-sol = DifferentialEquations.solve(prob_de, Tsit5())
+sol = DifferentialEquations.solve(prob_de, Rodas5(),dt = 1e-3,
+    dtmax=1e-3,adaptive=true,maxiters=1e15)
 
 #higher precision, shorter traj (couple of periods)
-prob_de = ODEProblem(att_din!, sol.u[end], (0,200.), p, reltol = 1e-8, abstol = 1e-10)
+prob_de = ODEProblem(att_din!, sol.u[end], (0,200.), p)
 
-sol = DifferentialEquations.solve(prob_de, Rodas5(),saveat=Δt)
+sol = DifferentialEquations.solve(prob_de, Rodas5(),saveat=Δt,
+    dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15,reltol = 1e-8, abstol = 1e-10)
 
 #proj_sol(t) = sol(t)[end-N+1:end]
 
@@ -103,8 +105,8 @@ us = stack(sol.u)'
 actives = findall(m -> m > 1,[maximum(us[:,i]) for i in 1:2N])
 
 #approximate period 
-x1_ts = [sol.u[i][1] for i in 1:length(sol)]
-x2_ts = [sol.u[i][2] for i in 1:length(sol)]
+x1_ts = [sol.u[i][actives[1]] for i in 1:length(sol)]
+x2_ts = [sol.u[i][actives[3]] for i in 1:length(sol)]
 pl = plot(sol.t[1:2000],x1_ts[1:2000],label="N=$N")
 plot!(sol.t[1:2000],x2_ts[1:2000],label="N=$N")
 
@@ -115,8 +117,28 @@ T_period = estimate_period(x1_ts,:ac,sol.t;L=length(x1_ts)÷3,ϵ=0.2)
 probcoll, orbitguess = generate_ci_problem(PeriodicOrbitOCollProblem(30, 5;meshadapt=true),
 	prob, sol, T_period)
 
-    
-opts_po_cont = ContinuationPar(p_min = 0.3, p_max = 0.4, ds = -ds,
+newton_opts = NewtonPar(;eigsolver=DefaultEig(;which=abs),verbose=true)
+
+
+#check if cycle can be found
+#based on the orbitguess
+
+newton_sol = newton(probcoll, orbitguess, newton_opts;start_with_eigen=true)
+
+#check stability of the found solution
+#UNSTABLE?
+opts_po_cont = ContinuationPar(p_min = 0.3, p_max = 0.3, ds = ds,
+        newton_options = NewtonPar(;eigsolver=DefaultEig(;which=abs)), save_to_file=false,
+        save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,nev=2N,
+        dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = 1, tol_stability = 1e-10)
+
+brpo = continuation(probcoll, orbitguess, PALC(), opts_po_cont,; 
+	verbosity = 3 ,plot = false,
+    finalise_solution = fin_sol,funcs_po...)
+
+#-----------------------------continuation test-------------------------
+#=
+opts_po_cont = ContinuationPar(p_min = 0.3, p_max = 0.4, ds = ds,
         newton_options = NewtonPar(;eigsolver=DefaultEig(;which=abs)), save_to_file=false,
         save_eigenvectors=false,save_sol_every_step=100,save_eig_every_step = 1,nev=2N,
         dsmax = dsmax,detect_bifurcation=detect_bifurcation, max_steps = max_steps, tol_stability = 1e-10)
@@ -124,3 +146,4 @@ opts_po_cont = ContinuationPar(p_min = 0.3, p_max = 0.4, ds = -ds,
 brpo = continuation(probcoll, orbitguess, PALC(), opts_po_cont,; 
 	verbosity = 3 ,plot = false,
     finalise_solution = fin_sol,funcs_po...)
+=#

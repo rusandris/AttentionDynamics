@@ -3,6 +3,7 @@ using DynamicalSystems
 using AttentionDynamics
 using OrdinaryDiffEq
 using StatsBase
+using LinearAlgebra
 #using Attractors
 cd(@__DIR__)
 figs_dir = "../../paper_figs/"
@@ -39,10 +40,11 @@ w = 0.3
 p = [g,w,N]
 
 T_plot_chaos = 400
-Ttr_chaos = 7000
+Ttr_chaos = 1000
 Δt = 0.005
 Tλ = 200
 
+#=
 pl = plot(xlabel=L"x_1-x_2",ylabel=L"y_1-y_2",
         guidefontsize=20,legend=:bottomright,dpi=300)
 
@@ -97,36 +99,47 @@ pl_cr
 #savefig(pl, figs_dir*"chaotic_regime_diff_proj_lyap_colored_test_Tlamb$(Tλ)_Ttr$(Ttr_chaos)_N$N"*"_g$g"*"_w$w"*".png")
 #IDEA: compute unstable limit cycles for this parameter?
 #using Bifkit.jl? 
+=#
+
 
 
 #test partial limit cycle trajectories
 #perturbed inside invariant plane vs. outside
-#=
-function inittest_custom(u1,d0;dims=[3,5,9])
-           u_p = zeros(length(u1))
-           u_p[dims] .+= rand(length(dims)) .* d0 
-           return u1 .+ u_p
-       end
+
+function inittest_custom(u1,d0;dims)
+    u_p = zeros(length(u1))
+    u_p[dims] .+= rand(length(dims)) .* d0 
+    return u1 .+ u_p
+end
 
 u0 = rand(2N) .* 50
+ds = create_ds(u0,p;diffeq=diffeq)
 traj,t = trajectory(ds,500,u0;Ttr=1000,Δt = 0.001)
 M = Matrix(traj)
 minmaxs = [extrema(M[:,i]) for i in 1:2:20]
 d0 = 1e-9
 u0_limc = traj[end]
-u0_p_inv = inittest_custom(traj[end],d0)
-u0_p = inittest_custom(traj[end],d0;dims=[1:2N;])
-   
-traj_limc,t = trajectory(ds,5,u0_;Ttr=0,Δt = 0.001)
-traj_p,t = trajectory(ds,5,u0_p;Ttr=0,Δt = 0.001)
-traj_p_inv,t = trajectory(ds,5,u0_p_inv;Ttr=0,Δt = 0.001)
+u0_p_inv = inittest_custom(traj[end],d0;dims=[1,3,9,17]) #perturb only in the invariant plane of the limit cycle
+u0_p = inittest_custom(traj[end],d0;dims=[1:2N;]) #perturb along every dim   
 
-pl = plot_projection(traj_limc;xlims=(-30,30),ylims=(-4,4))
-plot_projection!(pl,traj_p;xlims=(-30,30),ylims=(-4,4))
-plot_projection!(pl,traj_p_inv;xlims=(-30,30),ylims=(-4,4))
+traj_limc,t = trajectory(ds,5,u0_limc;Ttr=0,Δt = 0.001)
+traj_p,t = trajectory(ds,10,u0_p;Ttr=0,Δt = 0.001)
+traj_p_inv,t = trajectory(ds,10,u0_p_inv;Ttr=0,Δt = 0.001)
+
+pl = plot_projection(traj_limc;xlims=(-30,30),ylims=(-2,2))
+plot_projection!(pl,traj_p;xlims=(-30,30),ylims=(-2,2))
+plot_projection!(pl,traj_p_inv;xlims=(-30,30),ylims=(-2,2))
+
+#calc lyapunov exponents using different perturbation vectors
+lyapunov(ds,100;u0=u0_limc,inittest = (u1,d0) -> inittest_custom(u1,d0;dims=[1,3,9,17]),Ttr=100)
+lyapunov(ds,100;u0=u0_limc,inittest = (u1,d0) -> inittest_custom(u1,d0;dims=[1:2N;]),Ttr=100)
+
 
 #check Jacobian along limit cycle
 J = build_jacobian(u0_limc,p)
 vals,vecs = eigen(J)
 
-=#
+#check dynamics around transition to limit cycle
+#increase solver precision
+
+
