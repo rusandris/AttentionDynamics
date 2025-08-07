@@ -68,7 +68,8 @@ end
 #initialize ensemble from the chaotic attractor?
 #for each parameter, take the average LLE  
 function ensemble_average_lyapunov(ds,ws,T,Ttr,nr_ens;u0=current_state(ds),
-        ensemble_init_param,T_init_traj = T,Ttr_init_traj = Ttr,d0=1e-9,Δt = 0.01)
+        ensemble_init_param,T_init_traj = T,Ttr_init_traj = Ttr,d0=1e-9,Δt = 0.01,
+        filename="all_lyaps.txt")
 
     lyap_avgs = zeros(length(ws)) #save lyap avgs here
     dim = dimension(ds)
@@ -76,25 +77,33 @@ function ensemble_average_lyapunov(ds,ws,T,Ttr,nr_ens;u0=current_state(ds),
     #init ensemble from a trajectory
     set_parameter!(ds,2,ensemble_init_param)
     traj,t = trajectory(ds,T_init_traj;Ttr=Ttr_init_traj)
+    lyap_exps_all = zeros(length(nr_ens),length(ws))
 
     for i in 1:length(ws)
-        w = ws[i]
-
+    	w = ws[i]
+	println("w = $w")
         #go over initial conditions (paralellized)
         #select nr_ens init conds from traj
-        lyaps_ensemble = zeros(length(ws)) #save lyap avgs here
+        lyaps_ensemble = zeros(nr_ens) #save lyap avgs here
 
         Threads.@threads for e in 1:nr_ens
             id = Threads.threadid()
-            println("Thread Id: $id" * " ensemble member: $e" * " w = $w")
+            #println("Thread Id: $id" * " ensemble member: $e" * " w = $w")
 
             #initialize from previously computed traj
             ic_idx = rand(1:length(traj))
             u0 = traj[ic_idx]
-            pds = ParallelDynamicalSystem(deepcopy(ds),[u0,u0 .+ d0 .* randn(dim)])
+            pds = ParallelDynamicalSystem(deepcopy(ds),[u0,u0 .+ d0 .* rand(dim)])
             set_parameter!(pds,2,w)
             lyaps_ensemble[e] = lyapunov(pds,T;Ttr=Ttr)
         end
+        
+
+	open(filename, "a") do f
+	   writedlm(f, lyaps_ensemble')
+	end
+
+
         lyap_avgs[i] = mean(lyaps_ensemble)
     end
 

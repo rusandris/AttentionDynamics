@@ -9,48 +9,63 @@ cd(@__DIR__)
 
 #---------------------------saving-------------------------------
 
-savedir = "./data_highres/"
+savedir = "./data/data_ensembles/"
 mkpath(savedir)
 
 #-----------------------time parameters--------------------------
-T = 200
 Tλ_benettin = 2000
-Tλ_ens = 50
-T_init_traj = 2000
-Ttr_init_traj = 1000
-Ttr_ens = 0.0
-Ttrs = [100,500,1000,5000,10000,500000,100000]
+Tλ_ens = 10
+T_init_traj = 100000
+Ttr_init_traj = 10000
+Ttrλ_ens = 100.0
+
+@show Tλ_ens 
+@show T_init_traj 
+@show Ttr_init_traj
+#@show Ttrλ_ens 
+
+Ttrsλ_ens = [0,100,500,1000,5000]
 
 #---------------------ensemble parameters-----------------------
-nr_ens = 5 #100
+nr_ens = 10000
 w_ens_init = 0.3
 Δt_init_traj_save = 1.0
 
+@show nr_ens
+@show w_ens_init 
+@show Δt_init_traj_save
+
 
 #----------------------system parameters----------------------
-w_min = 0.21
+#w_min = 0.21
+w_min = 0.3
 w_max = 0.4
-nw = 50
+nw = 50 #100
 ws = range(w_max,w_min;length=nw) 
-
+#ws = [0.4]
+#@show ws
 #-----------------------setup for dynamical system----------------------
 diffeq = (alg = Tsit5(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
 N = 10 #N = 5
 g = 45.0 #g = 20.0
 p = [g,w_max,N]
 u0 = generate_initial_condition(N) #dummy init as [1,0,2,0,3...]
+u0 = rand(2N) #dummy init close to origin
 ds = create_ds(u0,[g,ws[1],N];diffeq=diffeq)
 
 #test how dependent are the results from T_init_traj
 
-T_init_traj_values = [100,200,500,1000,2000]
-for T_init_traj in T_init_traj_values[1:1]
-    @show T_init_traj
-    λ_ens = ensemble_average_lyapunov(ds,ws,Tλ_ens,Ttr_ens,nr_ens;u0=current_state(ds),
-        ensemble_init_param=w_ens_init,T_init_traj = T_init_traj,Ttr_init_traj = Ttr_init_traj,Δt = Δt_init_traj_save)
+#T_init_traj_values = [100000] #[100,200,500,1000,2000]
+λ_avgs_all = Float64[]
+for Ttrλ_ens in Ttrsλ_ens
+    @show Ttrλ_ens
+    λ_avgs = ensemble_average_lyapunov(ds,ws,Tλ_ens,Ttrλ_ens,nr_ens;u0=u0,
+        ensemble_init_param=w_ens_init,T_init_traj = T_init_traj,Ttr_init_traj = Ttr_init_traj,Δt = Δt_init_traj_save,filename=savedir*"lyaps_all_Ttrlambda_$Ttrλ_ens.txt")
     
-    file_name = "lyaps_ensemble_average_T_init_traj$T_init_traj"*"_ens_$nr_ens"*"_Tlambda_$Tλ_ens"*"_N$N"*"_g$g"*".txt"
-    writedlm(file_name,hcat(ws,λ_ens)) 
+    #@show λ_avgs[1]
+    #push!(λ_avgs_all,λ_avgs[1])
+    file_name = "lyaps_ensemble_average_T_init_traj$T_init_traj"*"_ens_$nr_ens"*"_Tlambda_$Tλ_ens"* "Ttrlambda_$Ttrλ_ens" *"_N$N"*"_g$g"*"test.txt"
+    writedlm(savedir*file_name,hcat(ws,λ_avgs)) 
 end
 
 
