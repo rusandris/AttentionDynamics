@@ -5,28 +5,92 @@ using AttentionDynamics
 using OrdinaryDiffEq
 using DynamicalSystems
 cd(@__DIR__)
-#N = 10
-#g = 45.0
-#w = 0.5
+#inspectdr()
+gr()
 
-N = 5
-g = 20.0
-w = 0.25
+function plot_projection(traj;xlims=(-Inf,Inf),ylims=(-Inf,Inf))
+    x1 = traj[:,1]
+    x2 = traj[:,3]
+    y1 = traj[:,2]
+    y2 = traj[:,4]
+
+    pl = plot(x1 .- x2, y1 .- y2,
+        lw=1, la=1.0, ylims=ylims, xlims=xlims)
+
+end
+
+function plot_projection!(pl,traj;xlims=(-Inf,Inf),ylims=(-Inf,Inf))
+    x1 = traj[:,1]
+    x2 = traj[:,3]
+    y1 = traj[:,2]
+    y2 = traj[:,4]
+
+    plot!(pl,x1 .- x2, y1 .- y2,
+        lw=1, la=1.0, ylims=ylims, xlims=xlims)
+
+end
+
+
+#check if partial limit cycles really exist
+N = 10 #N = 5
+g = 45.0 #g = 20.0
+w = 0.3 #w = 0.25
+
 p = [g,w,N]
 
-dts = [0.1,0.05,0.001,0.005,0.0001]
-algs = [RK4(),Tsit5(),Rodas5(),Vern9()] 
+#search a u0 before transition to limit cycle
+T = 20
+Ttr = 500
+u0 = rand(2N) .* 50
+#default diffeq options
+diffeq0 = (alg = Tsit5(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
+ds0 = create_ds(u0,p;diffeq=diffeq0)
+traj0,t0 = trajectory(ds,T,u0;Ttr=Ttr,Δt = 0.001)
+M0 = Matrix(traj0)
+pl = plot_projection(traj0[end-5000:end];xlims=(-30,30),ylims=(-4,4))
+#plot(t,M[:,5],xlims=(0,100))
+
+
+alg_strings = ["RK4","Tsit5","Rodas5","Vern9","Rosenbrock23"] 
+adaptive_settings_strings = ["adaptive","fixed"]
+Δt = 1e-2
+
+#----------------solver options------------------ 
+
+dts = [1e-3, 1e-4] #,1e-5] #,1e-6]
+algs = [Rosenbrock23(),RK4(),Tsit5(),Rodas5(),Vern9()] 
 adaptive_settings = [true,false]
 
-T = 200
-Ttr = 0
-u0 = rand(2N)
+#calc trajectories with different solvers and dt
+trajs_all = []
+for dt in dts
+    @show dt
+    trajs = []
+    for (j,alg) in enumerate(algs)
+        @show alg_strings[j]
+        diffeq = (alg = alg,dt = dt,dtmax=dt,adaptive=true,maxiters=1e15)
+        ds = create_ds(u0,p;diffeq=diffeq)
+        traj,t = trajectory(ds,T,u0;Ttr=Ttr,Δt = 0.01)
+        push!(trajs,traj)
+    end
+    push!(trajs_all,trajs)
+end
+
+#plot on top of eachother
 colors = distinguishable_colors(length(algs))
-alg_strings = ["RK4","Tsit5","Rodas5","Vern9"] 
-adaptive_settings_strings = ["adaptive","fixed"]
-Δt = 1e-3
+pl1 = deepcopy(pl)
+for traj in trajs_all[1] 
+    plot_projection!(pl1,traj;xlims=(-30,30),ylims=(-4,4))
+end
+pl1
 
+pl2 = deepcopy(pl)
+for traj in trajs_all[2] 
+    plot_projection!(pl2,traj;xlims=(-30,30),ylims=(-4,4))
+end
+pl2
 
+#=
 plots = []
 for (a,setting) in enumerate(adaptive_settings)
     @show setting
@@ -49,6 +113,7 @@ end
 
 pl_all = plot(plots...,layout=(length(dts),2),size=(800,1200))
 savefig(pl_all,"../../new_figs/solver_tests_N_$(N)_w_$(w)_g_$(g)"*".png")
+=#
 
 #=
 #----------------calculate lyapunov----------------------
