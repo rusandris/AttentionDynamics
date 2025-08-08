@@ -9,14 +9,14 @@ cd(@__DIR__)
 
 #---------------------------saving-------------------------------
 
-savedir = "./data/data_ensembles/"
+savedir = "./data/data_ensembles_fast_tests/"
 mkpath(savedir)
 
 #-----------------------time parameters--------------------------
 Tλ_benettin = 2000
 Tλ_ens = 10
-T_init_traj = 100000
-Ttr_init_traj = 10000
+T_init_traj = 10000
+Ttr_init_traj = 1000
 Ttrλ_ens = 100.0
 
 @show Tλ_ens 
@@ -24,10 +24,10 @@ Ttrλ_ens = 100.0
 @show Ttr_init_traj
 #@show Ttrλ_ens 
 
-Ttrsλ_ens = [0,100,500,1000,5000]
+Ttrsλ_ens = [5000] #[0,100,500,1000,5000]
 
 #---------------------ensemble parameters-----------------------
-nr_ens = 10000
+nr_ens = 1000
 w_ens_init = 0.3
 Δt_init_traj_save = 1.0
 
@@ -40,7 +40,7 @@ w_ens_init = 0.3
 #w_min = 0.21
 w_min = 0.3
 w_max = 0.4
-nw = 50 #100
+nw = 20 #100
 ws = range(w_max,w_min;length=nw) 
 #ws = [0.4]
 #@show ws
