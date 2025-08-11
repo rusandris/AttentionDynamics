@@ -1,46 +1,85 @@
 using Revise
-using DynamicalSystems
+#using DynamicalSystems
 using AttentionDynamics
-using OrdinaryDiffEq
-using DelimitedFiles
+#using OrdinaryDiffEq
+#using DelimitedFiles
 using StatsBase
 using LinearAlgebra
 using Plots,LaTeXStrings
 cd(@__DIR__)
 
+#IDEA: demonstrate fixed point calclulations with figure
+#make a plot where M=0, M=1, 1 < M < N and M=N cases are shown 
+#plot analytical and numerical eigenvalue spectra for each case 
+#discuss also g < N, and g > N cases (separate plots)
 
-function contraction_rate(u,p)
-	g,w,N = p
-	sum_x = sum(u[1:2:end])
-	sum_y = sum(u[2:2:end])
-	return g*N - g* sum_y - g*w*(sum_x-sum_y) - N
+function extract_nondegenerate(vals;atol=1e-2)
+
+    eigs_nondeg = [vals[1]]
+
+    for i in 2:length(vals)
+        val = vals[i]
+        deg = any([isapprox(val, eig,atol=atol) for eig in eigs_nondeg])
+        
+        if !(deg)
+            push!(eigs_nondeg,val)
+        end
+    end
+    return eigs_nondeg
 end
 
-#set parameters
-gs_N10 = vec(readdlm("../../plotting/data/N=10.0_gvalues.txt"))
-gs = gs_N10 ./(10-1)
-g_N = gs[30]
+#------------------------set parameters----------------------------
 
-N = 4
-#N = 10
-#N = 5 
-g = g_N * (N-1) 
+#N = 4
+
+#N = 5
 #g = 5.0
+N = 10 
+g = 45.0 
+
 wc1 = (N-1)/g
 wc2 = (N-1)/N
+
+#=
 w_test = wc1+ (wc2-wc1)/2
 diffeq = (alg = Tsit5(),dt = 1e-3,adaptive=true,dtmax=1e-2,maxiters=1e15)
-
 ds = create_ds(rand(2N),[g,w_test,N];diffeq=diffeq)
+=#
+
+ws = [0.0:0.01:1.0;]
+#-------------------------------M = 0---------------------------------
 
 #eigval spectrum
 #coexistence fixed point 
-u = ones(2N)
-p = current_parameters(ds)
-J = build_jacobian(u,p)
-#test if results are correct
-numerical_spectrum =  eigvals!(J)
-analytical_spectrum = fixed_point_eigen_spectrum(N,N,p)
+u = zeros(2N)
+numerical_spectrums = []
+analytical_spectrums = []
+
+for (i,w) in enumerate(ws)
+    p = [g,w,N]
+
+    #build Jacobian
+    J = build_jacobian(u,p)
+
+    #numerical eigenvalues
+    numerical_spectrum = eigvals(J)
+    vals_real = real.(numerical_spectrum)
+    vals_imag = imag.(numerical_spectrum)
+    vals_real_nondeg = extract_nondegenerate(vals_real)
+    vals_imag_nondeg = extract_nondegenerate(vals_imag)
+
+    push!(numerical_spectrums,vals_real_nondeg)    
+
+    #analytical eigenvalues
+    analytical_spectrum = fixed_point_eigen_spectrum(N,0,p)
+    vals_real = real.(analytical_spectrum)
+    vals_imag = imag.(analytical_spectrum)
+    vals_real_nondeg = extract_nondegenerate(vals_real)
+    vals_imag_nondeg = extract_nondegenerate(vals_imag)
+
+    push!(analytical_spectrums,vals_real_nondeg)
+
+end
 
 #dominance fixed point: doesn't matter which one we choose 
 u = zeros(2N)
