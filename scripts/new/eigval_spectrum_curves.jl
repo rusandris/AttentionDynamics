@@ -34,8 +34,10 @@ end
 
 #N = 5
 #g = 5.0
-N = 10 
-g = 45.0 
+#N = 10
+#g = 45.0
+N = 3
+g = 5.0 
 
 wc1 = (N-1)/g
 wc2 = (N-1)/N
@@ -80,6 +82,19 @@ for (i,w) in enumerate(ws)
     push!(analytical_spectrums,vals_real_nondeg)
 
 end
+
+#-----------------------------plot real part------------------------------------
+S_a = transpose(stack(analytical_spectrums))
+S_n = transpose(stack(numerical_spectrums))
+
+pl0 = plot(xlims=(0, 1), ylims=(-2, 8),
+    xlabel = L"w", ylabel = L"\lambda",
+    guidefontsize=18,tickfontsize=15)
+
+plot!(ws,S_a,ls=:solid,lw=1)
+plot!(ws, S_n, st=:scatter, ms=2)
+
+
 
 #dominance fixed point: doesn't matter which one we choose 
 u = zeros(2N)
