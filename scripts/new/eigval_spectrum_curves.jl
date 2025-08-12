@@ -28,6 +28,16 @@ function extract_nondegenerate(vals;atol=1e-2)
     return eigs_nondeg
 end
 
+function add_NaNs!(vals)
+    lmax = maximum(length.(vals))
+    for i in 1:length(vals)
+        l = length(vals[i])
+        push!(vals[i],fill(NaN,lmax-length(vals[i]))...)
+    end
+end
+rectangle(w, h, x, y) = Shape(x .+ [0,w,w,0], y .+ [0,0,h,h])
+
+
 #------------------------set parameters----------------------------
 
 #N = 4
@@ -36,11 +46,6 @@ end
 #g = 5.0
 #N = 10
 #g = 45.0
-N = 3
-g = 5.0 
-
-wc1 = (N-1)/g
-wc2 = (N-1)/N
 
 #=
 w_test = wc1+ (wc2-wc1)/2
@@ -48,53 +53,308 @@ diffeq = (alg = Tsit5(),dt = 1e-3,adaptive=true,dtmax=1e-2,maxiters=1e15)
 ds = create_ds(rand(2N),[g,w_test,N];diffeq=diffeq)
 =#
 
-ws = [0.0:0.01:1.0;]
-#-------------------------------M = 0---------------------------------
+N = 3
+ws = [0.0:0.02:0.99;]
 
-#eigval spectrum
-#coexistence fixed point 
-u = zeros(2N)
-numerical_spectrums = []
-analytical_spectrums = []
+gs = [4.0,2.5] 
+plots = []
+x_axis_setting =:none
+y_axis_setting =:none
 
-for (i,w) in enumerate(ws)
-    p = [g,w,N]
+ylims = (-2,5)
+xlims = (0,1)
+tickfontsize = 10
+guidefontsize = 20
+legendfontsize = 12
+lw = 2
 
-    #build Jacobian
-    J = build_jacobian(u,p)
+critical_w_values = []
 
-    #numerical eigenvalues
-    numerical_spectrum = eigvals(J)
-    vals_real = real.(numerical_spectrum)
-    vals_imag = imag.(numerical_spectrum)
-    vals_real_nondeg = extract_nondegenerate(vals_real)
-    vals_imag_nondeg = extract_nondegenerate(vals_imag)
+for (gi,g) in enumerate(gs)
 
-    push!(numerical_spectrums,vals_real_nondeg)    
+    wc1 = (N-1)/g
+    wc2 = (N-1)/N
+    wc3 = (N-1)/(g+N-2)
 
-    #analytical eigenvalues
-    analytical_spectrum = fixed_point_eigen_spectrum(N,0,p)
-    vals_real = real.(analytical_spectrum)
-    vals_imag = imag.(analytical_spectrum)
-    vals_real_nondeg = extract_nondegenerate(vals_real)
-    vals_imag_nondeg = extract_nondegenerate(vals_imag)
+    push!(critical_w_values,[wc1,wc2,wc3])
 
-    push!(analytical_spectrums,vals_real_nondeg)
+    #-------------------------------M = 0---------------------------------
+
+    #eigval spectrum
+    #coexistence fixed point 
+    u = zeros(2N)
+    numerical_spectrums = []
+    analytical_spectrums = []
+
+    for (i,w) in enumerate(ws)
+        p = [g,w,N]
+        @show p
+
+        #build Jacobian
+        J = build_jacobian(u,p) 
+
+        #analytical eigenvalues
+        analytical_spectrum = fixed_point_eigen_spectrum(N,0,p)
+        vals_real = real.(analytical_spectrum)
+        vals_imag = imag.(analytical_spectrum)
+
+        push!(analytical_spectrums,vals_real)
+
+    end
+
+    #-----------------------------plot real part------------------------------------
+    S_a = transpose(stack(analytical_spectrums))
+    #S_n = transpose(stack(numerical_spectrums))
+
+    colors = [:blue :orange]
+    labels = [L"\lambda_a" L"\lambda_b"]
+
+    pl0 = plot(xlims=xlims, ylims=ylims,
+        xformatter=x_axis_setting,yformatter=y_axis_setting,
+        legendcolumns=-1,legendfontsize=legendfontsize,
+        guidefontsize=guidefontsize,tickfontsize=tickfontsize,
+        title = L"M = 0")
+
+    plot!(ws,S_a,ls=:solid, lw=lw, lc=colors, label = labels)
+    #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
+    #    markerstrokewidth=0.0,label = labels_num)
+    hline!([0.0],lc=:gray50,ls=:dash,label="")
+
+    #-------------------------------M = 1---------------------------------
+
+    #eigval spectrum
+    #coexistence fixed point 
+    u = zeros(2N)
+    x_fp(w,M,N) = (N-1)/(N-1 + w*M - w*N) #fixed point value (nonzero)
+
+    numerical_spectrums = []
+    analytical_spectrums = []
+
+    for (i,w) in enumerate(ws)
+        p = [g,w,N]
+
+        x_fp_value = x_fp(w,1,N) 
+        u[[1,N+1]] .= [x_fp_value,x_fp_value] #set both x1 and y1 to x
+
+        #build Jacobian
+        J = build_jacobian(u,p)
+
+        #analytical eigenvalues
+        analytical_spectrum = fixed_point_eigen_spectrum(N,1,p)
+        vals_real = real.(analytical_spectrum)
+        vals_imag = imag.(analytical_spectrum)
+
+        push!(analytical_spectrums,vals_real)
+
+    end
+
+    #-----------------------------plot real part------------------------------------
+    S_a = transpose(stack(analytical_spectrums))
+    #S_n = transpose(stack(numerical_spectrums))
+
+    colors = [:blue :orange :green :green ]
+    labels = [L"\lambda_a" L"\lambda_b" L"\lambda_c" ""]
+    labels_num = [L"\lambda_a^{num}" L"\lambda_b^{num}" L"\lambda_c^{num}"]
+    pl1 = plot(xlims=xlims, ylims=ylims,
+        xformatter=x_axis_setting,yformatter=y_axis_setting,
+        legendcolumns=-1,legendfontsize=legendfontsize,
+        guidefontsize=guidefontsize,tickfontsize=tickfontsize,
+        title = L"M = 1")
+
+    plot!(ws,S_a,ls=:solid, lw=lw, lc=colors, label = labels)
+    #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
+    #    markerstrokewidth=0.0,label = labels_num)
+    hline!([0.0],lc=:gray50,ls=:dash,label="")
+
+
+    #-------------------------------1 < M < N ---------------------------------
+
+    #eigval spectrum
+    #coexistence fixed point 
+    u = zeros(2N)
+
+    numerical_spectrums = []
+    analytical_spectrums = []
+
+    for (i,w) in enumerate(ws)
+        p = [g,w,N]
+
+        x_fp_value = x_fp(w,2,N) 
+        u[[1,N+1]] .= [x_fp_value,x_fp_value] #set both x1 and y1 to fp
+        u[[2,N+2]] .= [x_fp_value,x_fp_value] #set both x2 and y2 to fp
+
+        #build Jacobian
+        J = build_jacobian(u,p)
+
+        #analytical eigenvalues
+        analytical_spectrum = fixed_point_eigen_spectrum(N,2,p)
+        vals_real = real.(analytical_spectrum)
+        vals_imag = imag.(analytical_spectrum)
+
+        push!(analytical_spectrums,vals_real)
+
+    end
+
+    #-----------------------------plot real part------------------------------------
+    add_NaNs!(analytical_spectrums)
+    S_a = transpose(stack(analytical_spectrums))
+    #S_n = transpose(stack(numerical_spectrums))
+
+    colors = [:blue :orange :green :green :purple :purple]
+    labels = [L"\lambda_a" L"\lambda_b" L"\lambda_c" "" L"\lambda_d" ""]
+    labels_num = [L"\lambda_a^{num}" L"\lambda_b^{num}" L"\lambda_c^{num}"]
+    pl2 = plot(xlims=xlims, ylims=ylims,
+        xformatter=x_axis_setting,yformatter=y_axis_setting,
+        legendcolumns=-1,legendfontsize=legendfontsize,
+        guidefontsize=guidefontsize,tickfontsize=tickfontsize,
+        title = L"M = 2")
+
+    plot!(ws,S_a,ls=:solid, lw=lw, lc=colors, label = labels)
+    #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
+    #    markerstrokewidth=0.0,label = labels_num)
+    hline!([0.0],lc=:gray50,ls=:dash,label="")
+
+    #-------------------------------M = N ---------------------------------
+
+    #eigval spectrum
+    #coexistence fixed point 
+    u = ones(2N)
+
+    numerical_spectrums = []
+    analytical_spectrums = []
+
+    for (i,w) in enumerate(ws)
+        p = [g,w,N]
+
+        #build Jacobian
+        J = build_jacobian(u,p)
+
+        #analytical eigenvalues
+        analytical_spectrum = fixed_point_eigen_spectrum(N,3,p)
+        vals_real = real.(analytical_spectrum)
+        vals_imag = imag.(analytical_spectrum)
+
+        push!(analytical_spectrums,vals_real)
+
+    end
+
+    #-----------------------------plot real part------------------------------------
+    add_NaNs!(analytical_spectrums)
+    S_a = transpose(stack(analytical_spectrums))
+    #S_n = transpose(stack(numerical_spectrums))
+
+    colors = [:green :green :purple :purple]
+    labels = [L"\lambda_c" "" L"\lambda_d" ""]
+    labels_num = [L"\lambda_a^{num}" L"\lambda_b^{num}" L"\lambda_c^{num}"]
+    pl3 = plot(xlims=xlims, ylims=ylims,
+        xformatter=x_axis_setting,yformatter=y_axis_setting,
+        legendcolumns=-1,legendfontsize=legendfontsize,
+        guidefontsize=guidefontsize,tickfontsize=tickfontsize,
+        title = L"M = N")
+
+    plot!(ws,S_a,ls=:solid, lw=lw, lc=colors, label = labels)
+    #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
+    #    markerstrokewidth=0.0,label = labels_num)
+    hline!([0.0],lc=:gray50,ls=:dash,label="")
+
+    #pl_g1 = plot(pl0,pl1,pl2,pl3,layout=(1,4),size=(1200,300))
+    push!(plots,[pl0,pl1,pl2,pl3])
 
 end
 
-#-----------------------------plot real part------------------------------------
-S_a = transpose(stack(analytical_spectrums))
-S_n = transpose(stack(numerical_spectrums))
+#edit figures
+for i in 1:length(plots)
+    pls = plots[i]
+    ws_crit = critical_w_values[i]
 
-pl0 = plot(xlims=(0, 1), ylims=(-2, 8),
-    xlabel = L"w", ylabel = L"\lambda",
-    guidefontsize=18,tickfontsize=15)
+    for j in 1:length(pls)
 
-plot!(ws,S_a,ls=:solid,lw=1)
-plot!(ws, S_n, st=:scatter, ms=2)
+        #add vertical lines
+        if j == 2 
+            vline!(pls[j],[ws_crit[2]],lc=:red,lw=2,ls=:dash,label="") #label=L"w^{(2)}_c")
+        elseif j == 4
+            vline!(pls[j],[ws_crit[1]],lc=:gray10,lw=2,ls=:dash,label="") #,label=L"w^{(1)}_c")
+            vline!(pls[j],[ws_crit[2]],lc=:red,lw=2,ls=:dash,label="") #label=L"w^{(2)}_c")
+
+            if i == 2
+                vline!(pls[j],[ws_crit[2]],lc=:red,lw=2,ls=:dash,label="") #label=L"w^{(2)}_c")
+                #vline!(pls[j],[ws_crit[1]],lc=:gray10,lw=2,ls=:dash,label="") #,label=L"w^{(1)}_c")
+                #vline!(pls[j],[ws_crit[3]],lc=:gray50,lw=2,ls=:dash,label="") #,label=L"w^{(1)}_c")
+            end
+        end
+        
+        #set y-axis attributes
+        if j == 1
+            plot!(pls[j],yformatter=:auto,ylabel=L"Re(\lambda)")
+        end
+
+        #set x-axis attributes
+        if i == 2
+            plot!(pls[j],xformatter=:auto,xlabel=L"w")
+        end
+
+        #draw shading
+        
+        #draw shading for M=1 cases
+        if j == 2
+            width = ws[end]-ws_crit[2]
+            height = ylims[end] - ylims[1]
+            plot!(rectangle(width,height,ws_crit[2],ylims[1]), 
+                opacity=.2,color=:gray50,label="")
+        end
+            
+        #draw shading for M=N cases
+
+        if j == 4
+            if i == 1
+                width = ws_crit[1] - ws[1]
+                height = ylims[end] - ylims[1]
+                plot!(rectangle(width,height,0,ylims[1]), 
+                    opacity=.2,color=:gray50,label="")
+            elseif i == 2
+                width = ws[end]-ws_crit[2]
+                height = ylims[end] - ylims[1]
+                plot!(rectangle(width,height,ws_crit[2],ylims[1]), 
+                    opacity=.2,color=:gray50,label="")
+            end
+        end
+
+        #add bottom margins to second row figs 
+        if i == 2
+            plot!(pls[j],bottom_margin=5Plots.mm)
+        end
+
+        #add left margins to first column figs 
+        if j == 1
+            plot!(pls[j],left_margin=8Plots.mm)
+        end
+
+    end
+end
+
+pl_final = plot(plots[1]...,plots[2]...,layout = (2,4),
+    size=(1200,400))
+    #left_margin=-1Plots.mm,dpi=300,
+    #right_margin=1Plots.mm,bottom_margin=-1Plots.mm)
+
+figs_dir = "../../paper_figs/"
+savefig(pl_final,figs_dir*"eigen_spectrum_fig_N3_g2.5_4.png")
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+#=
 
 #dominance fixed point: doesn't matter which one we choose 
 u = zeros(2N)
@@ -249,3 +509,4 @@ rectangle(w, h, x, y) = Shape(x .+ [0,w,w,0], y .+ [0,0,h,h])
 plot!(rectangle(ws[end]-ws[1],6,ws[1],-6), opacity=.2,fillc=:gray50,label="")
 
 savefig(pl,"../../eigen_spectrum_coexistence_fp_N$(N).png")
+=#
