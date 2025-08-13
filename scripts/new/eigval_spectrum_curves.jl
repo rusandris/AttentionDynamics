@@ -54,7 +54,7 @@ ds = create_ds(rand(2N),[g,w_test,N];diffeq=diffeq)
 =#
 
 N = 3
-ws = [0.0:0.02:0.99;]
+ws = [0.0:0.02:1.0;]
 
 gs = [4.0,2.5] 
 plots = []
@@ -67,6 +67,8 @@ tickfontsize = 10
 guidefontsize = 20
 legendfontsize = 12
 lw = 2
+samp = 5 #point sampling
+plot_labels = ["a)", "b)"]
 
 critical_w_values = []
 
@@ -115,7 +117,13 @@ for (gi,g) in enumerate(gs)
         guidefontsize=guidefontsize,tickfontsize=tickfontsize,
         title = L"M = 0")
 
-    plot!(ws,S_a,ls=:solid, lw=lw, lc=colors, label = labels)
+    bool_mask = S_a .< 0
+    linestyle_mask = similar(bool_mask,Symbol)
+    for i in 1:length(bool_mask)
+        linestyle_mask[i] = bool_mask[i] ? :solid : :dash
+    end
+    #println(linestyle_mask)
+    plot!(ws[1:samp:end,1:end],S_a[1:samp:end,1:end],ls=linestyle_mask[1:samp:end,1:end], lw=lw, lc=colors, label = labels)
     #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
     #    markerstrokewidth=0.0,label = labels_num)
     hline!([0.0],lc=:gray50,ls=:dash,label="")
@@ -155,13 +163,20 @@ for (gi,g) in enumerate(gs)
     colors = [:blue :orange :green :green ]
     labels = [L"\lambda_a" L"\lambda_b" L"\lambda_c" ""]
     labels_num = [L"\lambda_a^{num}" L"\lambda_b^{num}" L"\lambda_c^{num}"]
+
+    bool_mask = S_a .< 0
+    linestyle_mask = similar(bool_mask,Symbol)
+    for i in 1:length(bool_mask)
+        linestyle_mask[i] = bool_mask[i] ? :solid : :dash
+    end
+
     pl1 = plot(xlims=xlims, ylims=ylims,
         xformatter=x_axis_setting,yformatter=y_axis_setting,
         legendcolumns=-1,legendfontsize=legendfontsize,
         guidefontsize=guidefontsize,tickfontsize=tickfontsize,
         title = L"M = 1")
 
-    plot!(ws,S_a,ls=:solid, lw=lw, lc=colors, label = labels)
+    plot!(ws[1:samp:end],S_a[1:samp:end,1:end],ls=linestyle_mask[1:samp:end,1:end], lw=lw, lc=colors, label = labels)
     #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
     #    markerstrokewidth=0.0,label = labels_num)
     hline!([0.0],lc=:gray50,ls=:dash,label="")
@@ -203,13 +218,22 @@ for (gi,g) in enumerate(gs)
     colors = [:blue :orange :green :green :purple :purple]
     labels = [L"\lambda_a" L"\lambda_b" L"\lambda_c" "" L"\lambda_d" ""]
     labels_num = [L"\lambda_a^{num}" L"\lambda_b^{num}" L"\lambda_c^{num}"]
+
+    bool_mask = S_a .< 0
+    linestyle_mask = similar(bool_mask,Symbol)
+    for i in 1:length(bool_mask)
+        linestyle_mask[i] = bool_mask[i] ? :solid : :dash
+    end
+
+    @show size(S_a)
+    @show size(linestyle_mask)
     pl2 = plot(xlims=xlims, ylims=ylims,
         xformatter=x_axis_setting,yformatter=y_axis_setting,
         legendcolumns=-1,legendfontsize=legendfontsize,
         guidefontsize=guidefontsize,tickfontsize=tickfontsize,
         title = L"M = 2")
 
-    plot!(ws,S_a,ls=:solid, lw=lw, lc=colors, label = labels)
+    plot!(ws[1:samp:end],S_a[1:samp:end,1:end],ls=linestyle_mask[1:samp:end,1:end], lw=lw, lc=colors, label = labels)
     #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
     #    markerstrokewidth=0.0,label = labels_num)
     hline!([0.0],lc=:gray50,ls=:dash,label="")
@@ -246,13 +270,20 @@ for (gi,g) in enumerate(gs)
     colors = [:green :green :purple :purple]
     labels = [L"\lambda_c" "" L"\lambda_d" ""]
     labels_num = [L"\lambda_a^{num}" L"\lambda_b^{num}" L"\lambda_c^{num}"]
+
+    bool_mask = S_a .< 0
+    linestyle_mask = similar(bool_mask,Symbol)
+    for i in 1:length(bool_mask)
+        linestyle_mask[i] = bool_mask[i] ? :solid : :dash
+    end
+
     pl3 = plot(xlims=xlims, ylims=ylims,
         xformatter=x_axis_setting,yformatter=y_axis_setting,
         legendcolumns=-1,legendfontsize=legendfontsize,
         guidefontsize=guidefontsize,tickfontsize=tickfontsize,
-        title = L"M = N")
+        title = L"M = N = %$N")
 
-    plot!(ws,S_a,ls=:solid, lw=lw, lc=colors, label = labels)
+    plot!(ws[1:samp:end],S_a[1:samp:end,1:end],ls=linestyle_mask[1:samp:end,1:end], lw=lw, lc=colors, label = labels)
     #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
     #    markerstrokewidth=0.0,label = labels_num)
     hline!([0.0],lc=:gray50,ls=:dash,label="")
@@ -285,7 +316,9 @@ for i in 1:length(plots)
         
         #set y-axis attributes
         if j == 1
-            plot!(pls[j],yformatter=:auto,ylabel=L"Re(\lambda)")
+            plot!(pls[j],yformatter=:auto,ylabel=L"Re(\lambda)",
+                yticks = [-2,0,2,4])
+            annotate!(0.2, 5.5, text(plot_labels[i] * "  " * L" g = %$(gs[i])", :gray10, :right, 15))
         end
 
         #set x-axis attributes
@@ -312,9 +345,9 @@ for i in 1:length(plots)
                 plot!(rectangle(width,height,0,ylims[1]), 
                     opacity=.2,color=:gray50,label="")
             elseif i == 2
-                width = ws[end]-ws_crit[2]
+                width = ws[end]-ws[1]
                 height = ylims[end] - ylims[1]
-                plot!(rectangle(width,height,ws_crit[2],ylims[1]), 
+                plot!(rectangle(width,height,ws[1],ylims[1]), 
                     opacity=.2,color=:gray50,label="")
             end
         end
@@ -333,13 +366,13 @@ for i in 1:length(plots)
 end
 
 pl_final = plot(plots[1]...,plots[2]...,layout = (2,4),
-    size=(1200,400))
+    size=(1200,400),dpi=400)
     #left_margin=-1Plots.mm,dpi=300,
     #right_margin=1Plots.mm,bottom_margin=-1Plots.mm)
 
 figs_dir = "../../paper_figs/"
 savefig(pl_final,figs_dir*"eigen_spectrum_fig_N3_g2.5_4.png")
-
+display(pl_final)
 
 
 
