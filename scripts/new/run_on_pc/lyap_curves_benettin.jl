@@ -66,7 +66,7 @@ Ttrsλ = [100000]
 λs = calc_lyapunov_curves_reinit(ds,ws,Ttrsλ,Tλ_benettin;
 	generate_u0 = const_u0,d0=1e-9)
 
-filename_reinit = savedir*"lyapunovs_benettin_long_const_u0_" * "Ttr_lambda_10e5" *"T_$Tλ_benettin" * "_N_$N" * "g_$g" * ".txt"
+filename_reinit = savedir*"lyapunovs_benettin_long_const_u0_" * "Ttr_lambda_10e5" *"T_$Tλ_benettin" * "_N_$N" * "g_$g" * "_test2.txt"
 writedlm(filename_reinit,hcat(ws,stack(λs)) ) 
 
 
