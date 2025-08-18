@@ -102,43 +102,6 @@ pl_cr
 =#
 
 
-
-#test partial limit cycle trajectories
-#perturbed inside invariant plane vs. outside
-
-function inittest_custom(u1,d0;dims)
-    u_p = zeros(length(u1))
-    u_p[dims] .+= rand(length(dims)) .* d0 
-    return u1 .+ u_p
-end
-
-u0 = rand(2N) .* 50
-ds = create_ds(u0,p;diffeq=diffeq)
-traj,t = trajectory(ds,500,u0;Ttr=1000,Δt = 0.001)
-M = Matrix(traj)
-minmaxs = [extrema(M[:,i]) for i in 1:2:20]
-d0 = 1e-9
-u0_limc = traj[end]
-u0_p_inv = inittest_custom(traj[end],d0;dims=[1,3,9,17]) #perturb only in the invariant plane of the limit cycle
-u0_p = inittest_custom(traj[end],d0;dims=[1:2N;]) #perturb along every dim   
-
-traj_limc,t = trajectory(ds,5,u0_limc;Ttr=0,Δt = 0.001)
-traj_p,t = trajectory(ds,10,u0_p;Ttr=0,Δt = 0.001)
-traj_p_inv,t = trajectory(ds,10,u0_p_inv;Ttr=0,Δt = 0.001)
-
-pl = plot_projection(traj_limc;xlims=(-30,30),ylims=(-2,2))
-plot_projection!(pl,traj_p;xlims=(-30,30),ylims=(-2,2))
-plot_projection!(pl,traj_p_inv;xlims=(-30,30),ylims=(-2,2))
-
-#calc lyapunov exponents using different perturbation vectors
-lyapunov(ds,100;u0=u0_limc,inittest = (u1,d0) -> inittest_custom(u1,d0;dims=[1,3,9,17]),Ttr=100)
-lyapunov(ds,100;u0=u0_limc,inittest = (u1,d0) -> inittest_custom(u1,d0;dims=[1:2N;]),Ttr=100)
-
-
-#check Jacobian along limit cycle
-J = build_jacobian(u0_limc,p)
-vals,vecs = eigen(J)
-
 #check dynamics around transition to limit cycle
 #increase solver precision
 
