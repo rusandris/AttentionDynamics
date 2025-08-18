@@ -14,14 +14,6 @@ mkpath(figs_dir)
 logocolors = Colors.JULIA_LOGO_COLORS
 ms=6
 
-function generate_initial_condition(N)
-    u0 = zeros(Float64,2N)
-    for i in 1:2:2N 
-        u0[i] = (i+1)/2
-        u0[i+1] = 0.0 
-    end
-    return u0
-end
 
 N = 2
 g = 5
@@ -46,7 +38,7 @@ ds = create_ds(u0,p)
 #------------------------bifurcation diagram---------------------------------
 
 #data dirs
-cont_dir = "../../plotting/DDE25/bifkit_data_g5_N2/"
+cont_dir = "../../data/bifkit_data_g5_N2_trap/"
 #cont_dir = "../../bifkit_data_gN5/"
 
 #create dir for figs
@@ -72,12 +64,10 @@ ylims_bif = (0.5,4.1)
 contres_files_N = contres_files[findall(f -> occursin("N$N",f),contres_files)]
 
 #limit cycle continuation results
-contres_sol_file = contres_files_N[findfirst(f -> occursin("contres_po_sols",f),contres_files_N)]
-contres_bifp_file = contres_files_N[findfirst(f -> occursin("contres_po_bifp",f),contres_files_N)]
+contres_sol_files = contres_files_N[findall(f -> occursin("contres_po_sols",f),contres_files_N)]
+contres_bifp_files = contres_files_N[findall(f -> occursin("contres_po_bifp",f),contres_files_N)]
 
-#read the matched files
-contres_sols = readdlm(cont_dir*contres_sol_file)
-contres_bifp = readdlm(cont_dir*contres_bifp_file)
+
 
 
 #--------------------plot bifdiagram------------------
@@ -140,20 +130,41 @@ end
 =#
 
 #-------------------plot lim cycle results----------------------
+for i in 1:length(contres_sol_files)
 
-params = contres_sols[:,1]
-maxs = contres_sols[:,3]
-mins = contres_sols[:,2]
-stability = Bool.(contres_sols[:,end])
+    contres_sol_file = contres_sol_files[i]
+    contres_bifp_file = contres_sol_files[i]
 
-linestyle = [stb ? :solid : :dot for stb in stability]
-linewidth = [stb ? 4 : 2 for stb in stability]
-#sol_sampling = [stb ? 1 : 20 for stb in stability]
+    #read the matched files
+    contres_sols = readdlm(cont_dir * contres_sol_file)
+    contres_bifp = readdlm(cont_dir * contres_bifp_file)
 
-plot!(pl_bif,params[1:plot_srate:end], maxs[1:plot_srate:end],lc=:gray10,legend=false,
-ls=linestyle[1:plot_srate:end],lw=linewidth[1:plot_srate:end])
+    params = contres_sols[:,1]
+    maxs = contres_sols[:,3]
+    mins = contres_sols[:,2]
+    stability = Bool.(contres_sols[:,end])
 
-annotate!(pl_bif,0.35, 2.5, text("stable limit cycle", :gray10, :center, 15))
+    linestyle = [stb ? :solid : :dot for stb in stability]
+    linewidth = [stb ? 4 : 2 for stb in stability]
+    #sol_sampling = [stb ? 1 : 20 for stb in stability]
+
+    plot!(pl_bif,params[1:plot_srate:end], maxs[1:plot_srate:end],lc=:gray10,legend=false,
+    ls=linestyle[1:plot_srate:end],lw=linewidth[1:plot_srate:end])
+
+    #plot some (not all) bif points
+
+    for bp in eachrow(contres_bifp)
+        type,crit_param,idx = bp
+        if type == "ns"  
+            scatter!([crit_param], [maxs[idx]],ms=3,mc=:orange,markerstrokewidth=0.0)
+        elseif type == "nd"
+            scatter!([crit_param], [maxs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
+        elseif type == "bp"
+            scatter!([crit_param], [maxs[idx]],ms=3,mc=:green,markerstrokewidth=0.0)
+        end
+    end
+    annotate!(pl_bif,0.35, 2.5, text("stable limit cycle", :gray10, :center, 15))
+end
 
 #=
 
@@ -169,18 +180,7 @@ plot!(pl,params[.!(stability)][1:plot_srate:end], maxs_unstable[1:plot_srate:end
 
 =#
 
-#plot some (not all) bif points
 
-for bp in eachrow(contres_bifp)
-    type,crit_param,idx = bp
-    if type == "ns"  
-        scatter!([crit_param], [maxs[idx]],ms=3,mc=:orange,markerstrokewidth=0.0)
-    elseif type == "nd"
-        scatter!([crit_param], [maxs[idx]],ms=3,mc=:blue,markerstrokewidth=0.0)
-    elseif type == "bp"
-        scatter!([crit_param], [maxs[idx]],ms=3,mc=:green,markerstrokewidth=0.0)
-    end
-end
 #plot!(pl,brpo,linewidthunstable=0,linewidthstable=0) #plot only bif points hack
 
 #--------------------------plot critical values------------------------
@@ -189,9 +189,13 @@ rectangle(w, h, x, y) = Shape(x .+ [0,w,w,0], y .+ [0,0,h,h])
 plot!(rectangle(0.1,4,0.1,0), opacity=.2,c=:gray10)
 plot!(rectangle(0.1,4,0.5,0), opacity=.2,c=:gray10)
 
+# add vertical lines 
 
 vline!(pl_bif,[wc1],ls=:dash,lw=3,lc=:gray10)
-vline!(pl_bif,[wc2],ls=:dash,lw=3,lc=:gray10)
+vline!(pl_bif,[wc2],ls=:dash,lw=3,lc=:red)
+vline!(pl_bif, [0.3], ls=:dash, lw=1, lc=:gray50)
+vline!(pl_bif, [0.41], ls=:dash, lw=1, lc=:gray50)
+
 
 #w_c^{(1)} = \epsilon (N-1)
 #w_c^{(2)} = \frac{N-1}{N}
@@ -203,8 +207,8 @@ annotate!(wc2-0.03, 3.8, text(L"w_c^{(2)}", :gray10, :center, 22))
 annotate!(0.22, 0.8, text("HOPF", :gray10, :center, 13))
 annotate!(0.45, 1.5, text("HOMOCLINIC", :gray10, :center, 13))
 
-annotate!(0.15,0.8, text(L"u^{*}_c", :gray10, :center, 22))
-annotate!(0.55,1.8, text(L"u_d^{*}", :gray10, :center, 22))
+annotate!(0.15,0.8, text(L"u^{*}_N", :gray10, :center, 22))
+annotate!(0.55,1.8, text(L"u_1^{*}", :gray10, :center, 22))
 
 #--------------------------plot inset----------------------------
 

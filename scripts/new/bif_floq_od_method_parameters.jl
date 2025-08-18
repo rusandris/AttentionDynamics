@@ -18,8 +18,7 @@ Ns = [2]
 g_rel = 5.0
 global_params = [Ns...,g_rel]
 
-cont_dir = "../../plotting/DDE25/bifkit_data_g5_N2/"
-mkpath(cont_dir)
+
 #save params that apply to every system size
-writedlm(cont_dir*"global_params_Ns_g.txt",global_params)
+#writedlm(cont_dir*"global_params_Ns_g.txt",global_params)
 

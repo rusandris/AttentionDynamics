@@ -23,7 +23,7 @@ Ttr_N2 = 0
 
 #--------------------------plotting params-------------------------
 logocolors = Colors.JULIA_LOGO_COLORS
-w_values = [0.3,0.495]
+w_values = [0.3,0.41]
 Ttrs = [200,200]
 Ts = [20,200]
 pp_lims = [(0.0,3.0),(0.0,4.0)]
@@ -44,18 +44,17 @@ wc2 = (N-1)/N
 u0s = [rand(2N) for i in 1:3]
 #u0 = generate_initial_condition(N)
 
-w_values = [0.3,0.495]
-
 p = [g,w_values[1],N]
 @show wc1,wc2,p
 #create system
-ds = create_ds(u0,p;diffeq=diffeq)
-colors = [logocolors.blue, logocolors.green, logocolors.red]
+ds = create_ds(u0s[1],p;diffeq=diffeq)
+colors = [logocolors.blue, logocolors.green, :gray50]
 plots = []
 
 #plot for two w values 
 for i in 1:length(w_values)
 	w = w_values[i]
+    @show w
 	lims=pp_lims[i]
 	ticks=round.(pp_ticks[i];digits=1)
 	velm_yticks = velm_ticks[i]
@@ -67,6 +66,10 @@ for i in 1:length(w_values)
     pp = plot(xlabel=L"$x_1$",ylabel=L"$x_2$",
         lims=lims,la=0.9,ticks=ticks,
         title=L"w=%$w",titlefontsize=15)
+
+    if i == 1
+        plot!(xformatter=:none,xlabel="")
+    end
 
 	#calc trajectories for all init cond
     for (j,u0) in enumerate(u0s)
