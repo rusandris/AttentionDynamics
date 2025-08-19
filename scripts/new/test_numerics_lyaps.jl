@@ -3,6 +3,7 @@ using Plots, LaTeXStrings
 using AttentionDynamics
 #using DifferentialEquations
 using OrdinaryDiffEq
+using DelimitedFiles
 using DynamicalSystems
 cd(@__DIR__)
 #inspectdr()
@@ -49,12 +50,14 @@ p = [g, w, N]
 
 #search a u0 before transition to limit cycle
 T = 50
-Ttr = 400
+Ttr = 100
 nr_u0s = 10
 d0 = 1e-9
 
 #def initial conditions
-u0s = [rand(2N) .* 50 for i in 1:20]
+#u0s = [rand(2N) .* 50 for i in 1:20]
+u0 = vec(readdlm("../../data/initial_condition_N10.txt"))
+u0s = [u0]
 lyaps = []
 
 #----------------------------define ds------------------------------- 
@@ -81,7 +84,7 @@ titles = ["Tsit5, adaptive","Tsit5, adaptive, dtmax=1e-3",
     "Rodas5, adaptive, dtmax=1e-3","Rodas5, adaptive, dtmax=1e-4"]
 plots = []
 
-for (i,ds) in enumerate(systems[end:end])
+for (i,ds) in enumerate(systems)
     @show i
     traj,t = trajectory(ds,T_limcycle,u0s[1];Ttr=Ttr,Δt = 0.001)
     pl = plot_projection(traj;xlims=(-30,30),ylims=ylims,lw=4,lc=:gray50,
