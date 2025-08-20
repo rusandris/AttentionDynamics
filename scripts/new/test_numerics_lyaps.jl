@@ -153,7 +153,7 @@ for (i,ds) in enumerate(systems)
     @show λ_p
     traj_p,t = trajectory(ds,T_short,u_p;Ttr=0,Δt = 0.001)
     plot_projection!(pl,traj_p;xlims=(-30,30),ylims=ylims,label="perturbed uniformly",
-        c=cgrad(:default), clims=clims, line_z=λ_p)
+        c=cgrad(:Set1_3), clims=clims, line_z=λ_p)
 
 
     #perturb trajectory on the limit cycle only in the invariant subspace
@@ -162,7 +162,7 @@ for (i,ds) in enumerate(systems)
     λ_p_inv =  lyapunov(ds,100;u0=traj[end],inittest = (u1,d0) -> u_p_inv,Ttr=100)
     @show λ_p_inv
     plot_projection!(pl,traj_p_inv;xlims=(-30,30),ylims=ylims,label="perturbed in invariant subspace",
-        c=cgrad(:default), clims=clims, line_z=λ_p_inv)
+        c=cgrad(:Set1_3), clims=clims, line_z=λ_p_inv)
 
 
     push!(perturb_plots,pl)

@@ -1,5 +1,6 @@
 export att_din!, skipsum, create_original_ds
-export create_ds, generate_initial_condition, rescaled_params, create_ds_noisy, create_ds_alle
+export create_ds, generate_initial_condition, rescaled_params, rescaling_factors
+export create_ds_noisy, create_ds_alle
 
 #sum skipping the i-th element
 function skipsum(u,i)
@@ -69,7 +70,7 @@ function create_ds_alle(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_alle!,
 
 #convert original params to rescaled
 rescaled_params(rp,rc,K,c,α,N) = ( 1/(1 + rc/(α*K*c*(N-1))), rp/α )
-
+rescaling_factors(rp, rc, K, c, α, N) = ( α*K/(rc+α*K*c*(N-1)), K/(rc + α*K*c*(N-1)) )
 #-----------initial conditions-----------------
 #define well-controlled initial condition for each system size
 
