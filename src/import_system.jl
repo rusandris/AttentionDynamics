@@ -1,11 +1,11 @@
 export att_din!, skipsum, create_original_ds
 export create_ds, generate_initial_condition, rescaled_params, rescaling_factors
-export create_ds_noisy, create_ds_alle
+export create_ds_noisy, create_ds_alle, create_ds_symLV
 
 #sum skipping the i-th element
-function skipsum(u,i)
+function skipsum(u,i;step=2)
     sum = 0.0
-    for j in 1:2:length(u)
+    for j in 1:step:length(u)
         sum += u[j]
     end
     return sum - u[i]
@@ -59,6 +59,15 @@ function att_din_alle!(du, u, p, t)
     end
 end
 
+#system definition no delay (classic symmetric LV)
+function symmetricLV!(du,u,p,t)
+    n = length(u)
+    r,w1,w2 = p
+    for i in 1:n
+        du[i] = r*u[i]*(1 - w1*u[i] - w2*skipsum(u,i;step=1))
+    end
+end
+
 
 diffeq_default =  (abstol = 1.0e-6, reltol = 1.0e-6)
 function create_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din!,u0,p;diffeq=diffeq) end
@@ -66,6 +75,7 @@ function create_integrator(ds,diffeq) integrator(ds;diffeq) end
 function create_original_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din_original!,u0,p;diffeq=diffeq) end
 function create_ds_noisy(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_noise!, u0, p; diffeq=diffeq) end
 function create_ds_alle(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_alle!, u0, p; diffeq=diffeq) end
+function create_ds_symLV(u0, p; diffeq=diffeq_default) CoupledODEs(symmetricLV!, u0, p; diffeq=diffeq) end
 
 
 #convert original params to rescaled

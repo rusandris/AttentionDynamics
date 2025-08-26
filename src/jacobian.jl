@@ -1,10 +1,12 @@
-export build_jacobian,eigval_maxrealparts,eigen_spectrum,fixed_point_eigen_spectrum,contraction_rate
+export build_jacobian, build_jacobian_symLV, eigval_maxrealparts, eigen_spectrum
+export fixed_point_eigen_spectrum,contraction_rate
 
 function skipsum(a,i,N)
 	x = @view a[1:N]
     return sum(x) - x[i]
 end
 
+#build jacobian for attdin
 function build_jacobian(u,p)
 	g,w,N = p
 	N = Int(N)
@@ -35,6 +37,56 @@ function build_jacobian(u,p)
 	
 	J = vcat(hcat(XX,XY),hcat(YX,YY))
 	
+end
+
+#build jacobian for symmetric classic LV
+function build_jacobian_symLV(u,p,M)
+    N = length(u)
+    r, w1, w2 = p
+    J = zeros(N, N)
+
+    for i in 1:N
+
+        #elements of J
+        Ai = A(u, p, i)
+        Bi = B(u, p, i)
+
+        for j in 1:N            
+            if i == j 
+                J[i,j] = Ai
+            else 
+                J[i, j] = Bi
+            end
+        end
+    end
+    return J
+end
+
+function A(u,p,i)
+    r, w1, w2 = p
+    return r*(1 - w2*skipsum(u,i;step=1) - 2*w1*u[i])
+end
+
+function B(u,p,i)
+    r, w1, w2 = p
+    return -r*u[i]*w2
+end
+
+#analytical symmetric LV eigenspectrum
+function fixed_point_eigen_spectrum(N,M,p)
+    r, w1, w2 = p
+
+    x = 1/(w1+(M-1)*w2)
+    A = r*(1 - ( (M-1)*w2 + 2w1)*x )
+    A0 = r * (1 - M * w2 * x)
+    B = -r*w2*x
+
+    λ1 = A + B*(M-1)
+    λ2 = A - B 
+    λ3 = A0
+    
+    return [λ1,fill(λ2,M-1)...,fill(λ3,N-M)...]
+
 end
 
 #calc max real part of eigvals numerically
