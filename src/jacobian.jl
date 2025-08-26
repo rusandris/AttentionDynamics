@@ -1,5 +1,5 @@
 export build_jacobian, build_jacobian_symLV, eigval_maxrealparts, eigen_spectrum
-export fixed_point_eigen_spectrum,contraction_rate
+export fixed_point_eigen_spectrum, fixed_point_eigen_spectrum_symLV, contraction_rate
 
 function skipsum(a,i,N)
 	x = @view a[1:N]
@@ -73,7 +73,7 @@ function B(u,p,i)
 end
 
 #analytical symmetric LV eigenspectrum
-function fixed_point_eigen_spectrum(N,M,p)
+function fixed_point_eigen_spectrum_symLV(N, M, p)
     r, w1, w2 = p
 
     x = 1/(w1+(M-1)*w2)
