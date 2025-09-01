@@ -3,6 +3,7 @@ using Plots, LaTeXStrings
 using AttentionDynamics
 #using DifferentialEquations
 using OrdinaryDiffEq
+using SimpleDiffEq
 using DelimitedFiles
 using DynamicalSystems
 cd(@__DIR__)
@@ -76,11 +77,22 @@ begin
     diffeq7 = (alg = Rodas5(),dt = 1e-3,adaptive=false,maxiters=maxiters)
     diffeq8 = (alg = Rodas5(),dt = 1e-4,dtmax=1e-4,adaptive=true,maxiters=maxiters)
     diffeq9 = (alg = Rodas5(),dt = 1e-4,adaptive=false,maxiters=maxiters)
+
+    #RK4
+    diffeq10 = (alg=RK4(), adaptive=true, maxiters=maxiters)
+    diffeq11 = (alg=RK4(), dt=1e-3, dtmax=1e-3, adaptive=true, maxiters=maxiters)
+    diffeq12 = (alg=RK4(), dt=1e-3, adaptive=false, maxiters=maxiters)
+    diffeq13 = (alg=RK4(), dt=1e-4, dtmax=1e-4, adaptive=true, maxiters=maxiters)
+    diffeq14 = (alg=RK4(), dt=1e-4, adaptive=false, maxiters=maxiters)
+
 end
 diffeqs = [diffeq0,diffeq1,diffeq2,diffeq3,diffeq4,
-    diffeq5,diffeq6,diffeq7,diffeq8,diffeq9]
+    diffeq5, diffeq6, diffeq7, diffeq8, diffeq9, 
+    diffeq10, diffeq11,diffeq12,
+    diffeq13, diffeq14, diffeq14]
 
 systems = []
+
 for diffeq in diffeqs 
     ds = create_ds(u0s[1],p;diffeq=diffeq)
     push!(systems,ds)
@@ -93,6 +105,25 @@ T_limcycle = 20
 ylims = (-3,3)
 lws = [1,5,3,2,1]
 
+#use SimpleDiffEq to make sure fixed timestepping works
+
+trajs_SRK4 = []
+dts = [1e-2, 1e-3, 1e-4, 1e-5]
+saveat = [1, 1, 10, 100]
+
+for (i,dt) in enumerate(dts)
+    @show i
+
+    prob = ODEProblem(att_din!,u0,(0.0,Ttr),p)
+    sol_Ttr = solve(prob,SimpleRK4(),dt=dt)
+
+    prob = ODEProblem(att_din!, sol_Ttr[end], (0.0, T_limcycle), p)
+
+    sol = solve(prob, SimpleRK4(), dt=dt)
+    traj_SRK4 = stack(sol[1:saveat[i]:end])'
+    push!(trajs_SRK4, traj_SRK4)
+end
+
 titles = ["adaptive, dtmax = Inf","adaptive, dtmax=1e-3",
     "fixed, dt=1e-3","adaptive, dtmax=1e-4","fixed, dt=1e-4"]
 
@@ -100,12 +131,15 @@ pl_Tsit5 = plot(xlabel=L"x_1-x_2",ylabel=L"y_1-y_2",
     guidefontsize=20,legendfontsize=6,title="N=$(N), g=$(g), Tsit5")
 pl_Rodas5 = plot(xlabel=L"x_1-x_2",ylabel=L"y_1-y_2",
     guidefontsize=20,legendfontsize=6,title="N=$(N), g=$(g), Rodas5")
+pl_RK4 = plot(xlabel=L"x_1-x_2",ylabel=L"y_1-y_2",
+    guidefontsize=20,legendfontsize=6,title="N=$(N), g=$(g), RK4")
 
 colors = distinguishable_colors(5)
 
 #plot test trajectories first 
 for (i,ds) in enumerate(systems)
     @show i
+    #i < 11 && continue
     i == 6 && continue
 
     traj,t = trajectory(ds,T_limcycle,u0s[1];Ttr=Ttr,Δt = 0.001)
@@ -113,15 +147,31 @@ for (i,ds) in enumerate(systems)
     if i < 6
         plot_projection!(pl_Tsit5,traj;xlims=(-30,30),ylims=ylims,
         label = titles[i],lw=lws[i],lc=colors[i])
-    else
+    elseif 6 < i < 11
         plot_projection!(pl_Rodas5,traj;xlims=(-30,30),ylims=ylims,
         label = titles[i-5], lw=lws[i-5],lc=colors[i-5])
-    end
+    elseif 11 <= i < 16
+        #plot_projection!(pl_RK4,traj;xlims=(-30,30),ylims=ylims,
+        #label = titles[i-10], lw=lws[i-10],lc=colors[i-10])
+    end 
 end
 plot!(pl_Tsit5,legend=:bottomright)
 plot!(pl_Rodas5,legend=:bottomright)
-pl = plot(pl_Tsit5,pl_Rodas5,size=(600,400),dpi=300)
-savefig(pl,figs_dir*"solver_comparison_Tsit5_vs_Rodas5_test.png")
+plot!(pl_RK4, legend=:bottomright)
+
+#add simple RK4 to plot 
+for (i,dt) in enumerate(dts)
+    plot_projection!(pl_RK4, trajs_SRK4[i]; xlims=(-30, 30), ylims=ylims,
+        label="SimpleRK4, dt = $dt", ls=:dot, lc=colors[i])
+end
+
+pl = plot(pl_Tsit5, pl_Rodas5, pl_RK4, layout = (1,3), size=(800, 400), dpi=300)
+
+#save plot
+figs_dir = "../../numerics_figs/"
+mkpath(figs_dir)
+
+savefig(pl,figs_dir*"solver_comparison_Tsit5_vs_Rodas5_vs_RK4_test.png")
 
 perturb_plots = []
 clims = (0.0,2.0)
@@ -129,7 +179,6 @@ clims = (0.0,2.0)
 for (i,ds) in enumerate(systems)
 
     @show i
-
     
     i == 6 && continue
     if i < 6
@@ -164,12 +213,10 @@ for (i,ds) in enumerate(systems)
     plot_projection!(pl,traj_p_inv;xlims=(-30,30),ylims=ylims,label="perturbed in invariant subspace",
         c=cgrad(:Set1_3), clims=clims, line_z=λ_p_inv)
 
-
     push!(perturb_plots,pl)
 end
 
-figs_dir = "../../numerics_figs/"
-mkpath(figs_dir)
+
 #plot(perturb_plots...,layout=(5,5),size=(200,300))
 for (i,diffeqs) in enumerate(perturb_plots)
     i == 6 && continue
@@ -179,7 +226,36 @@ for (i,diffeqs) in enumerate(perturb_plots)
 
 end
 
+#check if trajectory stays on the partial limit cycle
+#if it's there already
 
+systems_selected_idxs = [2, 5, 7, 9]
+systems_selected = systems[systems_selected_idxs]
+colors = distinguishable_colors(4)
+
+plot_perturb2 = plot()
+for i in systems_selected_idxs
+    ds = systems[i]
+
+    #solve with Tsit5 to get on the limcycle
+    traj, t = trajectory(systems[2], T_limcycle, u0s[1]; Ttr=Ttr, Δt=0.001)
+
+    plot_projection!(plot_perturb2,traj; xlims=(-30, 30), ylims=ylims, lw=3, lc=:gray70,
+        label="partial limit cycle", #L"N=%$(N)"* L",g=%$(g)" *
+        xlabel=L"x_1-x_2", ylabel=L"y_1-y_2", guidefontsize=20, legendfontsize=6)
+
+    #perturb trajectory on the limit cycle only in the invariant subspace
+    #see which variables are nonzero
+    active_vars_search = findall(u -> u > 1.0, maximum(Matrix(traj); dims=1))
+    active_vars = [last(ind.I) for ind in active_vars_search]
+
+    u_p_inv = inittest_custom(traj[end], d0; dims=active_vars)
+    traj_p_inv, t = trajectory(ds, T_short, u_p_inv; Ttr=0, Δt=0.001)
+
+    plot_projection!(plot_perturb2, traj_p_inv; xlims=(-30, 30), ylims=ylims)
+
+end
+plot_perturb2
 #calc lyapunov exponents using different perturbation vectors
 #lyapunov(ds,100;u0=u0_limc,inittest = (u1,d0) -> inittest_custom(u1,d0;dims=[1,3,9,17]),Ttr=100)
 #lyapunov(ds,100;u0=u0_limc,inittest = (u1,d0) -> inittest_custom(u1,d0;dims=[1:2N;]),Ttr=100)
