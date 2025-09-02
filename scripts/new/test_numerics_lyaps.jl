@@ -58,7 +58,14 @@ maxiters = 1e8
 
 #def initial conditions
 #u0s = [rand(2N) .* 50 for i in 1:20]
-u0 = vec(readdlm("../../data/initial_condition_N10.txt"))
+
+#read saved initial condition for reproducability
+
+#u0 = vec(readdlm("../../data/initial_condition_N10.txt"))
+
+#BigFloat?
+u0 = BigFloat.(vec(readdlm("../../data/initial_condition_N10.txt"));precision=60)
+
 u0s = [u0]
 lyaps = []
 
@@ -108,8 +115,10 @@ lws = [1,5,3,2,1]
 #use SimpleDiffEq to make sure fixed timestepping works
 
 trajs_SRK4 = []
-dts = [1e-2, 1e-3, 1e-4, 1e-5]
-saveat = [1, 1, 10, 100]
+#dts = [1e-2, 1e-3, 1e-4, 1e-5,5 * 1e-6]
+dts = [1e-2, 1e-3, 1e-4]
+#saveat = [1, 1, 10, 100,100]
+saveat = [1, 1, 10]
 
 for (i,dt) in enumerate(dts)
     @show i
@@ -140,7 +149,7 @@ colors = distinguishable_colors(5)
 for (i,ds) in enumerate(systems)
     @show i
     #i < 11 && continue
-    i == 6 && continue
+    (i == 6 || i == 1) && continue
 
     traj,t = trajectory(ds,T_limcycle,u0s[1];Ttr=Ttr,Δt = 0.001)
 
@@ -162,7 +171,7 @@ plot!(pl_RK4, legend=:bottomright)
 #add simple RK4 to plot 
 for (i,dt) in enumerate(dts)
     plot_projection!(pl_RK4, trajs_SRK4[i]; xlims=(-30, 30), ylims=ylims,
-        label="SimpleRK4, dt = $dt", ls=:dot, lc=colors[i])
+        label="SimpleRK4, dt = $dt", lc=colors[i],lw=lws[i])
 end
 
 pl = plot(pl_Tsit5, pl_Rodas5, pl_RK4, layout = (1,3), size=(800, 400), dpi=300)
@@ -172,6 +181,9 @@ figs_dir = "../../numerics_figs/"
 mkpath(figs_dir)
 
 savefig(pl,figs_dir*"solver_comparison_Tsit5_vs_Rodas5_vs_RK4_test.png")
+
+
+#------------------------------trajectory perturbation tests-------------------------------
 
 perturb_plots = []
 clims = (0.0,2.0)
@@ -233,17 +245,24 @@ systems_selected_idxs = [2, 5, 7, 9]
 systems_selected = systems[systems_selected_idxs]
 colors = distinguishable_colors(4)
 
-plot_perturb2 = plot()
-for i in systems_selected_idxs
-    ds = systems[i]
+#solve with Tsit5 to get on the limcycle
+traj, t = trajectory(systems[2], T_limcycle, u0s[1]; Ttr=Ttr, Δt=0.001)
+plot_perturb_inv = plot(title="perturbation along limit cycle",legend=:bottomright)
+plot_perturb_uni = plot(title="perturbation uniform",legend=:bottomright)
 
-    #solve with Tsit5 to get on the limcycle
-    traj, t = trajectory(systems[2], T_limcycle, u0s[1]; Ttr=Ttr, Δt=0.001)
+plot_projection!(plot_perturb_inv,traj; xlims=(-30, 30), ylims=ylims, lw=3, lc=:gray70,
+    label="partial limit cycle", #L"N=%$(N)"* L",g=%$(g)" *
+    xlabel=L"x_1-x_2", ylabel=L"y_1-y_2", guidefontsize=20, legendfontsize=8)
 
-    plot_projection!(plot_perturb2,traj; xlims=(-30, 30), ylims=ylims, lw=3, lc=:gray70,
-        label="partial limit cycle", #L"N=%$(N)"* L",g=%$(g)" *
-        xlabel=L"x_1-x_2", ylabel=L"y_1-y_2", guidefontsize=20, legendfontsize=6)
+plot_projection!(plot_perturb_uni,traj; xlims=(-30, 30), ylims=ylims, lw=3, lc=:gray70,
+    label="partial limit cycle", #L"N=%$(N)"* L",g=%$(g)" *
+    xlabel=L"x_1-x_2", ylabel=L"y_1-y_2", guidefontsize=20, legendfontsize=8)
 
+labels_solvers = ["Tsit5, dtmax=1e-3","Tsit5, dt = 1e-4","Rodas5, dtmax=1e-3","Rodas5, dtmax=1e-4"]
+
+for (i,idx) in enumerate(systems_selected_idxs)
+    ds = systems[idx]
+    @show ds
     #perturb trajectory on the limit cycle only in the invariant subspace
     #see which variables are nonzero
     active_vars_search = findall(u -> u > 1.0, maximum(Matrix(traj); dims=1))
@@ -252,10 +271,21 @@ for i in systems_selected_idxs
     u_p_inv = inittest_custom(traj[end], d0; dims=active_vars)
     traj_p_inv, t = trajectory(ds, T_short, u_p_inv; Ttr=0, Δt=0.001)
 
-    plot_projection!(plot_perturb2, traj_p_inv; xlims=(-30, 30), ylims=ylims)
+    plot_projection!(plot_perturb_inv, traj_p_inv; xlims=(-30, 30), ylims=ylims,
+        label=labels_solvers[i])
 
+    u_p_uni = inittest_custom(traj[end], d0; dims=[1:20;])
+    traj_p_uni, t = trajectory(ds, T_short, u_p_uni; Ttr=0, Δt=0.001)
+
+    plot_projection!(plot_perturb_uni, traj_p_uni; xlims=(-30, 30), ylims=ylims,
+        label=labels_solvers[i])
 end
-plot_perturb2
+pl_pert2 = plot(plot_perturb_uni,plot_perturb_inv,layout=(1,2),size=(800,400),
+    left_margin=5Plots.mm,bottom_margin=5Plots.mm,dpi=300)
+
+savefig(pl_pert2,figs_dir*"perturb_trajectory_on_limc_solver_comparison"*".png")
+
+
 #calc lyapunov exponents using different perturbation vectors
 #lyapunov(ds,100;u0=u0_limc,inittest = (u1,d0) -> inittest_custom(u1,d0;dims=[1,3,9,17]),Ttr=100)
 #lyapunov(ds,100;u0=u0_limc,inittest = (u1,d0) -> inittest_custom(u1,d0;dims=[1:2N;]),Ttr=100)
