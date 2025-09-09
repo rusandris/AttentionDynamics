@@ -77,4 +77,6 @@ l = @layout [a{0.6w} a{0.4w}; a{0.6w} a{0.4w}; a{0.6w} a{0.4w}]
 pl = plot(pl2, pp2, pl1, pp1, pl3, pp3, layout=l, size=(800, 600),
     left_margin=5Plots.mm, dpi=300)
 
+pl1_resized = plot(pl1,size=(800,300),left_margin=5Plots.mm,bottom_margin=5Plots.mm, dpi=300)
+savefig(pl1_resized,"logistic_rand_r4.png")
 savefig(pl,"logistic_rand.png")

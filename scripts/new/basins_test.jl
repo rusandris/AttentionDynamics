@@ -51,7 +51,7 @@ mapper = AttractorsViaRecurrences(ds, grid_attractors;Ttr=Ttr,
 
 #define grid for basins 
 
-x1_grid = x2_grid = range(0.1, 1.0; length = 80)
+x1_grid = x2_grid = range(0.1, 1.0; length = 20)
 grid_for_basin = (x1_grid,x2_grid)  
 
 basins = basins_of_attraction(mapper, grid_for_basin)
