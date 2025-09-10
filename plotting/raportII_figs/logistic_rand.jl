@@ -19,7 +19,7 @@ ts_rand = rand(100)
 
 pl1 = plot(t, traj[:, 1], markershape=:circle,
     lc=:gray10, mc=:gray10, ylims=(0, 1.2),
-    xlabel=L"\tau", ylabel=L"x_{\tau}", label=L"r=4.0",
+    xlabel=L"\tau", ylabel=L"x_{\tau}", label=L"r=3.82",
     guidefontsize=18, legendfontsize=12)
 
 pl2 = plot(t, traj_per[:, 1], markershape=:circle,
@@ -54,20 +54,18 @@ P_rand, _, x_rand = calculate_transition_matrix(sts_rand)
 
 
 
-pp1 = plot(traj[1:end-1, 1], traj[2:end, 1], markershape=:circle,
+pp1 = plot(traj[:, 1][1:end-1], traj[:, 1][2:end], markershape=:circle,
     st=:scatter, mc=:gray10, ms=1.5, ma=0.01,
     ylims=(0, 1.2), xlims=(0, 1.2),
     xlabel=L"x_\tau", ylabel=L"x_{\tau+1}", label="",
     guidefontsize=18, legendfontsize=12)
 
-pp2 = plot(traj_per[1:end-1, 1], traj_per[2:end, 1], markershape=:circle,
+pp2 = plot(traj_per[:, 1][1:end-1], traj_per[:, 1][2:end], markershape=:circle,
     st=:scatter, mc=:gray10, ylims=(0, 1.2), xlims=(0, 1.2), ms=5, ma=1,
     xlabel=L"x_\tau", ylabel=L"x_{\tau+1}", label="",
     guidefontsize=18, legendfontsize=12)
 
-
-
-pp3 = plot(ts_rand[1:end-1, 1], ts_rand[2:end, 1], markershape=:circle,
+pp3 = plot(ts_rand[:, 1][1:end-1], ts_rand[:, 1][2:end], markershape=:circle,
     st=:scatter, mc=:gray10, ms=0.5, ma=0.7,
     ylims=(0, 1.2), xlims=(0, 1.2),
     xlabel=L"x_\tau", ylabel=L"x_{\tau+1}", label="",
