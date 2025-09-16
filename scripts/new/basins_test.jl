@@ -28,7 +28,7 @@ ds = create_ds(u0,p;diffeq=diffeq)
 
 #create ds projection
 projection = [1,3]
-complete_state = [0.0,0.0,1.0,0.0] #u0[[2,4,5,6]] #ones(2N-2) 
+complete_state = zeros(4) #[0.0,0.0,1.0,0.0] #u0[[2,4,5,6]] #ones(2N-2) 
 ds_x1x2 = ProjectedDynamicalSystem(ds,projection,complete_state)
 
 #test trajectory for efficient phase space grid choice
@@ -51,7 +51,7 @@ mapper = AttractorsViaRecurrences(ds, grid_attractors;Ttr=Ttr,
 
 #define grid for basins 
 
-x1_grid = x2_grid = range(0.1, 1.0; length = 20)
+x1_grid = x2_grid = range(0.01, 2.0; length = 60)
 grid_for_basin = (x1_grid,x2_grid)  
 
 basins = basins_of_attraction(mapper, grid_for_basin)
