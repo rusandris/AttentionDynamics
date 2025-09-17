@@ -16,7 +16,7 @@ mkpath(savedir)
 diffeq = (alg = Tsit5(),dt = 1e-3,dtmax=1e-3,adaptive=true,maxiters=1e15)
 #diffeq = (alg = Rodas5(),dt = 1e-4,dtmax=1e-4,adaptive=true,maxiters=1e15)
 N = 3
-g = 3.5
+g = 5.0
 w = 0.6
 p = [g,w,N]
 wc1 = (N-1)/g
@@ -51,7 +51,7 @@ mapper = AttractorsViaRecurrences(ds, grid_attractors;Ttr=Ttr,
 
 #define grid for basins 
 
-x1_grid = x2_grid = range(0.01, 2.0; length = 60)
+x1_grid = x2_grid = range(0.01, 2.0; length = 100)
 grid_for_basin = (x1_grid,x2_grid)  
 
 basins = basins_of_attraction(mapper, grid_for_basin)
