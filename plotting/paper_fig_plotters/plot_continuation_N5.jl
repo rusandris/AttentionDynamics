@@ -127,8 +127,10 @@ end
 vline!([wc1],ls=:dash,lc=:gray10,lw=2)
 vline!([wc2],ls=:dash,lc=:blue,lw=2)
 ylabel!(pl,L"\mathrm{max}(x_1)")
+plot!(xlabel=L"w")
 display(pl)
-
+figs_dir = "../../paper_figs/"
+savefig(pl,figs_dir*"continuation_test_N5_g20_trap.png")
 #=
 #annotations
 if i == 1 

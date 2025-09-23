@@ -1,4 +1,4 @@
-export att_din!, skipsum, create_original_ds
+export att_din!,att_din_original!, skipsum, create_original_ds
 export create_ds, generate_initial_condition, rescaled_params, rescaling_factors
 export create_ds_noisy, create_ds_alle, create_ds_symLV
 

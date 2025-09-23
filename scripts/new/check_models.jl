@@ -8,12 +8,13 @@ cd(@__DIR__)
 
 #original params
 N = 10
+g = 45.0
 rc = 1.0;K = 1.0;α = 5*1e-2
 competition_strength(w,rc,K,α,N) = w/(1-w) * rc/(α*K*(N-1))
 c = competition_strength(0.3, rc, K, α, N)
 
 production_rate(g,α) = g*α
-rp = production_rate(45.0, α)
+rp = production_rate(g, α)
 p_orig = [rp,rc,K,c,α]
 
 #=
