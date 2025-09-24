@@ -4,6 +4,7 @@ using AttentionDynamics
 using DifferentialEquations
 using LinearAlgebra
 using DelimitedFiles
+using Plots
 #using DynamicalSystems
 using ChaosTools
 cd(@__DIR__)
@@ -23,7 +24,7 @@ wc2 = (N-1)/N
 
 #---------------------------data saving--------------------------
 
-cont_dir = "../../data/bifkit_data_orig_N5_trap/"
+cont_dir = "../../data/bifkit_data_orig_N5_trap_branch2/"
 mkpath(cont_dir)
 
 isunity(z) = isapprox(real(z),1.0;atol=1e-1) && isapprox(imag(z),0.0;atol=1e-1)
@@ -70,7 +71,7 @@ dsmax = 0.01 #max step size along bif curve
 ds = 0.001 #initial step along bif curve
 detect_bifurcation = 2 #detection level
 max_steps = 1000 #max nr of continuation steps
-M = 350 #discretization for trapezoid method
+M = 650 #discretization for trapezoid method
 
 #nev (nr of eigs) needs to be set every time? to 2N
 
@@ -83,7 +84,7 @@ wc2 = (N-1)/N
 
 #---------------------------------system parameters------------------------------------
 
-K = 1.0;α = 5*1e-2
+K = 1.0;α = 5*1e-2;rc=1.0
 competition_strength(w,rc,K,α,N) = w/(1-w) * rc/(α*K*(N-1))
 c_crit1 = competition_strength(wc1, rc, K, α, N)
 c_crit2 = competition_strength(wc2, rc, K, α, N)
@@ -96,9 +97,12 @@ writedlm(cont_dir * "global_params_Ns_g.txt", global_params)
 production_rate(g,α) = g*α
 rp = production_rate(20.0, α)
 rc = rp
-p_orig = [rp,rc,K,1.0,α]
+p_orig = [rp,rc,K,1.1,α]
 
-f1,f2 = rescaling_factors(rp, rc, K, c, α, N)
+c_min = c_crit1 
+c_max = c_crit2
+
+f1,f2 = rescaling_factors(rp, rc, K, 1.1, α, N)
 
 
 #-----------------coexistence fixed point continuation-----------------
@@ -139,9 +143,8 @@ writedlm(cont_dir*"contres_fp_bifp_N$N"*".txt",bifpoints)
 #------------------solve for a lim cycle---------------
 #take lim cycle closer to wc2
 
-c_min = c_crit1 
-c_max = c_crit2
-c_cent = 2.0 
+
+c_cent = 6.0 
 
 #params for continuation
 p_orig = p_orig = [rp,rc,K,c_cent,α]
@@ -193,7 +196,7 @@ brpo2 = continuation(prob_orbit, orbit_guess, PALC(), opts_po_cont, ;
 
 #-------------------extract data from continuation res-------------------------
 
-for (i,brpo) in enumerate([brpo1,brpo2])
+for (i,brpo) in enumerate([brpo2])
     #solution info: maxs,mins of x1 of the solution for each param 
     params = brpo.branch.param 
     mins = brpo.branch.min
