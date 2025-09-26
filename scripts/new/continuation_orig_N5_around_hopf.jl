@@ -22,7 +22,7 @@ T = 2500 #saved time
 
 #---------------systems parameters-------------------
 N = 5
-g = 20.0
+g = 6.0
 
 #critical values
 wc1 = (N-1)/g
@@ -131,7 +131,7 @@ dsmax = 0.01 #max step size along bif curve
 ds = 0.001 #initial step along bif curve
 detect_bifurcation = 2 #detection level
 max_steps = 300 #max nr of continuation steps
-M = 550 #discretization for trapezoid method
+M = 450 #discretization for trapezoid method
 
 #nev (nr of eigs) needs to be set every time? to 2N
 
@@ -157,7 +157,8 @@ c_crit2 = competition_strength(wc2, rc, K, α, N)
     #take lim cycle closer to wc2
 
 c_min = c_crit1 - 0.3
-c_max = c_crit1 + 3.0 
+c_min = c_crit1 + 1.0
+#c_max = c_crit1 + 4.0 
 p_orig = [rp,rc,K,c_max,α]
 
 f1,f2 = rescaling_factors(rp, rc, K, c_max, α, N)
