@@ -157,7 +157,7 @@ c_crit2 = competition_strength(wc2, rc, K, α, N)
     #take lim cycle closer to wc2
 
 c_min = c_crit1 - 0.3
-c_min = c_crit1 + 1.0
+c_max = c_crit1 + 1.0
 #c_max = c_crit1 + 4.0 
 p_orig = [rp,rc,K,c_max,α]
 

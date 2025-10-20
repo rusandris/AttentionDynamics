@@ -102,6 +102,7 @@ for (i,dir_attr) in enumerate(dir_attrs)
     display(pl)
 end
 
+savefig(pl,"../../paper_figs/continuation_around_hopf_multiple_attractors_N5_g$(g).png")
 
 #=
 params = contres_fp_sols[:,1]
