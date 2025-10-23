@@ -56,6 +56,7 @@ diffeq2 = (alg=Rodas5(), dt=1e-4, dtmax=1e-4, adaptive=true, maxiters=1e8)
 ds = create_ds(u0,p;diffeq=diffeq)
 ds2 = create_ds(u0, p; diffeq=diffeq2)
 ds_orig = create_original_ds(U0, p_orig; diffeq=diffeq)
+ds_orig_mod = create_original_mod_ds(U0, p_orig; diffeq=diffeq)
 
 @time traj,t = trajectory(ds,50,u0;Ttr=300,Δt=0.001)
 @time traj2, t = trajectory(ds2, 50, u0; Ttr=300, Δt=0.001)
