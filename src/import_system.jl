@@ -1,4 +1,4 @@
-export att_din!,att_din_original!, skipsum, create_original_ds
+export att_din!, att_din_original!, skipsum, create_original_ds, create_original_mod_ds
 export create_ds, generate_initial_condition, rescaled_params, rescaling_factors
 export create_ds_noisy, create_ds_alle, create_ds_symLV
 
@@ -41,6 +41,16 @@ function att_din_original!(du,u,p,t)
     end
 end
 
+#system definition (in-place) with original parameters modified carrying capacity
+function att_din_original_mod!(du, u, p, t)
+    rp, rc, K, c, α = p
+    N = Int(length(u) / 2)
+    for i in 1:2:(2*N)
+        du[i] = rp * u[i] * (K - rc * u[i+1] - c * skipsum(u, i))
+        du[i+1] = u[i] - α * u[i+1]
+    end
+end
+
 #system definition (in-place) with additional uniform noise
 function att_din_noise!(du, u, p, t)
     n = convert(Int32, p[3])
@@ -73,6 +83,7 @@ diffeq_default =  (abstol = 1.0e-6, reltol = 1.0e-6)
 function create_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din!,u0,p;diffeq=diffeq) end
 function create_integrator(ds,diffeq) integrator(ds;diffeq) end
 function create_original_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din_original!,u0,p;diffeq=diffeq) end
+function create_original_mod_ds(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_original_mod!, u0, p; diffeq=diffeq) end
 function create_ds_noisy(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_noise!, u0, p; diffeq=diffeq) end
 function create_ds_alle(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_alle!, u0, p; diffeq=diffeq) end
 function create_ds_symLV(u0, p; diffeq=diffeq_default) CoupledODEs(symmetricLV!, u0, p; diffeq=diffeq) end
