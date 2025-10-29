@@ -2,7 +2,8 @@ using Revise
 using ComplexityMeasures
 using BifurcationKit
 using AttentionDynamics
-
+using OrdinaryDiffEq
+using DynamicalSystems
 #test multidim OP after critical point 
 #what happens to the symbolic dynamics of w is changed?
 #PE,WPE
@@ -36,7 +37,8 @@ xs = traj[:,1:2:2*N]
 
 op = OrdinalPatterns{N}()
 wop = WeightedOrdinalPatterns{N}()
-sts = codify(op,xs)
+sts = [encode(op.encoding,xs[i]) for i in 1:length(xs)]
+perms = [decode(op.encoding,sts[i]) for i in 1:length(sts)]
 
 for w in w_vals
     @show w
