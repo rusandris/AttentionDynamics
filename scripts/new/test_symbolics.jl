@@ -6,6 +6,8 @@ using OrdinaryDiffEq
 using StateTransitionNetworks
 using DynamicalSystems
 using StatsBase
+using Plots,LaTeXStrings
+using LinearAlgebra
 #test multidim OP after critical point 
 #what happens to the symbolic dynamics of w is changed?
 #PE,WPE
@@ -25,7 +27,7 @@ function get_top_charts(sts,k,encoding)
 end
 
 #calculate lifetimes by counting consecutive appearances
-function get_lifetime(charts)
+function get_lifetimes(charts)
     tlen,k = size(charts) 
 
     vars = unique(charts)    
@@ -84,7 +86,7 @@ w_vals = [0.42,0.45,0.47,0.5]
 
 #test
 set_parameter!(ds,2,w_vals[1])
-traj,t = trajectory(ds,500;Ttr=1000,Δt=1e-2)
+traj,t = trajectory(ds,500;Ttr=5000,Δt=1e-1)
 xs = traj[:,1:2:2*N]
 
 op = OrdinalPatterns{N}()
@@ -95,15 +97,25 @@ wop = WeightedOrdinalPatterns{N}()
 sts = [encode(op.encoding,xs[i]) for i in 1:length(xs)]
 perms = [decode(op.encoding,sts[i]) for i in 1:length(sts)]
 
+lifetimes_allps = []
 for w in w_vals
     @show w
     set_parameter!(ds,2,w)
 
     #trajectories
-    traj,t = trajectory(ds,500,u01;Ttr=100,Δt=1e-1)
+    traj,t = trajectory(ds,5000,u01;Ttr=1000,Δt=1e-1)
     xs = traj[:,1:2:2*N]
 
+    #encode with OP
     sts = [encode(op.encoding,xs[i]) for i in 1:length(xs)]
+
+    #get charts and lifetimes
+    charts = get_top_charts(sts,2,op.encoding)
+    lifetimes = get_lifetimes(charts)
+    push!(lifetimes_allps,lifetimes)
+    @show mean(lifetimes)
+
+
     P,Q,ρ = calculate_transition_matrix(sts)
 
     @show bit_number_measures(ρ)
@@ -112,3 +124,23 @@ for w in w_vals
     @show information(Shannon(;base=ℯ),op,xs)
     @show information(Shannon(;base=ℯ),wop,xs)
 end
+
+lifetimes_allps
+
+plots = []
+for (i,lifetimes) in enumerate(lifetimes_allps) 
+
+    min,max = extrema(lifetimes)
+    bin_edges = range(min-0.1,max+0.1;length=10)
+    bin_width = Float64(bin_edges.step)
+    h = fit(Histogram, lifetimes,bin_edges)#nbins=50)
+    h = normalize(h, mode=:probability)
+    bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
+    pl_distrib = plot(bin_centres, h.weights, lc=:gray20, markershape=:circle,
+        xlabel=L"WPE",mc=:gray10, label=L"w=%$(w_vals[i])",dpi=300)
+
+    push!(plots,pl_distrib)
+
+end
+plot(plots...,layout=(1,length(w_vals)),xlabel="lifetime",size=(1000,300),
+    bottom_margin=5Plots.mm)
