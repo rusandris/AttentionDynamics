@@ -31,6 +31,45 @@ pl1 = plot_phase_diagram(lyap_vals,ws,gs,N;HEATMAP_DEFAULTS...,
     legend=:topright)
 
 #plot original parameter spaces
+
+rp = 1.0;rc = 1.0;K = 1.0;
+
+#plot (g(α),w(α)) curve 
+
+αs = [6*1e-2:1e-3:1e-1;]
+ws_crit1_alpha = (N-1) ./ ( rp ./ αs )
+
+w_g_alpha = rescaled_params.(rp,rc,c,K,αs,N)
+w_g_alpha = [[w_g_alpha[i][1],w_g_alpha[i][2]] for i in 1:length(αs)]
+w_alpha = [w_g_alpha[i][1] for i in 1:length(w_g_alpha)]
+g_alpha = [w_g_alpha[i][2] for i in 1:length(w_g_alpha)]
+
+#plot difference w - w_crit if alpha is changed
+#plot(αs,(w_alpha - ws_crit1_alpha),lc=:purple,lw=3,ylabel=L"w_c(\alpha)  - w(\alpha)",
+#    xlabel=L"\alpha",guidefontsize=15)
+
+#plot distance to criticality (g_crit,w_crit) if alpha is changed
+gs_crit1_alpha = (N-1) ./ ws_crit1_alpha
+w_g_alpha_crit = [ [ws_crit1_alpha[i],gs_crit1_alpha[i]] for i in 1:length(ws_crit1_alpha)]
+dist_crit = norm.( w_g_alpha .- w_g_alpha_crit  )
+plot(αs,dist_crit,lc=:purple,lw=3,ylabel="distance to criticality",
+    xlabel=L"\alpha",guidefontsize=15)
+
+#plot (g(c),w(c)) curve
+cs = [2.5:0.05:4.0;]
+w_g_cs = rescaled_params.(rp,rc,cs,K,αs[1],N)
+w_cs = [w_g_cs[i][1] for i in 1:length(w_g_cs)]
+g_cs = [w_g_cs[i][2] for i in 1:length(w_g_cs)]
+
+plot!(pl1,w_cs,g_cs ./ (N-1),lc=:green,lw=3,arrow=:arrow)
+
+
+
+
+
+
+
+#=
 #cs = [2.5:1.0:7.0;]
 cs = [3.0,4.0]
 linecolors = [:cyan,:purple]
@@ -61,3 +100,4 @@ plot!([w2],[g2/(N-1)],st=:scatter,lc=:purple,ms=6,label="")
 
 figs_dir = "../../paper_figs/"
 savefig(pl1,figs_dir*"phasediag_data_N10_zoomed_orig_param_markers.png")
+=#
