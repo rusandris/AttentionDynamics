@@ -99,7 +99,7 @@ k = 10 #top 10
 #change c competition strength 
 #and see how difference between 
 #the top and bottom of the chart changes
-c_vals = [2.4:-0.1:1.7;]
+c_vals = [2.4:-0.05:1.7;]
 
 #change 1/alpha memory length
 #and see average lifetimes change
@@ -110,7 +110,7 @@ lifetimes = []
 x_vals_diffs = []
 plots_ts = []
 
-#=
+
 #loop over competition strength
 for c in c_vals
     @show c
@@ -120,7 +120,7 @@ for c in c_vals
     traj,times = trajectory(ds,T_traj;Ttr=Ttr,Δt=1.0)
     xs = traj[:,1:2:2*N]
 
-    pl = plot(times,Matrix(xs),xlims=(450,500),legend=false)
+    pl = plot(times,Matrix(xs),xlims=(T_traj,T_traj+100),legend=false)
     push!(plots_ts,pl)
 
     #apply OP 
@@ -140,11 +140,11 @@ for c in c_vals
     Δxs = [x_vals_top_k[i][end] -  x_vals_top_k[i][1] for i in 1:length(x_vals_top_k)]
     push!(x_vals_diffs,Δxs)
 
-    #get lifetimes
-    lts = get_lifetimes(charts)
-    push!(lifetimes,lts)
 end
-=#
+
+plot(plots_ts...,layout=(length(α_vals),1),size=(500,2600),ylims=(0.0,0.04),left_margin=10Plots.mm)
+plot(c_vals,mean.(x_vals_diffs),markershape=:circle,ms=1,lc=:gray10,mc=:gray10,
+    ylabel=L"\langle x^{(1)} - x^{(k)} \rangle",xlabel=L"c")
 
 #loop over memory length
 for α in α_vals
