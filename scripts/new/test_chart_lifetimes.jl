@@ -75,7 +75,8 @@ end
 N = 300
 
 #original params
-rp=5.0;rc = 5.0;K = 1.0;α = 5*1e-3;c=1.8
+#rp=3.0;rc = 3.0;K = 1.0;α = 5*1e-3;c=1.8
+rc = 9.0;rp = 9.0;K = 1.0;c = 2.4;α = 0.005;
 w,g = rescaled_params(rp,rc,K,c,α,N)
 
 p_orig = [rp,rc,K,c,α]
@@ -90,16 +91,43 @@ u01 = 0.1 .* rand(2N)
 ds = create_original_ds(u01,p_orig;diffeq=diffeq)
 
 Ttr = 500
-T_traj = 1500
-Δt = 1.0 #sampling rate
+T_traj = 5500
+Δt = 0.5 #sampling rate
 #test_traj, = trajectory(ds,50;Ttr=300,Δt=1e-2)
 
 k = 10 #top 10
 
+#plot critical curve
+ws_crit = (N - 1) ./ gs
+ws = [0.01:0.01:0.99;]
+pl = plot(ws, 1 ./ ws, lc=:gray10, lw=1, ylabel=L"g/(N-1)", xlabel=L"w",
+    guidefontsize=15, label="")
+
+rs = [6:0.1:15;]
+rs4 = [9.0:1.0:12.0;]
+u0 = 0.1 .* rand(2N)
+
+w_g_rs = rescaled_params.(rs, rs, K, c, α, N)
+w_rs = [w_g_rs[i][1] for i in 1:length(w_g_rs)]
+g_rs = [w_g_rs[i][2] for i in 1:length(w_g_rs)]
+
+#plot rp = rc = r curve 
+plot!(w_rs, g_rs ./ (N - 1), arrow=:arrow,
+    lc=:green, lw=1, label="",ylims=(0,25))
+
+
+w_g_rs4 = rescaled_params.(rs4, rs4, K, c, α, N)
+w_rs4 = [w_g_rs4[i][1] for i in 1:length(w_g_rs4)]
+g_rs4 = [w_g_rs4[i][2] for i in 1:length(w_g_rs4)]
+
+colors = palette([:purple, :red], 4)
+plot!(w_rs4, g_rs4 ./ (N - 1), st=:scatter,
+    mc=collect(colors), markerstrokewidth=0.0, ms=3, label="", ylims=(0, 15))
+
 #change c competition strength 
 #and see how difference between 
 #the top and bottom of the chart changes
-c_vals = [2.4:-0.05:1.7;]
+c_vals = [3.4:-0.05:1.4;]
 
 #change 1/alpha memory length
 #and see average lifetimes change
@@ -111,7 +139,64 @@ x_vals_diffs = []
 plots_ts = []
 
 
+#loop over production rates
+for r in rs4
+    @show r
+    set_parameter!(ds, 1, r)
+    set_parameter!(ds, 2, r)
+
+    #solve systems to get trajectory
+    traj, times = trajectory(ds, T_traj; Ttr=Ttr, Δt=Δt)
+    xs = traj[:, 1:2:2*N]
+
+    pl = plot(times, Matrix(xs), xlims=(500, 550), legend=false)
+    push!(plots_ts, pl)
+
+    #apply OP 
+    #sts = [encode(op.encoding,xs[i]) for i in 1:length(xs)]
+    #@show extrema(sts)
+
+    #OP pattern-integer conversion OVERFLOWS FOR LARGE N
+
+    #build top charts 
+    #charts = get_top_charts(sts,k,op.encoding)
+    charts = stack([sortperm(xs[i]) for i in 1:length(xs)])'[:, end-k+1:end]
+    @show size(charts)
+    #save values?
+    #diff between top and bottom of the chart
+    x_vals_top_k = [xs[i][charts[i, :]] for i in 1:length(xs)]
+    @show size(x_vals_top_k)
+    Δxs = [x_vals_top_k[i][end] - x_vals_top_k[i][1] for i in 1:length(x_vals_top_k)]
+    push!(x_vals_diffs, Δxs)
+
+    #get lifetimes
+    lts = get_lifetimes(charts)
+    push!(lifetimes, lts)
+end
+
+plots_distrib = []
+for (i, lts) in enumerate(lifetimes)
+
+    min, max = extrema(lts)
+    bin_edges = range(min - 0.1, max + 0.1; length=70)
+    bin_width = Float64(bin_edges.step)
+    h = fit(Histogram, lts .* Δt, bin_edges)#nbins=50)
+    h = normalize(h, mode=:probability)
+    bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
+    pl_distrib = plot(bin_centres, h.weights, lc=colors[i], markershape=:circle,
+        mc=colors[i], label=L"r=%$(rs4[i])", dpi=300)
+
+    push!(plots_distrib, pl_distrib)
+
+end
+
+plot(plots_distrib..., layout=(length(plots_distrib), 1), size=(300, 500),
+    bottom_margin=-3Plots.mm, xlims=(0, 25), ylims=(0, 0.4), left_margin=8Plots.mm,
+    legend=:topright)
+
+
 #loop over competition strength
+
 for c in c_vals
     @show c
     set_parameter!(ds,4,c)
