@@ -69,6 +69,11 @@ function get_lifetimes(charts)
 
 end
 
+function perm_entropy(charts) 
+        
+
+end
+
 
 #set system params 
 
@@ -88,7 +93,7 @@ wc2 = (N-1)/N
 diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
 u01 = 0.1 .* rand(2N)
 
-ds = create_original_ds(u01,p_orig;diffeq=diffeq)
+ds = create_original_ds(u01,deepcopy(p_orig);diffeq=diffeq)
 
 Ttr = 500
 T_traj = 5500
@@ -96,35 +101,6 @@ T_traj = 5500
 #test_traj, = trajectory(ds,50;Ttr=300,Δt=1e-2)
 
 k = 10 #top 10
-
-#plot critical curve
-ws = [0.01:0.01:0.99;]
-pl_crit_curve = plot(ws, 1 ./ ws, lc=:gray10, lw=1, ylabel=L"g/(N-1)", xlabel=L"w",
-    guidefontsize=15, label=L"w^H",title = L"N=%$(N), K=%$(K), c=%$(c)",legendfontsize=15)
-
-rs = [6:0.1:15;]
-rs4 = [9.0:1.0:12.0;]
-u0 = 0.1 .* rand(2N)
-
-w_g_rs = rescaled_params.(rs, rs, K, c, α, N)
-w_rs = [w_g_rs[i][1] for i in 1:length(w_g_rs)]
-g_rs = [w_g_rs[i][2] for i in 1:length(w_g_rs)]
-
-#plot rp = rc = r curve 
-plot!(pl_crit_curve,w_rs, g_rs ./ (N - 1), arrow=:arrow,
-    lc=:green, lw=1,label=L"r_p=r_c=r")
-
-
-w_g_rs4 = rescaled_params.(rs4, rs4, K, c, α, N)
-w_rs4 = [w_g_rs4[i][1] for i in 1:length(w_g_rs4)]
-g_rs4 = [w_g_rs4[i][2] for i in 1:length(w_g_rs4)]
-
-colors = palette([:purple, :red], 4)
-
-plot!(pl_crit_curve,w_rs4, g_rs4 ./ (N - 1), st=:scatter,
-    mc=collect(colors), markerstrokewidth=0.0, ms=3, 
-    label="",xlims=(0.1,0.5), ylims=(0, 12))
-
 
 #change c competition strength 
 #and see how difference between 
@@ -135,6 +111,95 @@ c_vals = [3.4:-0.05:1.4;]
 #and see average lifetimes change
 αs = [2*1e-4:1e-4:7*1e-3;]
 #αs = [4*1e-2:1e-3:8*1e-2;]
+
+rs = [6:0.1:15;]
+rs4 = [9.0:1.0:12.0;]
+
+gs4 = rs4 ./ α
+αs4 = rp ./ gs4
+
+#check if ratio (w,g) is the same 
+w_g_rs4 = rescaled_params.(rs4, rs4, K, c, α, N)
+w_g_αs4 = rescaled_params.(rp, rp, K, c, αs4, N)
+
+#--------------------test lyapunov exponent--------------------
+n = 10
+u0s = [0.1 .* rand(2N) for i in 1:n] #initial conditions 
+set_parameters!(ds, p_orig)
+λ_rs = []
+for r in rs4  
+    set_parameter!(ds,1,r)
+    set_parameter!(ds,2,r)
+
+    @show r
+    p = current_parameters(ds)
+    @show p
+    @show rescaled_params(p..., N)
+
+    λs = [lyapunov(ds, 1000; u0=u0s[i], Ttr=500) for i in 1:n]
+    @show λs
+    push!(λ_rs,λs)
+
+end 
+
+set_parameters!(ds,p_orig)
+λ_αs = []
+for α in αs4
+    set_parameter!(ds, 5, α)
+
+    @show α
+    p = current_parameters(ds)
+    @show p
+    @show rescaled_params(p..., N)
+
+    λs = [lyapunov(ds, 1000; u0=u0s[i],Ttr = 500) for i in 1:n]
+    @show λs
+    push!(λ_αs, λs)
+
+end
+
+pl_lyaps_rs = plot(bar(mean.(λ_rs);yerror=std.(λ_rs)),ylims=(0.0,0.05)) 
+pl_lyaps_αs = plot(bar(mean.(λ_αs); yerror=std.(λ_αs), c=:red), ylims=(0.0, 0.05))
+plot(pl_lyaps_rs, pl_lyaps_αs,layout=(1,2))
+#-------------------test permutation entropy---------------------
+
+
+
+
+
+
+
+
+
+#-------------------------plot phase diagram---------------------
+#check lifetime distributions while keeping rp/alpha constant
+
+#plot critical curve
+ws = [0.01:0.01:0.99;]
+pl_crit_curve = plot(ws, 1 ./ ws, lc=:gray10, lw=1, ylabel=L"g/(N-1)", xlabel=L"w",
+    guidefontsize=15, label=L"w^H",title = L"N=%$(N), K=%$(K), c=%$(c)",legendfontsize=15)
+
+w_g_αs = rescaled_params.(rp, rc, c, K, αs, N)
+w_αs = [w_g_αs[i][1] for i in 1:length(w_g_αs)]
+g_αs = [w_g_αs[i][2] for i in 1:length(w_g_αs)]
+
+w_g_rs = rescaled_params.(rs, rs, K, c, α, N)
+w_rs = [w_g_rs[i][1] for i in 1:length(w_g_rs)]
+g_rs = [w_g_rs[i][2] for i in 1:length(w_g_rs)]
+
+w_g_rs4 = rescaled_params.(rs4, rs4, K, c, α, N)
+w_rs4 = [w_g_rs4[i][1] for i in 1:length(w_g_rs4)]
+g_rs4 = [w_g_rs4[i][2] for i in 1:length(w_g_rs4)]
+
+colors = palette([:purple, :red], 4)
+
+#plot rp = rc = r curve 
+plot!(pl_crit_curve, w_rs, g_rs ./ (N - 1), arrow=:arrow,
+    lc=:green, lw=1, label=L"r_p=r_c=r")
+
+plot!(pl_crit_curve,w_rs4, g_rs4 ./ (N - 1), st=:scatter,
+    mc=collect(colors), markerstrokewidth=0.0, ms=3, 
+    label="",xlims=(0.1,0.5), ylims=(0, 12))
 
 op = OrdinalPatterns{N}()
 lifetimes = []
@@ -177,6 +242,8 @@ for r in rs4
     push!(lifetimes, lts)
 end
 
+#plot!(pl, w_αs, g_αs ./ (N - 1), lc=:cyan, lw=3, arrow=:arrow, label="")
+
 plots_distrib = []
 for (i, lts) in enumerate(lifetimes)
 
@@ -203,15 +270,6 @@ pl_r = plot(pl_crit_curve,pl_distr_r,layout=(1,2),size=(800,600),dpi=300)
 figs_dir = "../../paper_figs/"
 savefig(pl_r,figs_dir*"lifetime_distribution_test_N$(N)_K$(K)_c$(c)_alpha_$(α)_k$(k)"*".png")
 
-
-w_g_αs = rescaled_params.(rp,rc,c,K,αs,N)
-w_αs = [w_g_αs[i][1] for i in 1:length(w_g_αs)]
-g_αs = [w_g_αs[i][2] for i in 1:length(w_g_αs)]
-
-plot!(pl,w_αs,g_αs ./ (N-1),lc=:cyan,lw=3,arrow=:arrow,label="")
-
-gs4 = rs4 ./ α
-αs4 = rp ./ gs4
 
 #add param annotations to plot
 for i in 1:4 
