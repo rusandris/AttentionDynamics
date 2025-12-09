@@ -69,10 +69,131 @@ function get_lifetimes(charts)
 
 end
 
+
+function precompute_trajectories(ds,ps,p_idx,Δt=1e-1,T_traj=5000,Ttr=1000)
+
+    #precomputed trajs
+    trajs = []
+    for p in ps
+
+        if p_idx isa Vector
+            for i in p_idx 
+                set_parameter!(ds, i, p)
+            end
+        else 
+            set_parameter!(ds, p_idx, p)
+        end
+
+        #solve systems to get trajectory
+        @time traj, times = trajectory(ds, T_traj; Ttr=Ttr, Δt=Δt)
+        push!(trajs,traj)
+    end 
+    return trajs
+end
+
+function get_lifetimes(ds::DynamicalSystem,ps,p_idxs,Δt,k=10,T_traj=5000,Ttr=1000)
+
+    N = Int(dimension(ds)/2)
+
+    trajs = precompute_trajectories(ds,ps,p_idxs,Δt)
+
+    lifetimes_x = []
+    lifetimes_y = []
+
+    #loop over precomputed trajectories 
+    #calculate chart lifetimes on instantaneous and cumulated activity  
+
+    for traj in trajs
+        xs = traj[:, 1:2:2*N]
+        ys = traj[:, 2:2:2*N]
+
+        #build top charts 
+        #charts = get_top_charts(sts,k,op.encoding)
+        charts_x = stack([sortperm(xs[i]) for i in 1:length(xs)])'[:, end-k+1:end]
+        charts_y = stack([sortperm(ys[i]) for i in 1:length(ys)])'[:, end-k+1:end]
+
+        #get lifetimes
+        lts_x = get_lifetimes(charts_x)
+        lts_y = get_lifetimes(charts_y)
+        push!(lifetimes_x, lts_x)
+        push!(lifetimes_y, lts_y)
+    end
+
+    return lifetimes_x,lifetimes_y
+
+end
+
+function get_lifetimes(trajs,k,Δt_chart)
+
+    N = Int(dimension(ds)/2)
+    T = length(trajs[1]) 
+
+    @show N,T
+
+    lifetimes_x = []
+    lifetimes_y = []
+
+    #loop over precomputed trajectories 
+    #calculate chart lifetimes on instantaneous and cumulated activity  
+
+    for traj in trajs
+        xs = traj[1:Δt_chart:T, 1:2:2*N]
+        ys = traj[1:Δt_chart:T, 2:2:2*N]
+
+        @show length(xs),length(ys)
+
+        #build top charts 
+        #charts = get_top_charts(sts,k,op.encoding)
+        charts_x = stack([sortperm(xs[i]) for i in 1:length(xs)])'[:, end-k+1:end]
+        charts_y = stack([sortperm(ys[i]) for i in 1:length(ys)])'[:, end-k+1:end]
+
+        #get lifetimes
+        lts_x = get_lifetimes(charts_x)
+        lts_y = get_lifetimes(charts_y)
+        push!(lifetimes_x, lts_x)
+        push!(lifetimes_y, lts_y)
+    end
+
+    return lifetimes_x,lifetimes_y
+
+end
+
+function plot_distribs(lifetimes,Δt_chart;ps,colors,nbins = 20,coff=10,scale=:identity,xlabel=L"\tau^{(x)}_k \cdot \Delta t",title="lifetime distribution",label_par="")
+
+    pl_distrib = plot()
+
+    for i in 1:length(lifetimes)
+
+        #lifetime distribution
+        lts = lifetimes[i][1:end]
+        min, max = extrema(lts .* Δt_chart)
+        bin_edges = range(min, max; length=nbins)
+        bin_width = Float64(bin_edges.step)
+
+        h = fit(Histogram, lts .* Δt_chart, bin_edges)#nbins=50)
+        h = normalize(h, mode=:probability)
+        bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
+
+        #plot together
+        plot!(pl_distrib,bin_centres[1:coff], h.weights[1:coff], 
+            markershape=:circle, scale=scale,
+            mc=colors[i],lc=colors[i],title=title, 
+            label=label_par*"$(ps[i])", dpi=300)
+
+    end
+
+    plot!(pl_distrib, xlabel=xlabel)
+
+    return pl_distrib
+end
+
+
 function perm_entropy(charts)
 
 
 end
+
+gauss(x,μ,σ) = 1/(σ*sqrt(2π)) * exp(-(x - μ)^2/(2σ^2))
 
 #change 1/alpha memory length
 #and see average lifetimes change
@@ -120,238 +241,148 @@ rescaled_params.(rp, rp, K, c, αs4, N)
 #increase α -> decrease memory length 
 
 #loop over memory length
-#compute and store trajectories beforehand
-trajs = []
-for α in αs4
-    @show α
-    set_parameter!(ds, 5, α)
+#precompute trajectories 
+trajs_αs = precompute_trajectories(ds,αs4,5,0.5,5000,1000)
 
-    #solve systems to get trajectory
-    @time traj, times = trajectory(ds, T_traj; Ttr=Ttr, Δt=Δt)
-    push!(trajs,traj)
-end 
-
-
-lifetimes_x = []
-lifetimes_y = []
-
-#loop over precomputed trajectories 
-#calculate chart lifetimes on instantaneous and cumulated activity  
+#plot parts of trajectories  
+plots_trajs = []
 
 for traj in trajs
-    xs = traj[:, 1:2:2*N]
-    ys = traj[:, 2:2:2*N]
+    pl_x = plot(Matrix(traj[1:Δts_chart[1]:500,1:2:2N]),legend=false)
+    pl_y = plot(Matrix(traj[1:8500,2:2:4]),legend=false)
 
-    #build top charts 
-    #charts = get_top_charts(sts,k,op.encoding)
-    charts_x = stack([sortperm(xs[i]) for i in 1:length(xs)])'[:, end-k+1:end]
-    charts_y = stack([sortperm(ys[i]) for i in 1:length(ys)])'[:, end-k+1:end]
-
-
-    #save values?
-    #diff between top and bottom of the chart
-    #x_vals_top_k = [xs[i][charts[i, :]] for i in 1:length(xs)]
-    #@show size(x_vals_top_k)
-    #Δxs = [x_vals_top_k[i][end] - x_vals_top_k[i][1] for i in 1:length(x_vals_top_k)]
-    #push!(x_vals_diffs, Δxs)
-
-    #get lifetimes
-    lts_x = get_lifetimes(charts_x)
-    lts_y = get_lifetimes(charts_y)
-    push!(lifetimes_x, lts_x)
-    push!(lifetimes_y, lts_y)
+    push!(plots_trajs,pl_x,pl_y)
 end
 
-#-------------------------check averages--------------------------
-lts_means_y = [mean(lts_y) for lts_y in lifetimes_y]
-lts_means_x = [mean(lts_x) for lts_x in lifetimes_x]
-
-plot(αs4,lts_means_y,c=colors_y,st=:scatter)
-plot(αs4,lts_means_x,c=colors_x,st=:scatter)
-
-
-#---------------------plot distributions----------------------
-
-nbins = 20
-plots_distrib_x = []
-plots_distrib_y = []
-
-pl_distrib_x = plot()
-pl_distrib_y = plot()
+#get lifetimes with different k, charting times 
+ks = [10,50,100]
+Δts_chart = [5,10,50]
 
 colors_x = palette([:purple, :red], 4)
 colors_y = palette([:green, :blue], 4)
-coff = 10 #cutoff
+plots = []
+nbins = 15
+coff_x = 7
+coff_y = 14
+for k in ks 
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs_αs,k,1)
 
-for i in 1:length(lifetimes_x)
+    pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; 
+        ps=αs4,colors=colors_x,nbins = nbins, coff=coff_x,
+        xlabel=L"\tau^{(x)}_k \cdot \Delta t",
+        title=L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        label_par=L"\alpha = ")
 
-    #plot x lifetime distribution
-    lts_x = lifetimes_x[i][1:end]
-    min, max = extrema(lts_x)
-    bin_edges = range(min - 0.1, max + 0.1; length=nbins)
-    bin_width = Float64(bin_edges.step)
-    h = fit(Histogram, lts_x .* Δt, bin_edges)#nbins=50)
-    h = normalize(h, mode=:probability)
-    bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
+    pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[1]; 
+        ps=αs4,colors=colors_y,nbins = nbins, coff=coff_y,
+        xlabel=L"\tau^{(y)}_k \cdot \Delta t",
+        title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        label_par=L"\alpha = ")
 
-    #plot separately
-    pl_x = plot(bin_centres[1:end], h.weights[1:end], markershape=:circle,
-        mc=colors_x[i],lc=colors_x[i], label=L"\alpha=%$(αs4[i])", dpi=300)
-
-    push!(plots_distrib_x, pl_x)
-
-    #plot together
-
-    plot!(pl_distrib_x,bin_centres[1:coff], h.weights[1:coff], markershape=:circle,
-        mc=colors_x[i],lc=colors_x[i], label=L"\alpha=%$(αs4[i])", dpi=300)
-
-    #plot y lifetime distribution
-    lts_y = lifetimes_y[i][1:end]
-    min, max = extrema(lts_y)
-    bin_edges = range(min - 0.1, max + 0.1; length=nbins)
-    bin_width = Float64(bin_edges.step)
-    h = fit(Histogram, lts_y .* Δt, bin_edges)#nbins=50)
-    h = normalize(h, mode=:probability)
-    bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
-    
-    #plot separately
-    pl_y = plot(bin_centres[1:end], h.weights[1:end], markershape=:circle,
-        mc=colors_y[i], lc=colors_y[i], label=L"\alpha=%$(αs4[i])", dpi=300)
-
-    push!(plots_distrib_y, pl_y)
-    
-    #plot together 
-    plot!(pl_distrib_y,bin_centres[1:coff], h.weights[1:coff], markershape=:circle,
-        mc=colors_y[i],lc=colors_y[i], label=L"\alpha=%$(αs4[i])", dpi=300)
-
+    pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
+        bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
+    push!(plots,pl)
 end
 
+plots_charting = []
+for (i,Δt_chart) in enumerate(Δts_chart) 
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,ks[2],Δt_chart)
 
-#plot separately
-plot!(plots_distrib_x[end], xlabel=L"\tau^{(x)}_k \cdot \Delta t")
-plot!(plots_distrib_y[end], xlabel=L"\tau^{(y)}_k \cdot \Delta t")
+    pl_distrib_x = plot_distribs(lifetimes_x,Δt_chart; 
+        ps=rs4,colors=colors_x,nbins = nbins, coff=coff_x,scale=:log10,
+        xlabel=L"\tau^{(x)}_k \cdot \Delta t",
+        title=L"k=%$(ks[2])" * L",Δt=%$(Δt_chart)",
+        label_par=L"\alpha = ")
 
-pl_distr_sep_x = plot(plots_distrib_x..., layout=(length(plots_distrib_x), 1), size=(300, 500),
-    bottom_margin=1Plots.mm, left_margin=8Plots.mm,
-    legend=:topright)
+    pl_distrib_y = plot_distribs(lifetimes_y,Δt_chart; 
+        ps=rs4,colors=colors_y,nbins = nbins, coff=coff_y,scale=:identity,
+        xlabel=L"\tau^{(y)}_k \cdot \Delta t",
+        title = L"k=%$(ks[2])" * L",Δt=%$(Δt_chart)",
+        label_par=L"\alpha = ")
 
-pl_distr_sep_y = plot(plots_distrib_y..., layout=(length(plots_distrib_y), 1), size=(300, 500),
-    bottom_margin=1Plots.mm, left_margin=8Plots.mm, legend=:topright) #yaxis=:log)
+    @show mean(lifetimes_y[1])
+    gaussian = gauss.([100.0:1200;] , mean(lifetimes_y[1])*Δt_chart,std(lifetimes_y[1].*Δt_chart)) 
+    plot!(pl_distrib_y,[100.0:1200;],gaussian,lc=:gray10)
 
-
-plot(pl_distr_sep_x,pl_distr_sep_y,layout=(1,2),size=(400,600))
-
-#savefig(pl_α, figs_dir * "lifetime_distribution_test_N$(N)_rp$(rp)_rc$(rp)_K$(K)_c$(c)_k$(k)" * ".png")
-
-
-#plot together
-plot!(pl_distrib_x, xlabel=L"\tau^{(x)}_k \cdot \Delta t")
-plot!(pl_distrib_y, xlabel=L"\tau^{(y)}_k \cdot \Delta t")
-plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
-    xlims=(0,100),bottom_margin=5Plots.mm)#yaxis=:log,xaxis=:log)
-
+    pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
+        bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
+    push!(plots_charting,pl)
+end
 
 #----------------------------change r parameter-------------------------
 # try rp = rc scenario
 # compare with rp \neq rc (mismatch between production and consumption rate)
 # can the model produce different distributions?
+# try different k 
+# try different Δt
+
+k = 10 #top 10
 
 rs = [6:0.1:15;]
 #rs4 = [9.0:1.0:12.0;]
 
+rs4 = [6.0:4.0:18.0;]
 set_parameters!(ds,p_orig)
+rescaled_params.(rs4, rs4, K, c, α, N)
 
-#loop over r
-#compute and store trajectories beforehand
-trajs = []
-for r in rs4
-    @show α
-    set_parameter!(ds, 1, r)
-    set_parameter!(ds, 2, r)
+#precompute trajectories 
+trajs = precompute_trajectories(ds,rs4,[1,2],1e-1,5000,1000)
 
-    #solve systems to get trajectory
-    @time traj, times = trajectory(ds, T_traj; Ttr=Ttr, Δt=Δt)
-    push!(trajs,traj)
-end 
-
-
-lifetimes_x = []
-lifetimes_y = []
-
-#loop over precomputed trajectories 
-#calculate chart lifetimes on instantaneous and cumulated activity  
+#plot parts of trajectories  
+plots_trajs = []
 
 for traj in trajs
-    xs = traj[:, 1:2:2*N]
-    ys = traj[:, 2:2:2*N]
+    pl_x = plot(Matrix(traj[1:500,1:2:2N]),legend=false)
+    pl_y = plot(Matrix(traj[1:500,2:2:2N]),legend=false)
 
-    #build top charts 
-    #charts = get_top_charts(sts,k,op.encoding)
-    charts_x = stack([sortperm(xs[i]) for i in 1:length(xs)])'[:, end-k+1:end]
-    charts_y = stack([sortperm(ys[i]) for i in 1:length(ys)])'[:, end-k+1:end]
-
-
-    #save values?
-    #diff between top and bottom of the chart
-    #x_vals_top_k = [xs[i][charts[i, :]] for i in 1:length(xs)]
-    #@show size(x_vals_top_k)
-    #Δxs = [x_vals_top_k[i][end] - x_vals_top_k[i][1] for i in 1:length(x_vals_top_k)]
-    #push!(x_vals_diffs, Δxs)
-
-    #get lifetimes
-    lts_x = get_lifetimes(charts_x)
-    lts_y = get_lifetimes(charts_y)
-    push!(lifetimes_x, lts_x)
-    push!(lifetimes_y, lts_y)
+    push!(plots_trajs,pl_x,pl_y)
 end
 
-
-nbins = 20
-plots_distrib_x = []
-plots_distrib_y = []
-
-pl_distrib_x = plot()
-pl_distrib_y = plot()
+#get lifetimes with different k, charting times 
+ks = [10,50,100]
+Δts_chart = [5,10,50]
 
 colors_x = palette([:purple, :red], 4)
 colors_y = palette([:green, :blue], 4)
-coff = 10 #cutoff
+plots_topk = []
+for k in ks 
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,10)
 
-for i in 1:length(lifetimes_x)
+    pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; ps=rs4,colors=colors_x,nbins = 20,
+        coff=10,xlabel=L"\tau^{(x)}_k \cdot \Delta t",
+        title=L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        label_par=L"r_p=r_c = ")
 
-    #plot x lifetime distribution
-    lts_x = lifetimes_x[i][1:end]
-    min, max = extrema(lts_x)
-    bin_edges = range(min - 0.1, max + 0.1; length=nbins)
-    bin_width = Float64(bin_edges.step)
-    h = fit(Histogram, lts_x .* Δt, bin_edges)#nbins=50)
-    h = normalize(h, mode=:probability)
-    bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
+    pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[1]; ps=rs4,colors=colors_y,nbins = 20,
+        coff=10,xlabel=L"\tau^{(y)}_k \cdot \Delta t",
+        title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        label_par=L"r_p=r_c = ")
 
-    #plot together
-
-    plot!(pl_distrib_x,bin_centres[1:coff], h.weights[1:coff], markershape=:circle,
-        mc=colors_x[i],lc=colors_x[i], label=L"r_p=r_c=%$(rs4[i])", dpi=300)
-
-    #plot y lifetime distribution
-    lts_y = lifetimes_y[i][1:end]
-    min, max = extrema(lts_y)
-    bin_edges = range(min - 0.1, max + 0.1; length=nbins)
-    bin_width = Float64(bin_edges.step)
-    h = fit(Histogram, lts_y .* Δt, bin_edges)#nbins=50)
-    h = normalize(h, mode=:probability)
-    bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
-    
-    #plot together 
-    plot!(pl_distrib_y,bin_centres[1:coff], h.weights[1:coff], markershape=:circle,
-        mc=colors_y[i],lc=colors_y[i], label=L"r_p=r_c=%$(rs4[i])", dpi=300)
-
+    pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
+        bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
+    push!(plots_topk,pl)
 end
 
-#plot together
-plot!(pl_distrib_x, xlabel=L"\tau^{(x)}_k \cdot \Delta t")
-plot!(pl_distrib_y, xlabel=L"\tau^{(y)}_k \cdot \Delta t")
-plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
-    xlims=(0,100),bottom_margin=5Plots.mm)#yaxis=:log,xaxis=:log)
+plots_charting = []
+for Δt_chart in Δts_chart 
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,ks[1],Δt_chart)
+
+    pl_distrib_x = plot_distribs(lifetimes_x,Δt_chart; ps=rs4,colors=colors_x,nbins = 20,
+        coff=10,xlabel=L"\tau^{(x)}_k \cdot \Delta t",
+        title=L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        label_par=L"r_p=r_c = ")
+
+    pl_distrib_y = plot_distribs(lifetimes_y,Δt_chart; ps=rs4,colors=colors_y,nbins = 20,
+        coff=10,xlabel=L"\tau^{(y)}_k \cdot \Delta t",
+        title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        label_par=L"r_p=r_c = ")
+
+    pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
+        bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
+    push!(plots_charting,pl)
+end
+
+plplots
+
 
 
