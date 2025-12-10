@@ -242,13 +242,13 @@ rescaled_params.(rp, rp, K, c, αs4, N)
 
 #loop over memory length
 #precompute trajectories 
-trajs_αs = precompute_trajectories(ds,αs4,5,0.5,5000,1000)
+trajs_αs = precompute_trajectories(ds,αs4,5,0.5,35000,1000)
 
 #plot parts of trajectories  
 plots_trajs = []
 
-for traj in trajs
-    pl_x = plot(Matrix(traj[1:Δts_chart[1]:500,1:2:2N]),legend=false)
+for traj in trajs_αs
+    pl_x = plot(Matrix(traj[1:500,1:2:2N]),legend=false)
     pl_y = plot(Matrix(traj[1:8500,2:2:4]),legend=false)
 
     push!(plots_trajs,pl_x,pl_y)
@@ -261,9 +261,9 @@ ks = [10,50,100]
 colors_x = palette([:purple, :red], 4)
 colors_y = palette([:green, :blue], 4)
 plots = []
-nbins = 15
+nbins = 10
 coff_x = 7
-coff_y = 14
+coff_y = 9
 for k in ks 
     lifetimes_x,lifetimes_y =  get_lifetimes(trajs_αs,k,1)
 
@@ -286,23 +286,23 @@ end
 
 plots_charting = []
 for (i,Δt_chart) in enumerate(Δts_chart) 
-    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,ks[2],Δt_chart)
+    lifetimes_x, lifetimes_y = get_lifetimes(trajs_αs, ks[2], Δt_chart)
 
     pl_distrib_x = plot_distribs(lifetimes_x,Δt_chart; 
-        ps=rs4,colors=colors_x,nbins = nbins, coff=coff_x,scale=:log10,
+        ps=αs4, colors=colors_x, nbins=nbins, coff=coff_x, scale=:log10,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t",
         title=L"k=%$(ks[2])" * L",Δt=%$(Δt_chart)",
         label_par=L"\alpha = ")
 
     pl_distrib_y = plot_distribs(lifetimes_y,Δt_chart; 
-        ps=rs4,colors=colors_y,nbins = nbins, coff=coff_y,scale=:identity,
+        ps=αs4, colors=colors_y, nbins=nbins, coff=coff_y, scale=:identity,
         xlabel=L"\tau^{(y)}_k \cdot \Delta t",
         title = L"k=%$(ks[2])" * L",Δt=%$(Δt_chart)",
         label_par=L"\alpha = ")
 
     @show mean(lifetimes_y[1])
-    gaussian = gauss.([100.0:1200;] , mean(lifetimes_y[1])*Δt_chart,std(lifetimes_y[1].*Δt_chart)) 
-    plot!(pl_distrib_y,[100.0:1200;],gaussian,lc=:gray10)
+    #gaussian = gauss.([100.0:1200;] , mean(lifetimes_y[1])*Δt_chart,std(lifetimes_y[1].*Δt_chart)) 
+    #plot!(pl_distrib_y,[100.0:1200;],gaussian,lc=:gray10)
 
     pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
         bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
