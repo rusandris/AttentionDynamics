@@ -158,7 +158,7 @@ function get_lifetimes(trajs,k,Δt_chart)
 
 end
 
-function plot_distribs(lifetimes,Δt_chart;ps,colors,nbins = 20,coff=10,scale=:identity,xlabel=L"\tau^{(x)}_k \cdot \Delta t",title="lifetime distribution",label_par="")
+function plot_distribs(lifetimes,Δt_chart;ps,colors,mode=:probability,nbins = 20,coff=10,scale=:identity,xlabel=L"\tau^{(x)}_k \cdot \Delta t",title="lifetime distribution",label_par="")
 
     pl_distrib = plot()
 
@@ -171,12 +171,12 @@ function plot_distribs(lifetimes,Δt_chart;ps,colors,nbins = 20,coff=10,scale=:i
         bin_width = Float64(bin_edges.step)
 
         h = fit(Histogram, lts .* Δt_chart, bin_edges)#nbins=50)
-        h = normalize(h, mode=:probability)
+        h = normalize(h, mode=mode)
         bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
 
         #plot together
         plot!(pl_distrib,bin_centres[1:coff], h.weights[1:coff], 
-            markershape=:circle, scale=scale,
+            markershape=:circle, scale=scale,st=:scatter,
             mc=colors[i],lc=colors[i],title=title, 
             label=label_par*"$(ps[i])", dpi=300)
 
@@ -218,6 +218,10 @@ wc1 = (N - 1) / (rp / α)
 wc2 = (N - 1) / N
 
 diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
+#diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
+#diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
+
+
 u01 = 0.1 .* rand(2N)
 
 ds = create_original_ds(u01, deepcopy(p_orig); diffeq=diffeq)
@@ -326,17 +330,19 @@ set_parameters!(ds,p_orig)
 rescaled_params.(rs4, rs4, K, c, α, N)
 
 #precompute trajectories 
-trajs = precompute_trajectories(ds,rs4,[1,2],1e-1,5000,1000)
+trajs = precompute_trajectories(ds,rs4,[1,2],1e-1,15000,1000)
 
 #plot parts of trajectories  
 plots_trajs = []
 
-for traj in trajs
-    pl_x = plot(Matrix(traj[1:500,1:2:2N]),legend=false)
-    pl_y = plot(Matrix(traj[1:500,2:2:2N]),legend=false)
+for (i,traj) in enumerate(trajs)
+    pl_x = plot(Matrix(traj[1:500,1:2:2N]),legend=false,title=L"r_p=r_c = %$(rs4[i])")
+    pl_y = plot(Matrix(traj[1:18500,2:2:16]),legend=false,title=L"r_p=r_c = %$(rs4[i])")
 
     push!(plots_trajs,pl_x,pl_y)
 end
+pl_trajs = plot(plots_trajs...,layout=(4,2),size=(600,800),dpi=300)
+savefig(pl_trajs,"trajs_x_y_test.png")
 
 #get lifetimes with different k, charting times 
 ks = [10,50,100]
@@ -344,37 +350,71 @@ ks = [10,50,100]
 
 colors_x = palette([:purple, :red], 4)
 colors_y = palette([:green, :blue], 4)
+
+nbins = 15
+coff_x = 5
+coff_y = 14
+
 plots_topk = []
 for k in ks 
-    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,10)
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
 
-    pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; ps=rs4,colors=colors_x,nbins = 20,
-        coff=10,xlabel=L"\tau^{(x)}_k \cdot \Delta t",
+    pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; 
+        ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
+        scale=:log10,mode=:pdf,
+        xlabel=L"\tau^{(x)}_k \cdot \Delta t",
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1])",
         label_par=L"r_p=r_c = ")
 
-    pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[1]; ps=rs4,colors=colors_y,nbins = 20,
-        coff=10,xlabel=L"\tau^{(y)}_k \cdot \Delta t",
+    pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[1]; 
+        ps=rs4,colors=colors_y, nbins=nbins, coff=coff_y, 
+        scale=:identity, mode=:pdf,
+        xlabel=L"\tau^{(y)}_k \cdot \Delta t",
         title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
         label_par=L"r_p=r_c = ")
+
+    #plot normal distributions 
+    for (i,lts) in enumerate(lifetimes_y)
+        gaussian = gauss.([100.0:1700;], mean(lts)*Δts_chart[1],std(lts.*Δts_chart[1])) 
+        plot!(pl_distrib_y,[100.0:1700;],gaussian,lc=colors_y[i],label="")
+    end
 
     pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
         bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
     push!(plots_topk,pl)
 end
 
+for i in 1:3
+    xlims!(plots_topk[i][1],(10,10000))
+end 
+plot!(plots_topk[3][1],legend=:bottomleft)
+plot!(plots_topk[2][1],legend=:bottomleft)
+plot!(plots_topk[3][2],legend=:topright)
+
+pl_topk = plot(plots_topk...,layout=(3,1),size=(600,800),dpi=300)
+
+savefig(pl_topk,"../../paper_figs/lifetime_distributions_r_topk.png")
+
+nbins = 25
+coff_x = 15
+coff_y = 24
+
 plots_charting = []
 for Δt_chart in Δts_chart 
-    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,ks[1],Δt_chart)
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,20,1)
 
-    pl_distrib_x = plot_distribs(lifetimes_x,Δt_chart; ps=rs4,colors=colors_x,nbins = 20,
-        coff=10,xlabel=L"\tau^{(x)}_k \cdot \Delta t",
-        title=L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+    pl_distrib_x = plot_distribs(lifetimes_x,Δt_chart; 
+        ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
+        scale=:log10, mode=:probability,
+        xlabel=L"\tau^{(x)}_k \cdot \Delta t",
+        title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
         label_par=L"r_p=r_c = ")
 
-    pl_distrib_y = plot_distribs(lifetimes_y,Δt_chart; ps=rs4,colors=colors_y,nbins = 20,
-        coff=10,xlabel=L"\tau^{(y)}_k \cdot \Delta t",
-        title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+    pl_distrib_y = plot_distribs(lifetimes_y,Δt_chart; 
+        ps=rs4,colors=colors_y, nbins=nbins, coff=coff_x,
+        scale=:identity, mode=:pdf,
+        xlabel=L"\tau^{(y)}_k \cdot \Delta t",
+        title = L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
         label_par=L"r_p=r_c = ")
 
     pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
@@ -382,7 +422,205 @@ for Δt_chart in Δts_chart
     push!(plots_charting,pl)
 end
 
-plplots
+
+#-------------------------plot phase diagram---------------------
+#check lifetime distributions while keeping rp/alpha constant
+
+#plot critical curve
+ws = [0.01:0.01:0.99;]
+pl_crit_curve = plot(ws, 1 ./ ws, lc=:gray10, lw=1, ylabel=L"g/(N-1)", xlabel=L"w",
+    guidefontsize=15, label=L"w^H",title = L"N=%$(N), K=%$(K), c=%$(c)",legendfontsize=15)
+
+#when rp=rc
+w_g_rs4 = rescaled_params.(rs4, rs4, K, c, α, N)
+w_rs4 = [w_g_rs4[i][1] for i in 1:length(w_g_rs4)]
+g_rs4 = [w_g_rs4[i][2] for i in 1:length(w_g_rs4)]
+
+#plot rp = rc = r params 
+plot!(pl_crit_curve, w_rs4, g_rs4 ./ (N - 1),
+    mc=:green,lc=:green, lw=1, label=L"r_p=r_c=r \in [6,10,14,18]",ms=4,
+    xlims=(0.0,0.5),ylims=(0.,25),markershape=:circle)
+
+#when rp \neq rc, only rp changes
+w_g_rp = rescaled_params.(rs4, rc, K, c, α, N)
+w_rp = [w_g_rp[i][1] for i in 1:length(w_g_rp)]
+g_rp = [w_g_rp[i][2] for i in 1:length(w_g_rp)]
+
+#plot rp = rc = r params 
+plot!(pl_crit_curve, w_rp, g_rp ./ (N - 1),
+    mc=:purple, lc=:purple, lw=1, label=L"r_p \in [6,10,14,18], r_c=%$(rc)",ms=4,
+    xlims=(0.0,0.5),ylims=(0.,25),markershape=:circle)
+
+#when rp \neq rc, only rc changes
+w_g_rc = rescaled_params.(rp, rs4, K, c, α, N)
+w_rc = [w_g_rc[i][1] for i in 1:length(w_g_rc)]
+g_rc = [w_g_rc[i][2] for i in 1:length(w_g_rc)]
+
+#plot rp = rc = r params 
+plot!(pl_crit_curve, w_rc, g_rc ./ (N - 1),
+    mc=:blue, lc=:blue ,lw=1, label=label=L"r_p=%$(rp) , r_c \in [6,10,14,18]",ms=4,
+    xlims=(0.0,0.5),ylims=(0.,25),markershape=:circle)
+
+savefig(pl_crit_curve,"../../paper_figs/")
+
+# compare with rp \neq rc (mismatch between production and consumption rate)
+
+#NUMERICAL METHOD FAILS
+#Tsit5 with dt=1e-1 not enough 
+#dt = 1e-3 or RODAS5
+#=
+#precompute trajectories 
+trajs = precompute_trajectories(ds,rs4,1,1e-1,50,1000)
+
+#plot parts of trajectories  
+plots_trajs = []
+
+for (i,traj) in enumerate(trajs)
+    pl_x = plot(Matrix(traj[:,1:2:2N]),legend=false,title=L"r_p = %$(rs4[i]), r_c = %$(rc)")
+    pl_y = plot(Matrix(traj[:,2:2:16]),legend=false,title=L"r_p = %$(rs4[i]), r_c = %$(rc)")
+
+    push!(plots_trajs,pl_x,pl_y)
+end
+pl_trajs = plot(plots_trajs...,layout=(4,2),size=(600,800),dpi=300)
+#savefig(pl_trajs,"trajs_x_y_test.png")
 
 
+nbins = 15
+coff_x = 5
+coff_y = 14
 
+plots_topk = []
+for k in ks 
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
+
+    pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; 
+        ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
+        scale=:log10,mode=:pdf,
+        xlabel=L"\tau^{(x)}_k \cdot \Delta t",
+        title=L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        label_par=L"r_p=r_c = ")
+
+    pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[1]; 
+        ps=rs4,colors=colors_y, nbins=nbins, coff=coff_y, 
+        scale=:identity, mode=:pdf,
+        xlabel=L"\tau^{(y)}_k \cdot \Delta t",
+        title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        label_par=L"r_p=r_c = ")
+
+    #plot normal distributions 
+    for (i,lts) in enumerate(lifetimes_y)
+        gaussian = gauss.([100.0:1700;], mean(lts)*Δts_chart[1],std(lts.*Δts_chart[1])) 
+        plot!(pl_distrib_y,[100.0:1700;],gaussian,lc=colors_y[i],label="")
+    end
+
+    pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
+        bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
+    push!(plots_topk,pl)
+end
+
+for i in 1:3
+    xlims!(plots_topk[i][1],(10,10000))
+end 
+plot!(plots_topk[3][1],legend=:bottomleft)
+plot!(plots_topk[2][1],legend=:bottomleft)
+plot!(plots_topk[3][2],legend=:topright)
+
+pl_topk = plot(plots_topk...,layout=(3,1),size=(600,800),dpi=300)
+
+savefig(pl_topk,"../../paper_figs/lifetime_distributions_r_topk.png")
+
+nbins = 25
+coff_x = 15
+coff_y = 24
+
+plots_charting = []
+for Δt_chart in Δts_chart 
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,20,1)
+
+    pl_distrib_x = plot_distribs(lifetimes_x,Δt_chart; 
+        ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
+        scale=:log10, mode=:probability,
+        xlabel=L"\tau^{(x)}_k \cdot \Delta t",
+        title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
+        label_par=L"r_p=r_c = ")
+
+    pl_distrib_y = plot_distribs(lifetimes_y,Δt_chart; 
+        ps=rs4,colors=colors_y, nbins=nbins, coff=coff_x,
+        scale=:identity, mode=:pdf,
+        xlabel=L"\tau^{(y)}_k \cdot \Delta t",
+        title = L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
+        label_par=L"r_p=r_c = ")
+
+    pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
+        bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
+    push!(plots_charting,pl)
+end
+=#
+# compare with rp \neq rc (mismatch between production and consumption rate)
+
+#precompute trajectories 
+set_parameters!(ds,p_orig)
+trajs = precompute_trajectories(ds,rs4,2,1e-1,15000,1000)
+
+#plot parts of trajectories  
+plots_trajs = []
+
+for (i,traj) in enumerate(trajs)
+    pl_x = plot(Matrix(traj[1:500,1:2:2N]),legend=false,title=L"r_p = %$(rp), r_c = %$(rs4[i])")
+    pl_y = plot(Matrix(traj[1:12500,2:2:16]),legend=false,title=L"r_p = %$(rp), r_c = %$(rs4[i])")
+
+    push!(plots_trajs,pl_x,pl_y)
+end
+pl_trajs = plot(plots_trajs...,layout=(4,2),size=(600,800),dpi=300)
+savefig(pl_trajs,"../../paper_figs/trajs_x_y_rp_rc_mismatch_test.png")
+
+
+nbins = 25
+coff_x = 4
+coff_y = 24
+
+plots_topk = []
+for k in ks 
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[2])
+
+    pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[2]; 
+        ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
+        scale=:log10,mode=:pdf,
+        xlabel=L"\tau^{(x)}_k \cdot \Delta t",
+        title=L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        label_par=L"r_p = %$(rp), r_c = ")
+
+    pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[2]; 
+        ps=rs4,colors=colors_y, nbins=nbins, coff=coff_y, 
+        scale=:identity, mode=:pdf,
+        xlabel=L"\tau^{(y)}_k \cdot \Delta t",
+        title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        label_par=L"r_p = %$(rp), r_c = ")
+
+    #plot normal distributions 
+    for (i,lts) in enumerate(lifetimes_y)
+        gaussian = gauss.([0.0:2800;], mean(lts)*Δts_chart[2],std(lts.*Δts_chart[2])) 
+        plot!(pl_distrib_y,[0.0:2800;],gaussian,lc=colors_y[i],label="")
+    end
+
+    pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
+        bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
+    push!(plots_topk,pl)
+end
+
+for i in 1:3
+    xlims!(plots_topk[i][2],(10,1500))
+end 
+
+xlims!(plots_topk[1][2],(0,800))
+xlims!(plots_topk[3][2],(0,2800))
+plot!(plots_topk[3][1],legend=:bottomleft)
+plot!(plots_topk[2][1],legend=:bottomleft)
+plot!(plots_topk[3][2],legend=:topright)
+
+pl_topk = plot(plots_topk...,layout=(3,1),size=(600,800),dpi=300)
+subp1 = plot(plots_topk[1][2])
+subp2 = plot(plots_topk[2][2])
+subp3 = plot(plots_topk[3][2])
+pl_topk = plot(subp1,subp2,subp3,layout=(3,1),size=(300,800),dpi=300)
+savefig(pl_topk,"../../paper_figs/lifetime_distributions_rp_rc_mismatch_topk.png")
