@@ -128,7 +128,7 @@ function get_lifetimes(trajs,k,Δt_chart)
     N = Int(dimension(ds)/2)
     T = length(trajs[1]) 
 
-    @show N,T
+    #@show N,T
 
     lifetimes_x = []
     lifetimes_y = []
@@ -140,7 +140,7 @@ function get_lifetimes(trajs,k,Δt_chart)
         xs = traj[1:Δt_chart:T, 1:2:2*N]
         ys = traj[1:Δt_chart:T, 2:2:2*N]
 
-        @show length(xs),length(ys)
+        #@show length(xs),length(ys)
 
         #build top charts 
         #charts = get_top_charts(sts,k,op.encoding)
@@ -158,7 +158,8 @@ function get_lifetimes(trajs,k,Δt_chart)
 
 end
 
-function plot_distribs(lifetimes,Δt_chart;ps,colors,mode=:probability,nbins = 20,coff=10,scale=:identity,xlabel=L"\tau^{(x)}_k \cdot \Delta t",title="lifetime distribution",label_par="")
+function plot_distribs(lifetimes,Δt_chart;ps,colors,mode=:probability,nbins = 20,coff=10,scale=:identity,
+    xlabel=L"\tau^{(x)}_k \cdot \Delta t",title="lifetime distribution",label_par="")
 
     pl_distrib = plot()
 
@@ -166,20 +167,36 @@ function plot_distribs(lifetimes,Δt_chart;ps,colors,mode=:probability,nbins = 2
 
         #lifetime distribution
         lts = lifetimes[i][1:end]
-        min, max = extrema(lts .* Δt_chart)
-        bin_edges = range(min, max; length=nbins)
-        bin_width = Float64(bin_edges.step)
+        #min, max = extrema(lts .* Δt_chart)
+        #bin_edges = range(min, max; length=nbins)
+        #bin_width = Float64(bin_edges.step)
 
-        h = fit(Histogram, lts .* Δt_chart, bin_edges)#nbins=50)
+        h = fit(Histogram, lts .* Δt_chart, nbins=nbins)
         h = normalize(h, mode=mode)
-        bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
+        bin_edges = h.edges[1] .+ 1 #offset by 1 to avoid zeros 
+        #bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
+        #@show bin_edges
+        #automatic cutoff: throw out empty bins 
+        coff = findfirst(x->iszero(x),h.weights)
+        
+        if !(isnothing(coff)) 
+            probs = h.weights[1:coff-1]
 
-        #plot together
-        plot!(pl_distrib,bin_centres[1:coff], h.weights[1:coff], 
-            markershape=:circle, scale=scale,st=:scatter,
-            mc=colors[i],lc=colors[i],title=title, 
-            label=label_par*"$(ps[i])", dpi=300)
+            #plot together
+            plot!(pl_distrib,bin_edges[1:coff-1], probs, 
+                markershape=:circle, scale=scale,st=:scatter,
+                mc=colors[i],lc=colors[i],title=title, 
+                label=label_par*"$(ps[i])", dpi=300)
+        else 
+            probs = h.weights
 
+            #plot together
+            plot!(pl_distrib,bin_edges, probs, 
+                markershape=:circle, scale=scale,st=:scatter,
+                mc=colors[i],lc=colors[i],title=title, 
+                label=label_par*"$(ps[i])", dpi=300)
+
+        end
     end
 
     plot!(pl_distrib, xlabel=xlabel)
@@ -354,28 +371,33 @@ ks = [10,50,100]
 #colors_y = palette([:green, :blue], 4)
 
 colors_x = distinguishable_colors(4)
+colors_y = distinguishable_colors(4)
 
 
-nbins = 15
-coff_x = 5
-coff_y = 14
+nbins = 25
+coff_x = 15
+coff_y = 13
 
 #test lifetime distrib shape 
 #tresholded binning?
-
+lifetimes_x,lifetimes_y =  get_lifetimes(trajs,ks[2],Δts_chart[1])
 lts = lifetimes_x[1]
 min, max = extrema(lts .* Δts_chart[1])
 bin_edges = range(min, max; length=nbins)
 bin_width = Float64(bin_edges.step)
 
-h = fit(Histogram, lts .* Δts_chart[1], bin_edges)#nbins=50)
+h = fit(Histogram, lts .* Δts_chart[1], nbins=25) #bin_edges)
+
 h = normalize(h, mode=:pdf)
-bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
-plot(bin_centres[1:end-1], h.weights[1:end-1], st=:scatter, scale=:log10)
-plot!([500:1:12200;], lognormal.([500:1:12200;], mean(log10.(lts)), std(log10.(lts))), scale=:log10)
+#bin_centres = h.edges[1][1:end-1] .+ 0.5 * h.edges[1].step
+plot(h.edges[1][2:end-6], h.weights[2:end-6], st=:scatter, scale=:log10)
+plot!([50:1:12200;], lognormal.([50:1:12200;], mean(log10.(lts)), std(log10.(lts))), scale=:log10)
+
+lognormal_intervals = [100:1:2000,100:1:22000,100:1:52000]
+gaussian_intervals = [1:1:1000,100:1:2700,100:1:2700]
 
 plots_topk = []
-for k in ks 
+for (k_idx,k) in enumerate(ks) 
     lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
 
     pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; 
@@ -394,8 +416,15 @@ for k in ks
 
     #plot normal distributions 
     for (i,lts) in enumerate(lifetimes_y)
-        gaussian = gauss.([100.0:1700;], mean(lts)*Δts_chart[1],std(lts.*Δts_chart[1])) 
-        plot!(pl_distrib_y,[100.0:1700;],gaussian,lc=colors_y[i],label="")
+        gaussian = gauss.(gaussian_intervals[k_idx], mean(lts)*Δts_chart[1],std(lts.*Δts_chart[1])) 
+        plot!(pl_distrib_y,gaussian_intervals[k_idx],gaussian,lc=colors_y[i],label="")
+    end
+
+    #plot lognormal distribution 
+    for (i,lts) in enumerate(lifetimes_x) 
+        lognorm_vals = lognormal.(lognormal_intervals[k_idx], mean(log10.(lts.*Δts_chart[1])), std(log10.(lts.*Δts_chart[1])))
+        plot!(pl_distrib_x,lognormal_intervals[k_idx],lognorm_vals, 
+            scale=:log10,lc=colors_x[i],label="")
     end
 
     pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
@@ -403,8 +432,9 @@ for k in ks
     push!(plots_topk,pl)
 end
 
+xlimits = [(50,10000),(100,10000),(100,50000)]
 for i in 1:3
-    xlims!(plots_topk[i][1],(10,10000))
+    xlims!(plots_topk[i][1],xlimits[i])
 end 
 plot!(plots_topk[3][1],legend=:bottomleft)
 plot!(plots_topk[2][1],legend=:bottomleft)
@@ -412,7 +442,7 @@ plot!(plots_topk[3][2],legend=:topright)
 
 pl_topk = plot(plots_topk...,layout=(3,1),size=(600,800),dpi=300)
 
-savefig(pl_topk,"../../paper_figs/lifetime_distributions_r_topk.png")
+savefig(pl_topk,"../../paper_figs/lifetime_distributions_r_topk_shapes_recolor.png")
 
 nbins = 25
 coff_x = 15
@@ -575,8 +605,10 @@ for Δt_chart in Δts_chart
     push!(plots_charting,pl)
 end
 =#
-# compare with rp \neq rc (mismatch between production and consumption rate)
 
+#WATCH OUT FOR NUMERICAL METHOD ERRORS
+# compare with rp \neq rc (mismatch between production and consumption rate)
+#ONLY CHANGE rc
 #precompute trajectories 
 set_parameters!(ds,p_orig)
 trajs = precompute_trajectories(ds,rs4,2,1e-1,15000,1000)
@@ -598,18 +630,21 @@ nbins = 25
 coff_x = 4
 coff_y = 24
 
-plots_topk = []
-for k in ks 
-    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[2])
+lognormal_intervals = [100:1:2000,100:1:22000,100:1:52000]
+gaussian_intervals = [1:1:1000,100:1:2700,100:1:2700]
 
-    pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[2]; 
+plots_topk = []
+for (k_idx,k) in enumerate(ks) 
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
+
+    pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; 
         ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
         scale=:log10,mode=:pdf,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t",
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1])",
         label_par=L"r_p = %$(rp), r_c = ")
 
-    pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[2]; 
+    pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[1]; 
         ps=rs4,colors=colors_y, nbins=nbins, coff=coff_y, 
         scale=:identity, mode=:pdf,
         xlabel=L"\tau^{(y)}_k \cdot \Delta t",
@@ -618,8 +653,15 @@ for k in ks
 
     #plot normal distributions 
     for (i,lts) in enumerate(lifetimes_y)
-        gaussian = gauss.([0.0:2800;], mean(lts)*Δts_chart[2],std(lts.*Δts_chart[2])) 
-        plot!(pl_distrib_y,[0.0:2800;],gaussian,lc=colors_y[i],label="")
+        gaussian = gauss.(gaussian_intervals[k_idx], mean(lts)*Δts_chart[1],std(lts.*Δts_chart[1])) 
+        plot!(pl_distrib_y,gaussian_intervals[k_idx],gaussian,lc=colors_y[i],label="")
+    end
+
+    #plot lognormal distribution 
+    for (i,lts) in enumerate(lifetimes_x) 
+        lognorm_vals = lognormal.(lognormal_intervals[k_idx], mean(log10.(lts.*Δts_chart[1])), std(log10.(lts.*Δts_chart[1])))
+        plot!(pl_distrib_x,lognormal_intervals[k_idx],lognorm_vals, 
+            scale=:log10,lc=colors_x[i],label="")
     end
 
     pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
@@ -627,14 +669,17 @@ for k in ks
     push!(plots_topk,pl)
 end
 
+xlimits = [(50,10000),(100,10000),(100,50000)]
+
 for i in 1:3
-    xlims!(plots_topk[i][2],(10,1500))
+    xlims!(plots_topk[i][1],xlimits[i])
 end 
 
 xlims!(plots_topk[1][2],(0,800))
 xlims!(plots_topk[3][2],(0,2800))
 plot!(plots_topk[3][1],legend=:bottomleft)
 plot!(plots_topk[2][1],legend=:bottomleft)
+plot!(plots_topk[1][1],legend=:bottomleft)
 plot!(plots_topk[3][2],legend=:topright)
 
 pl_topk = plot(plots_topk...,layout=(3,1),size=(600,800),dpi=300)
