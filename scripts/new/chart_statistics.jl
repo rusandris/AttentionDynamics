@@ -187,6 +187,8 @@ function plot_distribs(lifetimes,Δt_chart;ps,colors,mode=:probability,nbins = 2
     return pl_distrib
 end
 
+lognormal(x,μ,σ) = 1/(x*σ*sqrt(2π)) * exp(-(log10(x) - μ)^2/(2*σ^2)) 
+
 
 function perm_entropy(charts)
 
@@ -348,12 +350,29 @@ savefig(pl_trajs,"trajs_x_y_test.png")
 ks = [10,50,100]
 Δts_chart = [5,10,50]
 
-colors_x = palette([:purple, :red], 4)
-colors_y = palette([:green, :blue], 4)
+#colors_x = palette([:purple, :red], 4)
+#colors_y = palette([:green, :blue], 4)
+
+colors_x = distinguishable_colors(4)
+
 
 nbins = 15
 coff_x = 5
 coff_y = 14
+
+#test lifetime distrib shape 
+#tresholded binning?
+
+lts = lifetimes_x[1]
+min, max = extrema(lts .* Δts_chart[1])
+bin_edges = range(min, max; length=nbins)
+bin_width = Float64(bin_edges.step)
+
+h = fit(Histogram, lts .* Δts_chart[1], bin_edges)#nbins=50)
+h = normalize(h, mode=:pdf)
+bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
+plot(bin_centres[1:end-1], h.weights[1:end-1], st=:scatter, scale=:log10)
+plot!([500:1:12200;], lognormal.([500:1:12200;], mean(log10.(lts)), std(log10.(lts))), scale=:log10)
 
 plots_topk = []
 for k in ks 
