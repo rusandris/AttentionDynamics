@@ -176,9 +176,9 @@ function plot_distribs(lifetimes,Δt_chart;ps,colors,mode=:probability,nbins = 2
         bin_edges = h.edges[1] .+ 1 #offset by 1 to avoid zeros 
         #bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
         #@show bin_edges
+
         #automatic cutoff: throw out empty bins 
         coff = findfirst(x->iszero(x),h.weights)
-        
         if !(isnothing(coff)) 
             probs = h.weights[1:coff-1]
 
@@ -340,19 +340,21 @@ for (k_idx,k) in enumerate(ks)
         plot!(pl_distrib_y,gaussian_intervals[k_idx],gaussian,lc=colors_y[i],label="")
     end
 
+    #=
     #plot lognormal distribution 
     for (i,lts) in enumerate(lifetimes_x) 
         lognorm_vals = lognormal.(lognormal_intervals[k_idx], mean(log10.(lts.*Δts_chart[1])), std(log10.(lts.*Δts_chart[1])))
         plot!(pl_distrib_x,lognormal_intervals[k_idx],lognorm_vals, 
             scale=:log10,lc=colors_x[i],label="")
     end
+    =#
 
     pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
         bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
     push!(plots_topk,pl)
 end
 
-xlimits = [(50,10000),(100,10000),(100,50000)]
+xlimits = [(50,1000),(500,10000),(1000,50000)]
 for i in 1:3
     xlims!(plots_topk[i][1],xlimits[i])
 end 
@@ -364,32 +366,60 @@ pl_topk = plot(plots_topk...,layout=(3,1),size=(600,800),dpi=300)
 
 savefig(pl_topk,"../../paper_figs/lifetime_distributions_r_topk_shapes_recolor.png")
 
-nbins = 25
+nbins = 20
 coff_x = 15
 coff_y = 24
 
+#keep k the same, change charting time
 plots_charting = []
-for Δt_chart in Δts_chart 
-    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,20,1)
+for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
+    lifetimes_x, lifetimes_y = get_lifetimes(trajs, ks[1], Δt_chart)
 
-    pl_distrib_x = plot_distribs(lifetimes_x,Δt_chart; 
-        ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
-        scale=:log10, mode=:probability,
+    pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
+        ps=rs4, colors=colors_x, nbins=nbins, coff=coff_x,
+        scale=:log10, mode=:pdf,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t",
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
         label_par=L"r_p=r_c = ")
 
-    pl_distrib_y = plot_distribs(lifetimes_y,Δt_chart; 
-        ps=rs4,colors=colors_y, nbins=nbins, coff=coff_x,
+    pl_distrib_y = plot_distribs(lifetimes_y, Δt_chart;
+        ps=rs4, colors=colors_y, nbins=nbins, coff=coff_y,
         scale=:identity, mode=:pdf,
         xlabel=L"\tau^{(y)}_k \cdot \Delta t",
-        title = L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
+        title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
         label_par=L"r_p=r_c = ")
 
-    pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
+    #plot normal distributions 
+    for (i, lts) in enumerate(lifetimes_y)
+        gaussian = gauss.(gaussian_intervals[Δt_idx], mean(lts) * Δt_chart, std(lts .* Δt_chart))
+        plot!(pl_distrib_y, gaussian_intervals[Δt_idx], gaussian, lc=colors_y[i], label="")
+    end
+
+    #=
+    #plot lognormal distribution 
+    for (i,lts) in enumerate(lifetimes_x) 
+        lognorm_vals = lognormal.(lognormal_intervals[Δt_idx], mean(log10.(lts.*Δt_chart)), std(log10.(lts.*Δt_chart)))
+        plot!(pl_distrib_x,lognormal_intervals[Δt_idx],lognorm_vals, 
+            scale=:log10,lc=colors_x[i],label="")
+    end
+    =#
+
+    pl = plot(pl_distrib_x, pl_distrib_y, layout=(1, 2), size=(800, 400),
         bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
-    push!(plots_charting,pl)
+    push!(plots_charting, pl)
 end
+
+xlimits = [(50, 1000), (50, 1000), (50, 5000)]
+for i in 1:3
+    xlims!(plots_charting[i][1], xlimits[i])
+end
+plot!(plots_charting[3][1], legend=:bottomleft)
+plot!(plots_charting[2][1], legend=:bottomleft)
+plot!(plots_charting[3][2], legend=:topright)
+
+pl_ch = plot(plots_charting..., layout=(3, 1), size=(600, 800), dpi=300)
+
+savefig(pl_topk, "../../paper_figs/lifetime_distributions_r_charting_time_shapes_recolor.png")
 
 
 #-------------------------plot phase diagram---------------------
@@ -762,7 +792,16 @@ savefig(pl_ch,"../../paper_figs/lifetime_distributions_alpha_memory_charting tim
 
 #WATCH OUT FOR NUMERICAL METHOD ERRORS
 
-cs = [1.5:0.4:3.0;]
+cs = [1.5:0.3:2.5;]
+diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
+#diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
+#diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
+
+
+u01 = 0.1 .* rand(2N)
+
+ds = create_original_ds(u01, deepcopy(p_orig); diffeq=diffeq)
+
 #precompute trajectories 
 set_parameters!(ds,p_orig)
 trajs = precompute_trajectories(ds,cs,4,1e-1,15000,1000)
@@ -780,7 +819,7 @@ pl_trajs = plot(plots_trajs...,layout=(4,2),size=(600,800),dpi=300)
 savefig(pl_trajs,"../../paper_figs/trajs_x_y_competition_test.png")
 
 
-nbins = 25
+nbins = 20
 coff_x = 4
 coff_y = 24
 
@@ -792,14 +831,14 @@ for (k_idx,k) in enumerate(ks)
     lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
 
     pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; 
-        ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
+        ps=cs,colors=colors_x,nbins=nbins, coff=coff_x, 
         scale=:log10,mode=:pdf,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t",
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1])",
         label_par=L"c = ")
 
     pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[1]; 
-        ps=rs4,colors=colors_y, nbins=nbins, coff=coff_y, 
+        ps=cs,colors=colors_y, nbins=nbins, coff=coff_y, 
         scale=:identity, mode=:pdf,
         xlabel=L"\tau^{(y)}_k \cdot \Delta t",
         title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
@@ -811,26 +850,28 @@ for (k_idx,k) in enumerate(ks)
         plot!(pl_distrib_y,gaussian_intervals[k_idx],gaussian,lc=colors_y[i],label="")
     end
 
+    #=
     #plot lognormal distribution 
     for (i,lts) in enumerate(lifetimes_x) 
         lognorm_vals = lognormal.(lognormal_intervals[k_idx], mean(log10.(lts.*Δts_chart[1])), std(log10.(lts.*Δts_chart[1])))
         plot!(pl_distrib_x,lognormal_intervals[k_idx],lognorm_vals, 
             scale=:log10,lc=colors_x[i],label="")
     end
+    =#
 
     pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
         bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
     push!(plots_topk,pl)
 end
 
-xlimits = [(50,10000),(100,10000),(100,50000)]
+xlimits = [(5,1000),(100,10000),(1000,50000)]
 
 for i in 1:3
     xlims!(plots_topk[i][1],xlimits[i])
 end 
 
 xlims!(plots_topk[1][2],(0,800))
-xlims!(plots_topk[3][2],(0,2800))
+xlims!(plots_topk[3][2],(0,2000))
 plot!(plots_topk[3][1],legend=:bottomleft)
 plot!(plots_topk[2][1],legend=:bottomleft)
 plot!(plots_topk[1][1],legend=:bottomleft)
@@ -842,3 +883,57 @@ subp2 = plot(plots_topk[2][2])
 subp3 = plot(plots_topk[3][2])
 pl_topk = plot(subp1,subp2,subp3,layout=(3,1),size=(300,800),dpi=300)
 savefig(pl_topk,"../../paper_figs/lifetime_distributions_competition_topk.png")
+
+
+#keep k the same, change charting time
+nbins=20
+plots_charting = []
+for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
+    lifetimes_x, lifetimes_y = get_lifetimes(trajs, ks[1], Δt_chart)
+
+    pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
+        ps=cs, colors=colors_x, nbins=nbins, coff=coff_x,
+        scale=:log10, mode=:pdf,
+        xlabel=L"\tau^{(x)}_k \cdot \Delta t",
+        title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
+        label_par=L"c = ")
+
+    pl_distrib_y = plot_distribs(lifetimes_y, Δt_chart;
+        ps=cs, colors=colors_y, nbins=nbins, coff=coff_y,
+        scale=:identity, mode=:pdf,
+        xlabel=L"\tau^{(y)}_k \cdot \Delta t",
+        title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
+        label_par=L"c = ")
+
+    #plot normal distributions 
+    for (i, lts) in enumerate(lifetimes_y)
+        gaussian = gauss.(gaussian_intervals[Δt_idx], mean(lts) * Δt_chart, std(lts .* Δt_chart))
+        plot!(pl_distrib_y, gaussian_intervals[Δt_idx], gaussian, lc=colors_y[i], label="")
+    end
+
+    #=
+    #plot lognormal distribution 
+    for (i,lts) in enumerate(lifetimes_x) 
+        lognorm_vals = lognormal.(lognormal_intervals[Δt_idx], mean(log10.(lts.*Δt_chart)), std(log10.(lts.*Δt_chart)))
+        plot!(pl_distrib_x,lognormal_intervals[Δt_idx],lognorm_vals, 
+            scale=:log10,lc=colors_x[i],label="")
+    end
+    =#
+
+    pl = plot(pl_distrib_x, pl_distrib_y, layout=(1, 2), size=(800, 400),
+        bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
+    push!(plots_charting, pl)
+end
+
+plot!(plots_charting[3][1], legend=:bottomleft)
+plot!(plots_charting[2][1], legend=:bottomleft)
+plot!(plots_charting[1][1], legend=:bottomleft)
+
+xlimits = [(5, 1000), (5, 1000), (5, 1000)]
+
+for i in 1:3
+    xlims!(plots_charting[i][1], xlimits[i])
+end
+
+pl_ch = plot(plots_charting..., layout=(3, 1), size=(600, 800), dpi=300)
+savefig(pl_ch, "../../paper_figs/lifetime_distributions_competition_charting time.png")
