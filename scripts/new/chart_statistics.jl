@@ -167,6 +167,8 @@ function plot_distribs(lifetimes,Δt_chart;ps,colors,mode=:probability,nbins = 2
 
         #lifetime distribution
         lts = lifetimes[i][1:end]
+
+        #TODO: REDO BIN_EDGES
         #min, max = extrema(lts .* Δt_chart)
         #bin_edges = range(min, max; length=nbins)
         #bin_width = Float64(bin_edges.step)
@@ -654,17 +656,20 @@ rescaled_params.(rp, rp, K, c, αs4, N)
 
 #loop over memory length
 #precompute trajectories 
-trajs_αs = precompute_trajectories(ds,αs4,5,1e-1,15000,1000)
+trajs = precompute_trajectories(ds,αs4,5,1e-1,15000,1000)
 
 #plot parts of trajectories  
 plots_trajs = []
 
-for traj in trajs_αs
+for traj in trajs
     pl_x = plot(Matrix(traj[1:500,1:2:2N]),legend=false)
-    pl_y = plot(Matrix(traj[1:8500,2:2:4]),legend=false)
+    pl_y = plot(Matrix(traj[1:8500,2:2:16]),legend=false)
 
     push!(plots_trajs,pl_x,pl_y)
 end
+
+pl_trajs = plot(plots_trajs...,layout=(4,2),size=(600,800),dpi=300)
+savefig(pl_trajs,"../../paper_figs/trajs_x_y_rp_rc_mismatch_test.png")
 
 nbins = 25
 coff_x = 4
@@ -675,17 +680,17 @@ gaussian_intervals = [1:1:1000,100:1:2700,100:1:2700]
 
 plots_topk = []
 for (k_idx,k) in enumerate(ks) 
-    lifetimes_x,lifetimes_y =  get_lifetimes(trajs_αs,k,Δts_chart[1])
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
 
     pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; 
-        ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
+        ps=αs4,colors=colors_x,nbins=nbins, coff=coff_x, 
         scale=:log10,mode=:pdf,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t",
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1])",
         label_par=L"\alpha = ")
 
     pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[1]; 
-        ps=rs4,colors=colors_y, nbins=nbins, coff=coff_y, 
+        ps=αs4,colors=colors_y, nbins=nbins, coff=coff_y, 
         scale=:identity, mode=:pdf,
         xlabel=L"\tau^{(y)}_k \cdot \Delta t",
         title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
@@ -697,19 +702,20 @@ for (k_idx,k) in enumerate(ks)
         plot!(pl_distrib_y,gaussian_intervals[k_idx],gaussian,lc=colors_y[i],label="")
     end
 
+    #=
     #plot lognormal distribution 
     for (i,lts) in enumerate(lifetimes_x) 
         lognorm_vals = lognormal.(lognormal_intervals[k_idx], mean(log10.(lts.*Δts_chart[1])), std(log10.(lts.*Δts_chart[1])))
         plot!(pl_distrib_x,lognormal_intervals[k_idx],lognorm_vals, 
             scale=:log10,lc=colors_x[i],label="")
     end
-
+    =#
     pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
         bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
     push!(plots_topk,pl)
 end
 
-xlimits = [(50,10000),(100,10000),(100,50000)]
+xlimits = [(5,1000),(800,10000),(800,50000)]
 
 for i in 1:3
     xlims!(plots_topk[i][1],xlimits[i])
