@@ -431,8 +431,10 @@ ws = [0.01:0.01:0.99;]
 pl_crit_curve = plot(ws, 1 ./ ws, lc=:gray10, lw=1, ylabel=L"g/(N-1)", xlabel=L"w",
     guidefontsize=15, label=L"w^H",title = L"N=%$(N), K=%$(K), c=%$(c)",legendfontsize=15)
 
+r_test = 9.0
+
 #when rp=rc
-w_g_rs4 = rescaled_params.(rs4, rs4, K, c, α, N)
+w_g_rs4 = rescaled_params.(r_test, r_test, K, c, α, N)
 w_rs4 = [w_g_rs4[i][1] for i in 1:length(w_g_rs4)]
 g_rs4 = [w_g_rs4[i][2] for i in 1:length(w_g_rs4)]
 
@@ -442,23 +444,23 @@ plot!(pl_crit_curve, w_rs4, g_rs4 ./ (N - 1),
     xlims=(0.0,0.5),ylims=(0.,25),markershape=:circle)
 
 #when rp \neq rc, only rp changes
-w_g_rp = rescaled_params.(rs4, rc, K, c, α, N)
+w_g_rp = rescaled_params.(rs4, r_test, K, c, α, N)
 w_rp = [w_g_rp[i][1] for i in 1:length(w_g_rp)]
 g_rp = [w_g_rp[i][2] for i in 1:length(w_g_rp)]
 
 #plot rp = rc = r params 
 plot!(pl_crit_curve, w_rp, g_rp ./ (N - 1),
-    mc=:purple, lc=:purple, lw=1, label=L"r_p \in [6,10,14,18], r_c=%$(rc)",ms=4,
+    mc=:purple, lc=:purple, lw=1, label=L"r_p \in [6,10,14,18], r_c=%$(r_test)",ms=4,
     xlims=(0.0,0.5),ylims=(0.,25),markershape=:circle)
 
 #when rp \neq rc, only rc changes
-w_g_rc = rescaled_params.(rp, rs4, K, c, α, N)
+w_g_rc = rescaled_params.(r_test, [6,7,8,9], K, c, α, N)
 w_rc = [w_g_rc[i][1] for i in 1:length(w_g_rc)]
 g_rc = [w_g_rc[i][2] for i in 1:length(w_g_rc)]
 
 #plot rp = rc = r params 
 plot!(pl_crit_curve, w_rc, g_rc ./ (N - 1),
-    mc=:blue, lc=:blue ,lw=1, label=label=L"r_p=%$(rp) , r_c \in [6,10,14,18]",ms=4,
+    mc=:blue, lc=:blue ,lw=1, label=label=L"r_p=%$(r_test) , r_c \in [6,7,8,9]",ms=4,
     xlims=(0.0,0.5),ylims=(0.,25),markershape=:circle)
 
 savefig(pl_crit_curve,"../../paper_figs/")
@@ -554,9 +556,12 @@ savefig(pl_topk,"../../paper_figs/lifetime_distributions_rp_rc_mismatch_change_r
 # compare with rp \neq rc (mismatch between production and consumption rate)
 #ONLY CHANGE rc
 #precompute trajectories 
-rs4 = [6.0:4.0:18.0;]
+rs4 = [6.0:1.0:9.0;]
+diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
+ds = create_original_ds(u01, deepcopy(p_orig); diffeq=diffeq)
 set_parameters!(ds,p_orig)
-trajs = precompute_trajectories(ds,rs4,2,1e-1,500,1000)
+set_parameter!(ds, 1,6.0)
+trajs = precompute_trajectories(ds,rs4,2,1e-1,15000,1000)
 
 #plot parts of trajectories  
 plots_trajs = []
@@ -571,7 +576,7 @@ pl_trajs = plot(plots_trajs...,layout=(4,2),size=(600,800),dpi=300)
 savefig(pl_trajs,"../../paper_figs/trajs_x_y_rp_rc_mismatch_test.png")
 
 
-nbins = 20
+nbins = 40
 coff_x = 4
 coff_y = 24
 
@@ -602,14 +607,14 @@ for (k_idx,k) in enumerate(ks)
         plot!(pl_distrib_y,gaussian_intervals[k_idx],gaussian,lc=colors_y[i],label="")
     end
 
-    
+    #=    
     #plot lognormal distribution 
     for (i,lts) in enumerate(lifetimes_x[1:2]) 
         lognorm_vals = lognormal.(lognormal_intervals[k_idx], mean(log10.(lts.*Δts_chart[1])), std(log10.(lts.*Δts_chart[1])))
         plot!(pl_distrib_x,lognormal_intervals[k_idx],lognorm_vals, 
             scale=:log10,lc=colors_x[i],label="")
     end
-    
+    =#
 
     pl = plot(pl_distrib_x,pl_distrib_y,layout=(1,2),size=(800,400),
         bottom_margin=5Plots.mm) #yaxis=:log,xaxis=:log)
