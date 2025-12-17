@@ -237,7 +237,7 @@ p_orig = [rp, rc, K, c, α]
 wc1 = (N - 1) / (rp / α)
 wc2 = (N - 1) / N
 
-diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-2, adaptive=true, maxiters=1e8)
+diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
 
@@ -265,7 +265,7 @@ k = 10 #top 10
 rs = [6:0.1:15;]
 #rs4 = [9.0:1.0:12.0;]
 
-rs4 = [6.0:4.0:18.0;]
+rs4 = [6.0:1.0:9.0;]
 set_parameters!(ds,p_orig)
 rescaled_params.(rs4, rs4, K, c, α, N)
 
@@ -277,7 +277,7 @@ plots_trajs = []
 
 for (i,traj) in enumerate(trajs)
     pl_x = plot(Matrix(traj[1:500,1:2:2N]),legend=false,title=L"r_p=r_c = %$(rs4[i])")
-    pl_y = plot(Matrix(traj[1:18500,2:2:16]),legend=false,title=L"r_p=r_c = %$(rs4[i])")
+    pl_y = plot(Matrix(traj[1:500,2:2:16]),legend=false,title=L"r_p=r_c = %$(rs4[i])")
 
     push!(plots_trajs,pl_x,pl_y)
 end
@@ -288,17 +288,7 @@ savefig(pl_trajs,"trajs_x_y_test.png")
 ks = [10,50,100]
 Δts_chart = [5,10,50]
 
-#colors_x = palette([:purple, :red], 4)
-#colors_y = palette([:green, :blue], 4)
-
-colors_x = distinguishable_colors(4)
-colors_y = distinguishable_colors(4)
-
-
-nbins = 25
-coff_x = 15
-coff_y = 13
-
+#=
 #test lifetime distrib shape 
 #tresholded binning?
 lifetimes_x,lifetimes_y =  get_lifetimes(trajs,ks[2],Δts_chart[1])
@@ -313,13 +303,37 @@ h = normalize(h, mode=:pdf)
 #bin_centres = h.edges[1][1:end-1] .+ 0.5 * h.edges[1].step
 plot(h.edges[1][2:end-6], h.weights[2:end-6], st=:scatter, scale=:log10)
 plot!([50:1:12200;], lognormal.([50:1:12200;], mean(log10.(lts)), std(log10.(lts))), scale=:log10)
+=#
 
 lognormal_intervals = [100:1:2000,100:1:22000,100:1:52000]
 gaussian_intervals = [1:1:1000,100:1:2700,100:1:2700]
 
-plots_topk = []
+#precompute lifetimes 
+lifetimes_x_allk = []
+lifetimes_y_allk = []
+
 for (k_idx,k) in enumerate(ks) 
     lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
+    push!(lifetimes_x_allk,lifetimes_x)
+    push!(lifetimes_y_allk,lifetimes_y)
+end
+
+#plot lifetimes 
+
+#colors_x = palette([:purple, :red], 4)
+#colors_y = palette([:green, :blue], 4)
+colors_x = distinguishable_colors(4)
+colors_y = distinguishable_colors(4)
+
+nbins = 25
+coff_x = 15
+coff_y = 13
+
+plots_topk = []
+for (k_idx,k) in enumerate(ks) 
+
+    lifetimes_x = lifetimes_x_allk[k_idx]
+    lifetimes_y = lifetimes_y_allk[k_idx]
 
     pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; 
         ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
@@ -365,29 +379,42 @@ plot!(plots_topk[3][2],legend=:topright)
 
 pl_topk = plot(plots_topk...,layout=(3,1),size=(600,800),dpi=300)
 
-savefig(pl_topk,"../../paper_figs/lifetime_distributions_r_topk_shapes_recolor.png")
+savefig(pl_topk,"../../paper_figs/lifetime_distributions_r_topk_shapes_recolor_lowr.png")
 
-nbins = 20
+
+#precompute lifetimes 
+lifetimes_x_all_cht = []
+lifetimes_y_all_cht = []
+
+for (Δt_idx,Δt) in enumerate(Δts_chart) 
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,ks[2],Δt)
+    push!(lifetimes_x_all_cht,lifetimes_x)
+    push!(lifetimes_y_all_cht,lifetimes_y)
+end
+
+nbins = 40
 coff_x = 15
 coff_y = 24
 
 #keep k the same, change charting time
 plots_charting = []
 for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
-    lifetimes_x, lifetimes_y = get_lifetimes(trajs, ks[1], Δt_chart)
+
+    lifetimes_x = lifetimes_x_all_cht[Δt_idx]
+    lifetimes_y = lifetimes_y_all_cht[Δt_idx]
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
         ps=rs4, colors=colors_x, nbins=nbins, coff=coff_x,
         scale=:log10, mode=:pdf,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t",
-        title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
+        title=L"k=%$(ks[2])" * L",Δt=%$(Δt_chart)",
         label_par=L"r_p=r_c = ")
 
     pl_distrib_y = plot_distribs(lifetimes_y, Δt_chart;
         ps=rs4, colors=colors_y, nbins=nbins, coff=coff_y,
         scale=:identity, mode=:pdf,
         xlabel=L"\tau^{(y)}_k \cdot \Delta t",
-        title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
+        title=L"k=%$(ks[2])" * L",Δt=%$(Δt_chart)",
         label_par=L"r_p=r_c = ")
 
     #plot normal distributions 
@@ -410,7 +437,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
     push!(plots_charting, pl)
 end
 
-xlimits = [(50, 1000), (50, 1000), (50, 5000)]
+xlimits = [(500, 5000), (500, 5000), (50, 8000)]
 for i in 1:3
     xlims!(plots_charting[i][1], xlimits[i])
 end
@@ -420,7 +447,7 @@ plot!(plots_charting[3][2], legend=:topright)
 
 pl_ch = plot(plots_charting..., layout=(3, 1), size=(600, 800), dpi=300)
 
-savefig(pl_topk, "../../paper_figs/lifetime_distributions_r_charting_time_shapes_recolor.png")
+savefig(pl_ch, "../../paper_figs/lifetime_distributions_r_charting_time_shapes_recolor_lowr.png")
 
 
 #-------------------------plot phase diagram---------------------
@@ -486,8 +513,18 @@ end
 pl_trajs = plot(plots_trajs...,layout=(4,2),size=(600,800),dpi=300)
 savefig(pl_trajs,"../../paper_figs/trajs_x_y_rp_rc_mismatch_test.png")
 
+#precompute lifetimes 
+lifetimes_x_allk = []
+lifetimes_y_allk = []
 
-nbins = 20
+for (k_idx,k) in enumerate(ks) 
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
+    push!(lifetimes_x_allk,lifetimes_x)
+    push!(lifetimes_y_allk,lifetimes_y)
+end
+
+
+nbins = 40
 coff_x = 4
 coff_y = 24
 
@@ -496,7 +533,9 @@ gaussian_intervals = [1:1:1000,100:1:2700,100:1:2700]
 
 plots_topk = []
 for (k_idx,k) in enumerate(ks) 
-    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
+
+    lifetimes_x = lifetimes_x_allk[k_idx]
+    lifetimes_y = lifetimes_y_allk[k_idx]
 
     pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; 
         ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
@@ -532,7 +571,7 @@ for (k_idx,k) in enumerate(ks)
     push!(plots_topk,pl)
 end
 
-xlimits = [(50,10000),(100,10000),(100,50000)]
+xlimits = [(5,10000),(100,10000),(100,50000)]
 
 for i in 1:3
     xlims!(plots_topk[i][1],xlimits[i])
@@ -550,7 +589,7 @@ subp1 = plot(plots_topk[1][2])
 subp2 = plot(plots_topk[2][2])
 subp3 = plot(plots_topk[3][2])
 pl_topk = plot(subp1,subp2,subp3,layout=(3,1),size=(300,800),dpi=300)
-savefig(pl_topk,"../../paper_figs/lifetime_distributions_rp_rc_mismatch_change_rp_topk.png")
+savefig(pl_topk,"../../paper_figs/lifetime_distributions_rp_rc_mismatch_change_rp_topk_lowr.png")
 
 #WATCH OUT FOR NUMERICAL METHOD ERRORS
 # compare with rp \neq rc (mismatch between production and consumption rate)
@@ -560,7 +599,7 @@ rs4 = [6.0:1.0:9.0;]
 diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
 ds = create_original_ds(u01, deepcopy(p_orig); diffeq=diffeq)
 set_parameters!(ds,p_orig)
-set_parameter!(ds, 1,6.0)
+#set_parameter!(ds, 1,6.0)
 trajs = precompute_trajectories(ds,rs4,2,1e-1,15000,1000)
 
 #plot parts of trajectories  
@@ -575,6 +614,15 @@ end
 pl_trajs = plot(plots_trajs...,layout=(4,2),size=(600,800),dpi=300)
 savefig(pl_trajs,"../../paper_figs/trajs_x_y_rp_rc_mismatch_test.png")
 
+#precompute lifetimes 
+lifetimes_x_allk = []
+lifetimes_y_allk = []
+
+for (k_idx,k) in enumerate(ks) 
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
+    push!(lifetimes_x_allk,lifetimes_x)
+    push!(lifetimes_y_allk,lifetimes_y)
+end
 
 nbins = 40
 coff_x = 4
@@ -585,7 +633,9 @@ gaussian_intervals = [1:1:1000,100:1:2700,100:1:2700]
 
 plots_topk = []
 for (k_idx,k) in enumerate(ks) 
-    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
+
+    lifetimes_x = lifetimes_x_allk[k_idx]
+    lifetimes_y = lifetimes_y_allk[k_idx]
 
     pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; 
         ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
@@ -639,7 +689,7 @@ subp1 = plot(plots_topk[1][2])
 subp2 = plot(plots_topk[2][2])
 subp3 = plot(plots_topk[3][2])
 pl_topk = plot(subp1,subp2,subp3,layout=(3,1),size=(300,800),dpi=300)
-savefig(pl_topk,"../../paper_figs/lifetime_distributions_rp_rc_mismatch_change_rc_topk.png")
+savefig(pl_topk,"../../paper_figs/lifetime_distributions_rp_rc_mismatch_change_rc_topk_lowr.png")
 
 
 #keep k the same, change charting time
@@ -707,9 +757,9 @@ savefig(pl_ch,"../../paper_figs/lifetime_distributions_rp_rc_mismatch_change_rc_
 αs4 = [0.01, 0.0085, 0.0025, 0.00175]
 rescaled_params.(rp, rp, K, c, αs4, N)
 
-
 #loop over memory length
 #precompute trajectories 
+set_parameters!(ds,p_orig)
 trajs = precompute_trajectories(ds,αs4,5,1e-1,15000,1000)
 
 #plot parts of trajectories  
@@ -725,6 +775,16 @@ end
 pl_trajs = plot(plots_trajs...,layout=(4,2),size=(600,800),dpi=300)
 savefig(pl_trajs,"../../paper_figs/trajs_x_y_rp_rc_mismatch_test.png")
 
+#precompute lifetimes 
+lifetimes_x_allk = []
+lifetimes_y_allk = []
+
+for (k_idx,k) in enumerate(ks) 
+    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
+    push!(lifetimes_x_allk,lifetimes_x)
+    push!(lifetimes_y_allk,lifetimes_y)
+end
+
 nbins = 25
 coff_x = 4
 coff_y = 24
@@ -734,7 +794,9 @@ gaussian_intervals = [1:1:1000,100:1:2700,100:1:2700]
 
 plots_topk = []
 for (k_idx,k) in enumerate(ks) 
-    lifetimes_x,lifetimes_y =  get_lifetimes(trajs,k,Δts_chart[1])
+
+    lifetimes_x = lifetimes_x_allk[k_idx]
+    lifetimes_y = lifetimes_y_allk[k_idx]
 
     pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; 
         ps=αs4,colors=colors_x,nbins=nbins, coff=coff_x, 
