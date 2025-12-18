@@ -34,7 +34,7 @@ function get_top_charts(sts, k, encoding)
 end
 
 #calculate lifetimes by counting consecutive appearances
-function get_lifetimes(charts)
+function get_lifetimes(charts;exclude_one=true)
     tlen, k = size(charts)
 
     vars = unique(charts)
@@ -53,7 +53,12 @@ function get_lifetimes(charts)
 
             #save when occurrence streak is over 
             if occ == false && prev_occ == true
-                push!(lifetimes, lifetime)
+                
+                if exclude_one == true 
+                    lifetime > 1 && (push!(lifetimes, lifetime))
+                else 
+                    push!(lifetimes, lifetime)
+                end
                 lifetime = 0
             end
             prev_occ = occ
@@ -499,6 +504,7 @@ savefig(pl_crit_curve,"../../paper_figs/")
 #dt = 1e-3 or RODAS5
 rs4 = [6.0:1.0:9.0;]
 set_parameters!(ds,p_orig)
+reinit!(ds)
 trajs = precompute_trajectories(ds,rs4,1,1e-1,15000,1000)
 
 #plot parts of trajectories  
