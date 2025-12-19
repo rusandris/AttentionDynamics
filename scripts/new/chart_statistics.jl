@@ -24,6 +24,7 @@ cd(@__DIR__)
 #TODO:
 #try exponential/statistically significant binning 
 #change charting time (3plot) + write time sampling on axis
+#charting time 1/10th of average peak width
 #add fits
 #show inequality on fig
 
@@ -130,7 +131,7 @@ function get_lifetimes(trajs,k,Δt_chart)
 
 end
 
-function plot_distribs(lifetimes,Δt_chart;ps,colors,mode=:probability,nbins = 20,coff=10,scale=:identity,
+function plot_distribs(lifetimes,Δt_chart;ps,colors,mode=:probability,nbins = 50,scale=:log,
     xlabel=L"\tau^{(x)}_k \cdot \Delta t",title="lifetime distribution",label_par="")
 
     pl_distrib = plot()
@@ -140,10 +141,12 @@ function plot_distribs(lifetimes,Δt_chart;ps,colors,mode=:probability,nbins = 2
         #lifetime distribution
         lts = lifetimes[i][1:end]
 
-        #TODO: REDO BIN_EDGES
         min_lts, max_lts = extrema(lts .* Δt_chart)
-        bin_edges = range(min_lts, max_lts; length=nbins)
-        bin_width = Float64(bin_edges.step)
+
+        #apply exponential binning
+        b = max_lts ^ (1/nbins) #base 
+        bin_edges = min_lts .* b .^ [0:1:nbins;]
+        #bin_width = Float64(bin_edges.step)
 
         h = fit(Histogram, lts .* Δt_chart, bin_edges)
         h = normalize(h, mode=mode)
@@ -151,25 +154,23 @@ function plot_distribs(lifetimes,Δt_chart;ps,colors,mode=:probability,nbins = 2
         #@show bin_edges
 
         #automatic cutoff: throw out empty bins 
-        coff = findfirst(x->iszero(x),h.weights)
-        if !(isnothing(coff)) 
-            probs = h.weights[1:coff-1]
+        #coff = findfirst(x->iszero(x),h.weights)
+        probs = h.weights
 
-            #plot together
-            plot!(pl_distrib,bin_edges[1:coff-2], probs[1:coff-1], 
-                markershape=:circle, scale=scale,st=:scatter,
-                mc=colors[i],lc=colors[i],title=title, 
-                label=label_par*"$(ps[i])", dpi=300)
-        else 
-            probs = h.weights
-
-            #plot together
-            plot!(pl_distrib,bin_edges[1:end-1], probs, 
-                markershape=:circle, scale=scale,st=:scatter,
-                mc=colors[i],lc=colors[i],title=title, 
-                label=label_par*"$(ps[i])", dpi=300)
-
+        if scale==:log
+            X = log10.(bin_edges[1:end-2])
+            Y = log10.(probs[1:end-1])
+        elseif scale==:lin
+            X = bin_edges[1:end-2]
+            Y = probs[1:end-1]
         end
+
+        #plot together
+        plot!(pl_distrib,X,Y, 
+            markershape=:circle,st=:scatter,
+            mc=colors[i],lc=colors[i],title=title, 
+            label=label_par*"$(ps[i])", dpi=300)
+
     end
 
     plot!(pl_distrib, xlabel=xlabel)
@@ -284,21 +285,19 @@ p_orig = [rp, rc, K, c, α]
 wc1 = (N - 1) / (rp / α)
 wc2 = (N - 1) / N
 
+
+#------------------------------solver settings----------------------------------
+
 diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
 
-
 u01 = 0.1 .* rand(2N)
-
 ds = create_original_ds(u01, deepcopy(p_orig); diffeq=diffeq)
 
 Ttr = 1000
 T_traj = 5000
-Δt = 0.5 #sampling rate
-#test_traj, = trajectory(ds,50;Ttr=300,Δt=1e-2)
-
-k = 10 #top 10
+Δt = 1e-1 #trajectory sampling rate
 
 #----------------------------change r parameter-------------------------
 # try rp = rc scenario
@@ -306,8 +305,6 @@ k = 10 #top 10
 # can the model produce different distributions?
 # try different k 
 # try different Δt
-
-k = 10 #top 10
 
 rs = [6:0.1:15;]
 #rs4 = [9.0:1.0:12.0;]
@@ -317,7 +314,7 @@ set_parameters!(ds,p_orig)
 rescaled_params.(rs4, rs4, K, c, α, N)
 
 #precompute trajectories 
-trajs = precompute_trajectories(ds,rs4,[1,2],1e-1,15000,1000)
+trajs = precompute_trajectories(ds,rs4,[1,2],Δt,15000,1000)
 
 #plot parts of trajectories  
 plots_trajs = []
@@ -386,14 +383,14 @@ for (k_idx,k) in enumerate(ks)
         ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
         scale=:log10,mode=:pdf,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t",
-        title=L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        title=L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_p=r_c = ")
 
     pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[1]; 
         ps=rs4,colors=colors_y, nbins=nbins, coff=coff_y, 
         scale=:identity, mode=:pdf,
         xlabel=L"\tau^{(y)}_k \cdot \Delta t",
-        title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        title = L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_p=r_c = ")
 
     #plot normal distributions 
@@ -547,7 +544,7 @@ savefig(pl_crit_curve,"../../paper_figs/")
 rs4 = [6.0:1.0:9.0;]
 set_parameters!(ds,p_orig)
 reinit!(ds)
-trajs = precompute_trajectories(ds,rs4,1,1e-1,15000,1000)
+trajs = precompute_trajectories(ds,rs4,1,Δt,15000,1000)
 
 #plot parts of trajectories  
 plots_trajs = []
@@ -572,7 +569,7 @@ for (k_idx,k) in enumerate(ks)
 end
 
 
-nbins = 40
+nbins = 30
 coff_x = 4
 coff_y = 24
 
@@ -586,17 +583,15 @@ for (k_idx,k) in enumerate(ks)
     lifetimes_y = lifetimes_y_allk[k_idx]
 
     pl_distrib_x = plot_distribs(lifetimes_x,Δts_chart[1]; 
-        ps=rs4,colors=colors_x,nbins=nbins, coff=coff_x, 
-        scale=:log10,mode=:pdf,
-        xlabel=L"\tau^{(x)}_k \cdot \Delta t",
-        title=L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        ps=rs4,colors=colors_x,nbins=nbins,mode=:pdf,
+        xlabel=L"\tau^{(x)}_k \cdot \Delta t",scale=:log,
+        title=L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_c = %$(rc), r_p = ")
 
     pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[1]; 
-        ps=rs4,colors=colors_y, nbins=nbins, coff=coff_y, 
-        scale=:identity, mode=:pdf,
-        xlabel=L"\tau^{(y)}_k \cdot \Delta t",
-        title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
+        ps=rs4,colors=colors_y, nbins=nbins,mode=:pdf,
+        xlabel=L"\tau^{(y)}_k \cdot \Delta t",scale=:lin,
+        title = L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_c = %$(rc), r_p = ")
 
     #plot normal distributions 
@@ -619,13 +614,8 @@ for (k_idx,k) in enumerate(ks)
     push!(plots_topk,pl)
 end
 
-xlimits = [(5,10000),(100,10000),(100,50000)]
-
-for i in 1:3
-    xlims!(plots_topk[i][1],xlimits[i])
-end 
-
 xlims!(plots_topk[1][2],(0,800))
+xlims!(plots_topk[2][2],(0,1200))
 xlims!(plots_topk[3][2],(0,2800))
 plot!(plots_topk[3][1],legend=:bottomleft)
 plot!(plots_topk[2][1],legend=:topright)
@@ -808,7 +798,7 @@ rescaled_params.(rp, rp, K, c, αs4, N)
 #loop over memory length
 #precompute trajectories 
 set_parameters!(ds,p_orig)
-trajs = precompute_trajectories(ds,αs4,5,1e-1,15000,1000)
+trajs = precompute_trajectories(ds,αs4,5,Δt,15000,1000)
 
 #plot parts of trajectories  
 plots_trajs = []
@@ -974,7 +964,7 @@ ds = create_original_ds(u01, deepcopy(p_orig); diffeq=diffeq)
 
 #precompute trajectories 
 set_parameters!(ds,p_orig)
-trajs = precompute_trajectories(ds,cs,4,1e-1,15000,1000)
+trajs = precompute_trajectories(ds,cs,4,Δt,15000,1000)
 
 #plot parts of trajectories  
 plots_trajs = []
