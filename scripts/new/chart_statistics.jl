@@ -20,6 +20,14 @@ cd(@__DIR__)
 #which parameter change leads to driving the system more towards criticality?
 #how does properties of the system change when it gets near criticality?
 
+
+#TODO:
+#try exponential/statistically significant binning 
+#change charting time (3plot) + write time sampling on axis
+#add fits
+#show inequality on fig
+
+
 #generate top charts from symbolic timeseries
 function get_top_charts(sts, k, encoding)
 
