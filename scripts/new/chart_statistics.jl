@@ -41,47 +41,6 @@ function get_top_charts(sts, k, encoding)
 
 end
 
-#calculate lifetimes by counting consecutive appearances
-function get_lifetimes(charts;exclude_one=true)
-    tlen, k = size(charts)
-
-    vars = unique(charts)
-
-    lifetimes = Int64[]
-    #non-optim approach: loop through every var
-    for v in vars
-        lifetime = 0
-        prev_occ = false
-        #loop through the charts, every timepoint
-        for t in 1:tlen
-
-            #increase lifetime in case of occurrence
-            occ = v in charts[t, :]
-            occ && (lifetime += 1)
-
-            #save when occurrence streak is over 
-            if occ == false && prev_occ == true
-                
-                if exclude_one == true 
-                    lifetime > 1 && (push!(lifetimes, lifetime))
-                else 
-                    push!(lifetimes, lifetime)
-                end
-                lifetime = 0
-            end
-            prev_occ = occ
-
-        end
-
-        #if end of time series ended a streak
-        lifetime != 0 && (push!(lifetimes, lifetime))
-
-    end
-
-    return lifetimes
-
-end
-
 
 function precompute_trajectories(ds,ps,p_idx,Δt=1e-1,T_traj=5000,Ttr=1000)
 
@@ -218,6 +177,81 @@ function plot_distribs(lifetimes,Δt_chart;ps,colors,mode=:probability,nbins = 2
     return pl_distrib
 end
 
+#calculate lifetimes by counting consecutive appearances
+function get_lifetimes(charts;exclude_one=true)
+    tlen, k = size(charts)
+
+    vars = unique(charts)
+
+    lifetimes = Int64[]
+    #non-optim approach: loop through every var
+    for v in vars
+        lifetime = 0
+        prev_occ = false
+        #loop through the charts, every timepoint
+        for t in 1:tlen
+
+            #increase lifetime in case of occurrence
+            occ = v in charts[t, :]
+            occ && (lifetime += 1)
+
+            #save when occurrence streak is over 
+            if occ == false && prev_occ == true
+                
+                if exclude_one == true 
+                    lifetime > 1 && (push!(lifetimes, lifetime))
+                else 
+                    push!(lifetimes, lifetime)
+                end
+                lifetime = 0
+            end
+            prev_occ = occ
+
+        end
+
+        #if end of time series ended a streak
+        lifetime != 0 && (push!(lifetimes, lifetime))
+
+    end
+
+    return lifetimes
+
+end
+
+#calculate a measure of inequality at each charting time 
+#average distance (difference in absolute value) between the first and last position 
+
+function get_inequality(trajs,k,Δt_chart)
+
+    N = Int(dimension(ds)/2)
+    T = length(trajs[1]) 
+
+    ineq_avgs = []
+    for traj in trajs
+        #sampling with charting time 
+        xs = traj[1:Δt_chart:T, 1:2:2*N]
+        ys = traj[1:Δt_chart:T, 2:2:2*N]
+
+        x_ineqs = Float64[]
+        y_ineqs = Float64[]
+        for t in 1:length(xs)
+            #take top k at each t
+            x_topk = sort(xs[t];rev=true)[1:k]
+            y_topk = sort(ys[t];rev=true)[1:k]
+
+            #take differences
+            x_ineq = x_topk[1] - x_topk[end] 
+            y_ineq = y_topk[1] - y_topk[end]
+
+            push!(x_ineqs,x_ineq)
+            push!(y_ineqs,y_ineq)
+        end
+        #take mean and push to vec
+        push!(ineq_avgs,(mean(x_ineqs),mean(y_ineqs)))
+    end
+    return ineq_avgs
+end
+
 lognormal(x,μ,σ) = 1/(x*σ*sqrt(2π)) * exp(-(log10(x) - μ)^2/(2*σ^2)) 
 
 
@@ -295,7 +329,7 @@ for (i,traj) in enumerate(trajs)
     push!(plots_trajs,pl_x,pl_y)
 end
 pl_trajs = plot(plots_trajs...,layout=(4,2),size=(600,800),dpi=300)
-savefig(pl_trajs,"trajs_x_y_test.png")
+savefig(pl_trajs,"../../paper_figs/trajs_x_y_change_rp_rc_test.png")
 
 #get lifetimes with different k, charting times 
 ks = [10,50,100]
@@ -525,7 +559,7 @@ for (i,traj) in enumerate(trajs)
     push!(plots_trajs,pl_x,pl_y)
 end
 pl_trajs = plot(plots_trajs...,layout=(4,2),size=(600,800),dpi=300)
-savefig(pl_trajs,"../../paper_figs/trajs_x_y_rp_rc_mismatch_test.png")
+savefig(pl_trajs,"../../paper_figs/trajs_x_y_rp_rc_mismatch_test_change_rp.png")
 
 #precompute lifetimes 
 lifetimes_x_allk = []
@@ -626,7 +660,7 @@ for (i,traj) in enumerate(trajs)
     push!(plots_trajs,pl_x,pl_y)
 end
 pl_trajs = plot(plots_trajs...,layout=(4,2),size=(600,800),dpi=300)
-savefig(pl_trajs,"../../paper_figs/trajs_x_y_rp_rc_mismatch_test.png")
+savefig(pl_trajs,"../../paper_figs/trajs_x_y_rp_rc_mismatch_test_change_rc.png")
 
 #precompute lifetimes 
 lifetimes_x_allk = []
