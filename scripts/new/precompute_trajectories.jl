@@ -37,8 +37,8 @@ N = 300
 
 #original params
 #rp=3.0;rc = 3.0;K = 1.0;α = 5*1e-3;c=1.8
-rc = 9.0;
-rp = 9.0;
+rc = 23.0;
+rp = 23.0 #9.0;
 K = 1.0;
 c = 2.4;
 α = 0.005;
@@ -52,9 +52,9 @@ wc2 = (N - 1) / N
 
 
 #------------------------------solver settings----------------------------------
-
-diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
-#diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
+dtmax = 1e-1 #5*1e-2
+diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-2, adaptive=true, maxiters=1e8)
+diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-2, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
 
 #create ds
@@ -62,10 +62,9 @@ u01 = 0.1 .* rand(2N)
 ds = create_original_ds(u01, deepcopy(p_orig); diffeq=diffeq)
 
 #length of precomputed trajs 
-T = 5000
-Ttr = 500
+T = 100 #5000
+Ttr = 100 #500
 Δt = 1e-1
-
 
 #----------------------------change r parameter-------------------------
 # try rp = rc scenario
@@ -76,8 +75,13 @@ Ttr = 500
 
 rs = [6:0.1:15;]
 #rs4 = [9.0:1.0:12.0;]
+#rs4 = [6.0:1.0:9.0;]
+#rs4 = [6.0:10.0:16.0;]
+#rs4 = [6.0:10.0:40.0;]
+#rs4 = [6.0:10.0:36.0;]
+rs4 = [6.0:7.0:36.0;]
 
-rs4 = [6.0:1.0:9.0;]
+@show rs4
 set_parameters!(ds, p_orig)
 rescaled_params.(rs4, rs4, K, c, α, N)
 
@@ -93,10 +97,10 @@ for (i, traj) in enumerate(trajs)
 
     push!(plots_trajs, pl_x, pl_y)
 end
-pl_trajs = plot(plots_trajs..., layout=(4, 2), size=(600, 800), dpi=300)
+pl_trajs = plot(plots_trajs..., layout=(length(rs4), 2), size=(600, 800), dpi=300)
 #save traj plot 
 
-savedir = "../../data/trajs_precomp_lifetimes/rp=rc/"
+savedir = "../../data/trajs_precomp_lifetimes_test2/rp=rc/"
 mkpath(savedir)
 savefig(pl_trajs, savedir*"trajs_x_y_change_rp_rc.png")
 
@@ -128,7 +132,7 @@ end
 pl_trajs = plot(plots_trajs..., layout=(4, 2), size=(600, 800), dpi=300)
 #save traj plot 
 
-savedir = "../../data/trajs_precomp_lifetimes/rp/"
+savedir = "../../data/trajs_precomp_lifetimes_test2/rp/"
 mkpath(savedir)
 savefig(pl_trajs, savedir * "trajs_x_y_change_rp.png")
 
@@ -141,11 +145,11 @@ end
 
 #---------------------------------change rc---------------------------------
 
-diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-2, adaptive=true, maxiters=1e8)
-ds = create_original_ds(u01, deepcopy(p_orig); diffeq=diffeq)
+#diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
+#ds = create_original_ds(u01, deepcopy(p_orig); diffeq=diffeq)
 set_parameters!(ds, p_orig)
 #set_parameter!(ds, 1,6.0)
-trajs = precompute_trajectories(ds, rs4, 2, Δt, T, Ttr)
+trajs = precompute_trajectories(ds, rs4[end-1:end], 2, Δt, T, Ttr)
 
 #plot parts of trajectories  
 plots_trajs = []
@@ -158,7 +162,7 @@ for (i, traj) in enumerate(trajs)
 end
 pl_trajs = plot(plots_trajs..., layout=(4, 2), size=(600, 800), dpi=300)
 
-savedir = "../../data/trajs_precomp_lifetimes/rc/"
+savedir = "../../data/trajs_precomp_lifetimes_test2/rc/"
 mkpath(savedir)
 savefig(pl_trajs, savedir * "trajs_x_y_change_rc.png")
 
@@ -199,7 +203,7 @@ end
 
 pl_trajs = plot(plots_trajs..., layout=(4, 2), size=(600, 800), dpi=300)
 
-savedir = "../../data/trajs_precomp_lifetimes/alpha/"
+savedir = "../../data/trajs_precomp_lifetimes_test2/alpha/"
 mkpath(savedir)
 savefig(pl_trajs, savedir * "trajs_x_y_change_alpha.png")
 
@@ -214,7 +218,7 @@ end
 
 
 cs = [1.5:0.3:2.5;]
-diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
+#diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
 
@@ -232,13 +236,13 @@ plots_trajs = []
 
 for (i, traj) in enumerate(trajs)
     pl_x = plot(Matrix(traj[1:500, 1:2:2N]), legend=false, title=L"c = %$(cs[i])")
-    pl_y = plot(Matrix(traj[1:12500, 2:2:16]), legend=false, title=L"c = %$(cs[i])")
+    pl_y = plot(Matrix(traj[1:500, 2:2:16]), legend=false, title=L"c = %$(cs[i])")
 
     push!(plots_trajs, pl_x, pl_y)
 end
 pl_trajs = plot(plots_trajs..., layout=(4, 2), size=(600, 800), dpi=300)
 
-savedir = "../../data/trajs_precomp_lifetimes/c/"
+savedir = "../../data/trajs_precomp_lifetimes_test2/c/"
 mkpath(savedir)
 savefig(pl_trajs, savedir * "trajs_x_y_change_c.png")
 
