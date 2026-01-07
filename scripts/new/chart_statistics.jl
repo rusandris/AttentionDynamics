@@ -1,10 +1,4 @@
-using Revise
-using ComplexityMeasures
-using BifurcationKit
-using AttentionDynamics
-using OrdinaryDiffEq
-using StateTransitionNetworks
-using DynamicalSystems
+
 using StatsBase
 using Plots, LaTeXStrings
 using LinearAlgebra

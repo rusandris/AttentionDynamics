@@ -67,11 +67,14 @@ x_N = x_fp(current_parameters(ds_symLV), N)
 trajN, t = trajectory(ds_symLV, 100, rand(N); Ttr=0, Δt=1e-2)
 
 pl_N = plot(ylabel=L"x_i", xlabel=L"t",
-    guidefontsize=18, legendfontsize=18, tickfontsize=10,
+    guidefontsize=18, legendfontsize=9, 
+    tickfontsize=10,xlims=(0,50),
     title=L"N = %$N"*L", w_1 = %$w1"*L", w_2 = %$(ws[1])")
 
-hline!([x_N], ls=:dash, lc=:gray10, label=L"u_N")
-plot!(t, Matrix(trajN[:]), label="")
+plot!(t, Matrix(trajN[:]), lw=3, label="")
+hline!([x_N], ls=:dash, lc=:gray10,lw=2, label=L"x^*_N = \frac{1}{w_1 + (N-1)w_2}")
+
+
 
 set_parameter!(ds_symLV, 3, ws[2])
 x_1 = x_fp(current_parameters(ds_symLV), 1)
@@ -79,17 +82,17 @@ x_1 = x_fp(current_parameters(ds_symLV), 1)
 traj1, t = trajectory(ds_symLV, 100, rand(N); Ttr=0, Δt=1e-2)
 
 
-pl_1 = plot(ylabel=L"x_i", xlabel=L"t",legend=:bottomright,
-    guidefontsize=18, legendfontsize=18, tickfontsize=10,
+pl_1 = plot(xlabel=L"t",
+    guidefontsize=18, legendfontsize=9, 
+    tickfontsize=10, xlims=(0, 50),ylims = (0.0,3.0),
     title=L"N = %$N"*L", w_1 = %$w1"*L", w_2 = %$(ws[2])")
 
-hline!([x_1], ls=:dash, lc=:gray10, label=L"u_1")
-plot!(t, Matrix(traj1[:]), ylabel=L"x_i", xlabel=L"t",
-    guidefontsize=18, legendfontsize=18, tickfontsize=10, label="")
+plot!(t, Matrix(traj1[:]), lw=3,la=1, label="")
+hline!([x_1], ls=:dash, lc=:gray10, lw=2, label=L"x^*_1 = \frac{1}{w_1}")
 
 
-pl = plot(pl_N,pl_1,size=(800,300), dpi = 300,
-    left_margin=5Plots.mm,bottom_margin=5Plots.mm)
+pl = plot(pl_N,pl_1,size=(600,300), dpi = 300,
+    left_margin=2Plots.mm,bottom_margin=5Plots.mm)
 
 figs_dir = "../../paper_figs/"
 savefig(pl,figs_dir*"timeseries_symmetric_LV_N$N"*".png")

@@ -1,6 +1,7 @@
 using DelimitedFiles
 using Plots,LaTeXStrings
 cd(@__DIR__)
+include("chart_functions.jl")
 #-------------------------plot settings------------------------------
 
 #get lifetimes with different k, charting times 
@@ -8,16 +9,18 @@ ks = [10, 50, 100]
 Δts_chart = [1, 10, 30]
 savedir = "../../paper_figs/lifetime_distributions/test6/"
 nbins = 50
-figsize = (600, 800)
+figsize = (400, 800)
 legendfontsize = 8
+Δt = 1e-1 #sampling rate of trajs 
 
 #------------------------------rp=rc------------------------------
 data_dir_traj_root = "../../data/trajs_precomp_test6/"
 data_dir_lt_root = "../../data/lifetimes_precomp_test6/"
 data_dir_lt = data_dir_lt_root * "rp=rc/"
 data_dir_traj = data_dir_traj_root * "rp=rc/"
+files_trajs = readdir(data_dir_traj)
 
-rs = vec(readdlm(data_dir_traj * files_all[1]))
+rs = vec(readdlm(data_dir_traj * files_trajs[1]))
 
 plots_topk = []
 for (k_idx, k) in enumerate(ks)
@@ -34,7 +37,7 @@ for (k_idx, k) in enumerate(ks)
     colors_x = distinguishable_colors(length(lifetimes_x))
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δts_chart[1];
-        ps=rs, colors=colors_x, nbins=nbins, mode=:pdf,
+        ps=rs, colors=colors_x, nbins=nbins, mode=:none,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_c = r_p = ")
@@ -50,7 +53,7 @@ savefig(pl_topk, savedir * "lifetime_distributions_r_topk_shapes_recolor_lowr.pn
 plots_charting = []
 for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
 
-    data_files = filter(f -> occursin("Δt$Δt", f) && occursin("k_10_", f), readdir(data_dir_lt))
+    data_files = filter(f -> occursin("Δt$(Δt_chart).txt", f) && occursin("k_10_", f), readdir(data_dir_lt))
     @show length(data_files)
     lifetimes_x = []
     for f in data_files
@@ -62,7 +65,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
     colors_x = distinguishable_colors(length(lifetimes_x))
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
-        ps=rs, colors=colors_x, nbins=nbins, mode=:pdf,
+        ps=rs, colors=colors_x, nbins=nbins, mode=:none,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart*Δt)",
         label_par=L"r_c = r_p = ")
@@ -70,7 +73,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
     push!(plots_charting, pl_distrib_x)
 end
 
-pl_ch = plot(plots_charting..., layout=(3, 1), size=(600, 800), legend=:bottomleft, legendfontsize=legendfontsize, dpi=300)
+pl_ch = plot(plots_charting..., layout=(3, 1), size=figsize, legend=:bottomleft, legendfontsize=legendfontsize, dpi=300)
 
 savefig(pl_ch, savedir * "lifetime_distributions_r_charting_time_shapes_recolor_lowr.png")
 
@@ -99,7 +102,7 @@ for (k_idx, k) in enumerate(ks)
     colors_x = distinguishable_colors(length(lifetimes_x))
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δts_chart[1];
-        ps=rs, colors=colors_x, nbins=nbins, mode=:pdf,
+        ps=rs, colors=colors_x, nbins=nbins, mode=:none,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_c = %$(rc) r_p = ")
@@ -113,7 +116,7 @@ savefig(pl_topk, savedir * "lifetime_distributions_rp_rc_mismatch_change_rp_topk
 plots_charting = []
 for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
 
-    data_files = filter(f -> occursin("Δt$Δt", f) && occursin("k_10_", f), readdir(data_dir_lt))
+    data_files = filter(f -> occursin("Δt$(Δt_chart).txt", f) && occursin("k_10_", f), readdir(data_dir_lt))
     @show length(data_files)
     lifetimes_x = []
     for f in data_files
@@ -125,7 +128,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
     colors_x = distinguishable_colors(length(lifetimes_x))
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
-        ps=rs, colors=colors_x, nbins=nbins, mode=:pdf,
+        ps=rs, colors=colors_x, nbins=nbins, mode=:none,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart*Δt)",
         label_par=L"r_c = %$(rc) r_p = ")
@@ -133,7 +136,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
     push!(plots_charting, pl_distrib_x)
 end
 
-pl_ch = plot(plots_charting..., layout=(3, 1), size=(600, 800), legend=:bottomleft, legendfontsize=legendfontsize, dpi=300)
+pl_ch = plot(plots_charting..., layout=(3, 1), size=figsize, legend=:bottomleft, legendfontsize=legendfontsize, dpi=300)
 savefig(pl_ch, savedir * "lifetime_distributions_rp_rc_mismatch_change_rp_chart_time_lowr.png")
 
 #------------------------rc----------------------------
@@ -162,7 +165,7 @@ for (k_idx, k) in enumerate(ks)
     colors_x = distinguishable_colors(length(lifetimes_x))
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δts_chart[1];
-        ps=rs, colors=colors_x, nbins=nbins, mode=:pdf,
+        ps=rs, colors=colors_x, nbins=nbins, mode=:none,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_p = %$(rp) r_c = ")
@@ -178,7 +181,7 @@ savefig(pl_topk, savedir * "lifetime_distributions_rp_rc_mismatch_change_rc_topk
 plots_charting = []
 for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
 
-    data_files = filter(f -> occursin("Δt$Δt", f) && occursin("k_10_", f), readdir(data_dir_lt))
+    data_files = filter(f -> occursin("Δt$(Δt_chart).txt", f) && occursin("k_10_", f), readdir(data_dir_lt))
     @show length(data_files)
     lifetimes_x = []
     for f in data_files
@@ -190,7 +193,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
     colors_x = distinguishable_colors(length(lifetimes_x))
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
-        ps=rs, colors=colors_x, nbins=nbins, mode=:pdf,
+        ps=rs, colors=colors_x, nbins=nbins, mode=:none,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart*Δt)",
         label_par=L"r_p = %$(rp) r_c = ")
@@ -212,7 +215,7 @@ for (k_idx, k) in enumerate(ks)
     lifetimes_y = lifetimes_y_allk[k_idx]
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δts_chart[1];
-        ps=rs, colors=colors_x, nbins=nbins, mode=:pdf,
+        ps=rs, colors=colors_x, nbins=nbins, mode=:none,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_c = %$(rc), r_p = ")
@@ -220,7 +223,7 @@ for (k_idx, k) in enumerate(ks)
     #=
     pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[1]; 
         ps=αs4,colors=colors_y, nbins=nbins, coff=coff_y, 
-        scale=:identity, mode=:pdf,
+        scale=:identity, mode=:none,
         xlabel=L"\tau^{(y)}_k \cdot \Delta t",
         title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
         label_par=L"\alpha = ")
@@ -309,7 +312,7 @@ for (Δt_idx,Δt_chart) in enumerate(Δts_chart)
     lifetimes_y = lifetimes_y_allk[Δt_idx]
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
-        ps=rs, colors=colors_x, nbins=nbins, mode=:pdf,
+        ps=rs, colors=colors_x, nbins=nbins, mode=:none,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart*Δt)",
         label_par=L"r_c = %$(rc), r_p = ")
@@ -318,7 +321,7 @@ for (Δt_idx,Δt_chart) in enumerate(Δts_chart)
 
     pl_distrib_y = plot_distribs(lifetimes_y,Δt_chart; 
         ps=αs4,colors=colors_y, nbins=nbins, coff=coff_y, 
-        scale=:identity, mode=:pdf,
+        scale=:identity, mode=:none,
         xlabel=L"\tau^{(y)}_k \cdot \Delta t",
         title = L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
         label_par=L"\alpha = ")
@@ -385,7 +388,7 @@ for (k_idx,k) in enumerate(ks)
     lifetimes_y = lifetimes_y_allk[k_idx]
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δts_chart[1];
-        ps=rs, colors=colors_x, nbins=nbins, mode=:pdf,
+        ps=rs, colors=colors_x, nbins=nbins, mode=:none,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_c = %$(rc), r_p = ")
@@ -394,7 +397,7 @@ for (k_idx,k) in enumerate(ks)
     #=
     pl_distrib_y = plot_distribs(lifetimes_y,Δts_chart[1]; 
         ps=cs,colors=colors_y, nbins=nbins, coff=coff_y, 
-        scale=:identity, mode=:pdf,
+        scale=:identity, mode=:none,
         xlabel=L"\tau^{(y)}_k \cdot \Delta t",
         title = L"k=%$k" * L",Δt=%$(Δts_chart[1])",
         label_par=L"c = ")
@@ -444,7 +447,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
     lifetimes_y = lifetimes_y_allk[Δt_idx]
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
-        ps=rs, colors=colors_x, nbins=nbins, mode=:pdf,
+        ps=rs, colors=colors_x, nbins=nbins, mode=:none,
         xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart*Δt)",
         label_par=L"r_c = %$(rc), r_p = ")
@@ -452,7 +455,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
     #=
     pl_distrib_y = plot_distribs(lifetimes_y, Δt_chart;
         ps=cs, colors=colors_y, nbins=nbins, coff=coff_y,
-        scale=:identity, mode=:pdf,
+        scale=:identity, mode=:none,
         xlabel=L"\tau^{(y)}_k \cdot \Delta t",
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart)",
         label_par=L"c = ")
@@ -480,6 +483,6 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
 end
 
 
-pl_ch = plot(plots_charting..., layout=(3, 1), size=(600, 800), dpi=300)
+pl_ch = plot(plots_charting..., layout=(3, 1), size=figsize, dpi=300)
 savefig(pl_ch, savedir*"lifetime_distributions_competition_charting time.png")
 =#

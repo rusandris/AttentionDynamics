@@ -301,7 +301,7 @@ function lyapunov_diagram!(Λ,pds,gvalues,wvalues; T, Ttr, Δt,fp_settings=[100,
 			witer = wvalues
 		end
 		
-		calc_lyap_row!(Λ,pds,gvalues,witer,gindex; T, Ttr, Δt,fp_settings=fp_settings, d0=1e-9, ut=1e-6, lt=1e-12)
+		calc_lyap_row!(Λ,pds,gvalues,witer,gindex; T, Ttr, Δt,fp_settings=fp_settings, d0=d0, ut=ut, lt=lt)
 	end
 end
 

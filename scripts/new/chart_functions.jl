@@ -1,3 +1,15 @@
+using Revise
+using ComplexityMeasures
+using BifurcationKit
+using AttentionDynamics
+using OrdinaryDiffEq
+using StateTransitionNetworks
+using DynamicalSystems
+using StatsBase
+using Plots, LaTeXStrings
+using LinearAlgebra
+using DelimitedFiles
+
 #generate top charts from symbolic timeseries
 function get_top_charts(sts, k, encoding)
 
@@ -113,7 +125,7 @@ function get_lifetimes(trajs::Vector{Matrix{Float64}}, k, Δt_chart)
 
 end
 
-function plot_distribs(lifetimes, Δt_chart; ps, colors, mode=:probability, nbins=50, scale=:log,
+function plot_distribs(lifetimes, Δt_chart; ps, colors, mode=:none, nbins=50, scale=:log,
     xlabel=L"\tau^{(x)}_k \cdot \Delta t", title="lifetime distribution", label_par="")
 
     pl_distrib = plot()
@@ -149,7 +161,7 @@ function plot_distribs(lifetimes, Δt_chart; ps, colors, mode=:probability, nbin
 
         #plot together
         plot!(pl_distrib, X, Y,
-            markershape=:circle, st=:scatter,
+            markershape=:circle, st=:scatter,ylabel="log(count)",
             mc=colors[i], lc=colors[i], title=title,
             label=label_par * "$(ps[i])", dpi=300)
 
