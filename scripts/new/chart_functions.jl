@@ -126,7 +126,7 @@ function get_lifetimes(trajs::Vector{Matrix{Float64}}, k, Δt_chart)
 end
 
 function plot_distribs(lifetimes, Δt_chart; ps, colors, mode=:none, nbins=50, scale=:log,
-    xlabel=L"\tau^{(x)}_k \cdot \Delta t", title="lifetime distribution", label_par="")
+    xlabel=L"\log(\tau^{(x)}_k \cdot \Delta t)", title="lifetime distribution", label_par="")
 
     pl_distrib = plot()
 

@@ -53,7 +53,7 @@ wc2 = (N - 1) / N
 
 
 #------------------------------solver settings----------------------------------
-dtmax = 1e-1 #5*1e-2
+dtmax = 1e-2 #5*1e-2
 diffeq = (alg=Tsit5(), dt=1e-3, dtmax=dtmax, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-2, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
@@ -69,7 +69,7 @@ u02[1:2:end] .= x0
 ds = create_original_ds(u02, deepcopy(p_orig); diffeq=diffeq)
 
 #length of precomputed trajs 
-T = 10000 #100 #5000
+T = 10000 #10000 #100 #5000
 Ttr = 500 #500
 Δt = 1e-1
 
@@ -82,7 +82,7 @@ Ttr = 500 #500
 
 #rs = [6:0.1:15;]
 #rs = [6.0:1.0:12.0;]
-rs = [6.0:0.5:8.0;]
+rs = [6.0:3.0:16.0;]
 
 
 @show rs
@@ -105,7 +105,7 @@ end
 pl_trajs = plot(plots_trajs..., layout=(length(rs), 2), size=(600, 800), dpi=300)
 #save traj plot 
 
-savedir = "../../data/trajs_precomp_lifetimes_test6/rp=rc/"
+savedir = "../../data/trajs_precomp_lifetimes_test7_long/rp=rc/"
 mkpath(savedir)
 savefig(pl_trajs, savedir*"trajs_x_y_change_rp_rc.png")
 writedlm(savedir*"rp_rc.txt", rs)
@@ -138,10 +138,10 @@ end
 pl_trajs = plot(plots_trajs..., layout=(length(rs), 2), size=(600, 800), dpi=300)
 #save traj plot 
 
-savedir = "../../data/trajs_precomp_lifetimes_test6/rp/"
+savedir = "../../data/trajs_precomp_lifetimes_test7_long/rp/"
 mkpath(savedir)
 savefig(pl_trajs, savedir * "trajs_x_y_change_rp.png")
-writedlm(savedir * "rp_rc=10.txt", rs_rp)
+writedlm(savedir * "rp_rc=$(r_const).txt", rs_rp)
 
 #save trajectories into file 
 for i in 1:length(trajs)

@@ -21,7 +21,9 @@ pl_crit_curve = plot(ws, 1 ./ ws, lc=:gray10, lw=1,
 
 r_test = 6.0
 #rs = [6.0:10.0:40.0;]
-rs = [6.0:1.0:12.0;]
+#rs = [6.0:1.0:12.0;]
+rs = [6.0:3.0:16.0;]
+
 
 #when rp=rc
 w_g_rs = rescaled_params.(rs, rs, K, c, α, N)
@@ -33,7 +35,6 @@ plot!(pl_crit_curve, w_rs, g_rs ./ (N - 1),
     mc=:green, lc=:green, lw=1, arrow=:arrow,
     label=L"r_p=r_c \in [%$(rs[1]),%$(rs[end])]", ms=4,
     xlims=(0.0,0.5),ylims=(0.,25),markershape=:circle)
-
 #when rp \neq rc, only rp changes
 w_g_rp = rescaled_params.(rs, r_test, K, c, α, N)
 w_rp = [w_g_rp[i][1] for i in 1:length(w_g_rp)]

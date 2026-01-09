@@ -7,15 +7,15 @@ include("chart_functions.jl")
 #get lifetimes with different k, charting times 
 ks = [10, 50, 100]
 Δts_chart = [1, 10, 30]
-savedir = "../../paper_figs/lifetime_distributions/test6/"
+savedir = "../../paper_figs/lifetime_distributions/test7_long/"
 nbins = 50
 figsize = (400, 800)
 legendfontsize = 8
 Δt = 1e-1 #sampling rate of trajs 
 
 #------------------------------rp=rc------------------------------
-data_dir_traj_root = "../../data/trajs_precomp_test6/"
-data_dir_lt_root = "../../data/lifetimes_precomp_test6/"
+data_dir_traj_root = "../../data/trajs_precomp_test7_long/"
+data_dir_lt_root = "../../data/lifetimes_precomp_test7_long/"
 data_dir_lt = data_dir_lt_root * "rp=rc/"
 data_dir_traj = data_dir_traj_root * "rp=rc/"
 files_trajs = readdir(data_dir_traj)
@@ -38,7 +38,7 @@ for (k_idx, k) in enumerate(ks)
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δts_chart[1];
         ps=rs, colors=colors_x, nbins=nbins, mode=:none,
-        xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
+          scale=:log,
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_c = r_p = ")
 
@@ -66,7 +66,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
         ps=rs, colors=colors_x, nbins=nbins, mode=:none,
-        xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
+          scale=:log,
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart*Δt)",
         label_par=L"r_c = r_p = ")
 
@@ -78,8 +78,8 @@ pl_ch = plot(plots_charting..., layout=(3, 1), size=figsize, legend=:bottomleft,
 savefig(pl_ch, savedir * "lifetime_distributions_r_charting_time_shapes_recolor_lowr.png")
 
 #----------------------------rp---------------------------------
-data_dir_traj_root = "../../data/trajs_precomp_test6/"
-data_dir_lt_root = "../../data/lifetimes_precomp_test6/"
+data_dir_traj_root = "../../data/trajs_precomp_test7_long/"
+data_dir_lt_root = "../../data/lifetimes_precomp_test7_long/"
 data_dir_lt = data_dir_lt_root * "rp/"
 data_dir_traj = data_dir_traj_root * "rp/"
 
@@ -103,7 +103,7 @@ for (k_idx, k) in enumerate(ks)
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δts_chart[1];
         ps=rs, colors=colors_x, nbins=nbins, mode=:none,
-        xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
+          scale=:log,
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_c = %$(rc) r_p = ")
 
@@ -129,7 +129,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
         ps=rs, colors=colors_x, nbins=nbins, mode=:none,
-        xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
+          scale=:log,
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart*Δt)",
         label_par=L"r_c = %$(rc) r_p = ")
 
@@ -166,7 +166,7 @@ for (k_idx, k) in enumerate(ks)
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δts_chart[1];
         ps=rs, colors=colors_x, nbins=nbins, mode=:none,
-        xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
+          scale=:log,
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_p = %$(rp) r_c = ")
 
@@ -194,7 +194,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
         ps=rs, colors=colors_x, nbins=nbins, mode=:none,
-        xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
+          scale=:log,
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart*Δt)",
         label_par=L"r_p = %$(rp) r_c = ")
 
@@ -216,7 +216,7 @@ for (k_idx, k) in enumerate(ks)
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δts_chart[1];
         ps=rs, colors=colors_x, nbins=nbins, mode=:none,
-        xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
+          scale=:log,
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_c = %$(rc), r_p = ")
 
@@ -313,7 +313,7 @@ for (Δt_idx,Δt_chart) in enumerate(Δts_chart)
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
         ps=rs, colors=colors_x, nbins=nbins, mode=:none,
-        xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
+          scale=:log,
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart*Δt)",
         label_par=L"r_c = %$(rc), r_p = ")
 
@@ -389,7 +389,7 @@ for (k_idx,k) in enumerate(ks)
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δts_chart[1];
         ps=rs, colors=colors_x, nbins=nbins, mode=:none,
-        xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
+          scale=:log,
         title=L"k=%$k" * L",Δt=%$(Δts_chart[1]*Δt)",
         label_par=L"r_c = %$(rc), r_p = ")
 
@@ -448,7 +448,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
 
     pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
         ps=rs, colors=colors_x, nbins=nbins, mode=:none,
-        xlabel=L"\tau^{(x)}_k \cdot \Delta t", scale=:log,
+          scale=:log,
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart*Δt)",
         label_par=L"r_c = %$(rc), r_p = ")
 

@@ -12,14 +12,14 @@ k = 10 #top k
 Δt_chart = 1 #charting time
 
 #READ precomputed lifetimes
-data_dir_lt_root = "../../data/lifetimes_precomp_test6/"
+data_dir_lt_root = "../../data/lifetimes_precomp_test7_long/"
 data_dir_lt = data_dir_lt_root * "rp=rc/"
 files_lt_all = readdir(data_dir_lt)
 files_lt = filter(f -> occursin("Δt1.", f) && occursin("k_10_", f), readdir(data_dir_lt))
 
 
 #READ precomputed trajectories
-data_dir_traj_root = "../../data/trajs_precomp_test6/"
+data_dir_traj_root = "../../data/trajs_precomp_test7_long/"
 data_dir_traj = data_dir_traj_root*"rp=rc/"
 files_trajs = readdir(data_dir_traj)
 traj_files = filter(f -> occursin(".txt", f), files_trajs)[2:end]
@@ -115,8 +115,8 @@ pl_mean_lt = plot(ws, 1 ./ ws, lc=:gray10,
     legendfontsize=10)
 
 plot!(pl_mean_lt, w_rs, g_rs ./ (N - 1),
-    zcolor=mean_τs, m=(:blues, 8.0, Plots.stroke(1, :gray10)),
-    lw=1, arrow=:arrow,
+    zcolor=mean_τs, m=(:default, 10.0, Plots.stroke(1, :gray10)),
+    lw=1, #arrow=:arrow,
     label=L"r_p=r_c \in [%$(rs[1]),%$(rs[end])]", ms=4,
     markershape=:circle)
 
@@ -130,8 +130,8 @@ pl_ineq = plot(ws, 1 ./ ws, lc=:gray10, lw=1,
     legendfontsize=10)
 
 plot!(pl_ineq, w_rs, g_rs ./ (N - 1),
-    zcolor=mean_ineq, m=(:blues, 10.0, Plots.stroke(1, :gray10)),
-    lw=1, arrow=:arrow,
+    zcolor=mean_ineq, m=(:default, 10.0, Plots.stroke(1, :gray10)),
+    lw=1, #arrow=:arrow,
     label=L"r_p=r_c \in [%$(rs[1]),%$(rs[end])]", ms=4,
     xlims=(0.0, 0.5), ylims=(0., 25), markershape=:circle)
 
@@ -146,14 +146,16 @@ pl_lyap = plot(ws, 1 ./ ws, lc=:gray10, lw=1,
 
 #lyapunov exponent 
 plot!(pl_lyap, w_rs, g_rs ./ (N - 1),
-    zcolor=λs, m=(:blues, 10.0, Plots.stroke(1, :gray10)),
-    lw=1, arrow=:arrow,
+    zcolor=λs, m=(:default, 10.0, Plots.stroke(1, :gray10)),
+    lw=1, #arrow=:arrow,
     label=L"r_p=r_c \in [%$(rs[1]),%$(rs[end])]",
     ms=4,xlims=(0.0, 0.5), ylims=(0., 25), 
     markershape=:circle)
 
 pl = plot(pl_mean_lt,pl_ineq,pl_lyap,
     layout=(1,3),dpi=300,size=(1800,500),
+    xlims=(0.1,0.5),
     plot_title=L"N=%$(N), K=%$(K), c=%$(c)")
 
-savefig(pl,"phase_diag_measures_rp=rc_test6.png")
+savedir = "../../paper_figs/"
+savefig(pl,savedir*"phase_diag_measures_rp=rc_test7_long.png")
