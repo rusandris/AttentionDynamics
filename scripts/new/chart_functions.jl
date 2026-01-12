@@ -9,6 +9,7 @@ using StatsBase
 using Plots, LaTeXStrings
 using LinearAlgebra
 using DelimitedFiles
+using Integrals
 
 #generate top charts from symbolic timeseries
 function get_top_charts(sts, k, encoding)
@@ -55,7 +56,7 @@ function get_lifetimes(ds::DynamicalSystem, ps, p_idxs, Δt, k=10, T_traj=5000, 
 
 end
 
-function get_lifetimes(trajs::Vector{StateSpaceSet}, k, Δt_chart)
+function get_lifetimes(trajs::Vector{<:StateSpaceSet}, k, Δt_chart)
 
     N = Int(dimension(ds) / 2)
     T = length(trajs[1])
@@ -253,4 +254,46 @@ lognormal(x, μ, σ) = 1 / (x * σ * sqrt(2π)) * exp(-(log10(x) - μ)^2 / (2 * 
 function perm_entropy(charts)
 
 
+end
+
+
+#TODO: 
+#implement chart building from integrated variables
+
+function get_lifetimes_integ(Is, k)
+
+    charts = stack([sortperm(Is[i]) for i in 1:length(Is)])'[:, end-k+1:end]
+
+    lts = get_lifetimes(charts)
+
+end
+
+function integrate_activity(traj, ts, n::Int; method=TrapezoidalRule())
+    #T = length(traj)
+    #l = length(traj[1])
+    T,l = size(traj)
+
+    traj_integ = Vector{Float64}[]
+    time_segments = []
+    start_idxs = [1:n:T;][1:end-1]
+    for i in start_idxs
+        traj_segment = traj[i:i+n,:]
+        t = ts[i:i+n]
+        int_vals = integrate_activity(traj_segment, t; method=method)
+        push!(traj_integ,int_vals)
+        push!(time_segments, (t[1],t[end]))
+    end 
+    return traj_integ,time_segments
+end
+
+function integrate_activity(traj, ts::Vector{Float64}; method=TrapezoidalRule())
+    t,nr_vars = size(traj) #nr of variables
+    L_ints = zeros(nr_vars)
+    for i in 1:nr_vars 
+        y = traj[:,i]
+        problem = SampledIntegralProblem(y, ts)
+        Li_int = solve(problem, method)
+        L_ints[i] = Li_int.u
+    end
+    return L_ints
 end
