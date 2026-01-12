@@ -4,6 +4,7 @@ using AttentionDynamics
 using OrdinaryDiffEq
 using DelimitedFiles
 using Plots,LaTeXStrings
+using LinearAlgebra
 cd(@__DIR__)
 include("../../plotting/defaults.jl")
 include("../../plotting/plot_functions/lyapunov.jl")
@@ -56,7 +57,7 @@ wc2 = (N-1)/N
 u0 = generate_initial_condition(N)
 ds = create_ds(u0,[5,0.5,N];diffeq=diffeq) #no noise
 
-σ = 1e-4
+σ = 1e-9
 p_noisy = [5, 0.5, N, σ]
 ds_noise = create_ds_noisy(u0,p_noisy;diffeq=diffeq) #noise 
 #figure out how to calc lyap exp for noisy ds 
@@ -77,68 +78,99 @@ lyap_vals = []
 #calc lyapunov exponents
 @time for (i,Ttr) in enumerate(Ttrs)
     @show Ttr
-    @time Λ = lyapunov_diagram(ds_noise,gs,ws; T=T, Ttr=Ttr, Δt=0.1, fp_settings=fp_settings, 
-        d0=1e-3, ut=1e-1, lt=1e-4,save=false,realtime_plotting=false,parallelize=false)
+    @time Λ = lyapunov_diagram(ds_noise,gs,ws; T=T, Ttr=Ttr, Δt=1.0, fp_settings=fp_settings, 
+        d0=1e-9, ut=1e-6, lt=1e-10,save=false,realtime_plotting=false,parallelize=false)
 
     #@time Λ = lyapunov_diagram(ds,gs,ws; T=T, Ttr=Ttr, Δt=0.1, fp_settings=fp_settings, 
     #d0=1e-9,save=false,realtime_plotting=false,parallelize=false)
     push!(lyap_vals,Λ)
 end
 
+savedir = "../../data/phasediag_data_N10_noise_1e-9/"
+mkpath(savedir)
+writedlm(savedir * "phasediag_params.txt", hcat(ws, gs))
+writedlm(savedir * "lyap_values.txt", lyap_vals)
 
-#=
-#check lyap
-ds = create_ds(u0, [18, 0.6, N]; diffeq=diffeq) #no noise
-traj, = trajectory(ds, 0; Ttr=1000)
-u0 = traj[end] #rand(2N) .* 0.1 
-d0 = 1e-6
-pds = ParallelDynamicalSystem(ds, [u0 , u0 .+ rand(2N) .* d0/sqrt(2N) ])
+
+#--------------------------check lyap-----------------------
+#average trajectory distance evolution 
+#no noise vs noise case 
+
+#no noise
+
+n_trajs = 500
+d0 = 1e-12
 nsteps = 15000
-d = zeros(nsteps)
-for i in 1:nsteps
-    step!(pds)
-    states = current_states(pds)
-    d[i] = norm(states[1] .- states[2])
+g = 18.0
+w = 0.7
+
+ds = create_ds(u0, [g, w, N]; diffeq=diffeq) #no noise
+#ds = Systems.lorenz()
+traj_u0s, = trajectory(ds, 1000; Ttr=5000) #generate init conds 
+
+u0s = rand(traj_u0s,n_trajs)
+#calc d(t) avgs
+dist_avg = zeros(nsteps)
+for (i,u0) in enumerate(u0s)
+
+    @show i
+    dim = dimension(ds)
+    pds = ParallelDynamicalSystem(ds, [u0 , u0 .+ rand(dim) .* d0/sqrt(dim) ])
+    d = zeros(nsteps)
+    for i in 1:nsteps
+        step!(pds)
+        states = current_states(pds)
+        dist_avg[i] += norm(states[1] .- states[2])
+    end
+
 end
-pl = plot(d,lc=:gray10,yscale=:log10,
-    label="no noise")
+dist_avg ./= n_trajs
+
+pl2 = plot(dist_avg, lc=:gray10, yscale=:log10,
+    label=L"\sigma = 0, d_0 = %$d0",
+    title = L"g=%$g,w=%$w",
+    legend=:bottomright,
+    legendfontsize=12)
 
 #check noisy lyap
 #noise
-ds_noise = create_ds_noisy(u0, [18, 0.6, N, 1e-4]; diffeq=diffeq) #noise 
-u0 = traj[end] #rand(2N) .* 0.1
-d0 = 1e-3
-pds = ParallelDynamicalSystem(ds_noise, [u0, u0 .+ rand(2N) .* d0 / sqrt(2N)])
-nsteps = 15000
-d = zeros(nsteps)
-for i in 1:nsteps
-    step!(pds)
-    states = current_states(pds)
-    d[i] = norm(states[1] .- states[2])
+σ = 1e-9
+ds_noise = create_ds_noisy(u0, [g, w, N, σ]; diffeq=diffeq) #noise 
+traj_u0s, = trajectory(ds, 100; Ttr=3000) #generate init conds 
+
+u0s = rand(traj_u0s, n_trajs)
+#calc d(t) avgs
+dist_avg_noise = zeros(nsteps)
+for (i, u0) in enumerate(u0s)
+
+    @show i
+    pds = ParallelDynamicalSystem(ds_noise, [u0, u0 .+ rand(2N) .* d0 / sqrt(2N)])
+    d = zeros(nsteps)
+    for i in 1:nsteps
+        step!(pds)
+        states = current_states(pds)
+        dist_avg_noise[i] += norm(states[1] .- states[2])
+    end
+
 end
-plot!(pl, d, lc=:red, yscale=:log10, 
-    label=L"σ=1e-4")
-=#
+dist_avg_noise ./= n_trajs
 
-
-savedir="../../data/phasediag_data_N10_noise_1e-4/"
-mkpath(savedir)
-writedlm(savedir*"phasediag_params.txt",hcat(ws,gs))
-writedlm(savedir*"lyap_values.txt",lyap_vals)
-
+plot!(pl2, dist_avg_noise, lc=:red, yscale=:log10,
+    label=L"\sigma = 1e-9, d_0 = 1e-9",
+    legend=:bottomright,
+    legendfontsize=12)
 
 
 #--------------read lyaps--------------------
-data_dir = "../../data/phasediag_data_N10_no_noise/"
+data_dir = "../../data/phasediag_data_N10_noise_1e-4/"
 lyap_vals = reshape(readdlm(data_dir*"lyap_values.txt"),(50,50))
 params = readdlm(data_dir*"phasediag_params.txt")
 ws = params[:,1]
 gs = params[:,2]
 N=10
 
-
 pl1 = plot_phase_diagram(lyap_vals[1],ws,gs,N;HEATMAP_DEFAULTS...,
-    ylabel=L"\frac{1}{\epsilon(N-1)}",
+    ylabel=L"\frac{1}{\epsilon(N-1)}",clims=(-0.5,0.5),
     right_margin=6Plots.mm,
     left_margin=6Plots.mm,
     tickfontsize=tick_fontsize_large,

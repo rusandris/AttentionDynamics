@@ -12,14 +12,14 @@ k = 10 #top k
 Δt_chart = 1 #charting time
 
 #READ precomputed lifetimes
-data_dir_lt_root = "../../data/lifetimes_precomp_test7_long/"
+data_dir_lt_root = "../../data/lifetimes_precomp_test8_origpar/"
 data_dir_lt = data_dir_lt_root * "rp=rc/"
 files_lt_all = readdir(data_dir_lt)
 files_lt = filter(f -> occursin("Δt1.", f) && occursin("k_10_", f), readdir(data_dir_lt))
 
 
 #READ precomputed trajectories
-data_dir_traj_root = "../../data/trajs_precomp_test7_long/"
+data_dir_traj_root = "../../data/trajs_precomp_test8_origpar/"
 data_dir_traj = data_dir_traj_root*"rp=rc/"
 files_trajs = readdir(data_dir_traj)
 traj_files = filter(f -> occursin(".txt", f), files_trajs)[2:end]
@@ -158,4 +158,4 @@ pl = plot(pl_mean_lt,pl_ineq,pl_lyap,
     plot_title=L"N=%$(N), K=%$(K), c=%$(c)")
 
 savedir = "../../paper_figs/"
-savefig(pl,savedir*"phase_diag_measures_rp=rc_test7_long.png")
+savefig(pl, savedir * "phase_diag_measures_rp=rc_test8_origpar.png")

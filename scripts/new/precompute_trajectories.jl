@@ -82,8 +82,8 @@ Ttr = 500 #500
 
 #rs = [6:0.1:15;]
 #rs = [6.0:1.0:12.0;]
-rs = [6.0:3.0:16.0;]
-
+#rs = [6.0:3.0:16.0;]
+rs = [9.0:1.0:12.0;]
 
 @show rs
 set_parameters!(ds, p_orig)
@@ -105,7 +105,7 @@ end
 pl_trajs = plot(plots_trajs..., layout=(length(rs), 2), size=(600, 800), dpi=300)
 #save traj plot 
 
-savedir = "../../data/trajs_precomp_lifetimes_test7_long/rp=rc/"
+savedir = "../../data/trajs_precomp_test8_origpar/rp=rc/"
 mkpath(savedir)
 savefig(pl_trajs, savedir*"trajs_x_y_change_rp_rc.png")
 writedlm(savedir*"rp_rc.txt", rs)
@@ -138,7 +138,7 @@ end
 pl_trajs = plot(plots_trajs..., layout=(length(rs), 2), size=(600, 800), dpi=300)
 #save traj plot 
 
-savedir = "../../data/trajs_precomp_lifetimes_test7_long/rp/"
+savedir = "../../data/trajs_precomp_test8_origpar/rp/"
 mkpath(savedir)
 savefig(pl_trajs, savedir * "trajs_x_y_change_rp.png")
 writedlm(savedir * "rp_rc=$(r_const).txt", rs_rp)
@@ -173,7 +173,7 @@ for (i, traj) in enumerate(trajs)
 end
 pl_trajs = plot(plots_trajs..., layout=(length(rs), 2), size=(600, 800), dpi=300)
 
-savedir = "../../data/trajs_precomp_lifetimes_test6/rc/"
+savedir = "../../data/trajs_precomp_test8_origpar/rc/"
 mkpath(savedir)
 savefig(pl_trajs, savedir * "trajs_x_y_change_rc.png")
 writedlm(savedir * "rc_rp=6.txt", rs_rc)

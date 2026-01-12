@@ -7,15 +7,15 @@ include("chart_functions.jl")
 #get lifetimes with different k, charting times 
 ks = [10, 50, 100]
 Δts_chart = [1, 10, 30]
-savedir = "../../paper_figs/lifetime_distributions/test7_long/"
+savedir = "../../paper_figs/lifetime_distributions/test8_origpar/"
 nbins = 50
 figsize = (400, 800)
 legendfontsize = 8
 Δt = 1e-1 #sampling rate of trajs 
 
 #------------------------------rp=rc------------------------------
-data_dir_traj_root = "../../data/trajs_precomp_test7_long/"
-data_dir_lt_root = "../../data/lifetimes_precomp_test7_long/"
+data_dir_traj_root = "../../data/trajs_precomp_test8_origpar/"
+data_dir_lt_root = "../../data/lifetimes_precomp_test8_origpar/"
 data_dir_lt = data_dir_lt_root * "rp=rc/"
 data_dir_traj = data_dir_traj_root * "rp=rc/"
 files_trajs = readdir(data_dir_traj)

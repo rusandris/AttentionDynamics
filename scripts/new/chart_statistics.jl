@@ -31,10 +31,10 @@ gauss(x,μ,σ) = 1/(σ*sqrt(2π)) * exp(-(x - μ)^2/(2σ^2))
 nbins = 50
 figsize = (600,800)
 legendfontsize=10
-savedir = "../../paper_figs/lifetime_distributions/test7_long/"
+savedir = "../../paper_figs/lifetime_distributions/test8_origpar/"
 mkpath(savedir)
-data_dir_traj_root = "../../data/trajs_precomp_test7_long/"
-data_dir_lt_root = "../../data/lifetimes_precomp_test7_long/"
+data_dir_traj_root = "../../data/trajs_precomp_test8_origpar/"
+data_dir_lt_root = "../../data/lifetimes_precomp_test8_origpar/"
 
 
 #----------------------------change r parameter-------------------------
