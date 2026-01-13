@@ -7,8 +7,8 @@ figsize = (600, 800)
 legendfontsize = 10
 savedir = "../../paper_figs/lifetime_distributions/test_integ_origpar/"
 mkpath(savedir)
-data_dir_traj_root = "../../data/trajs_precomp_test8_origpar/"
-data_dir_lt_root = "../../data/lifetimes_precomp_test_integ_origpar/"
+data_dir_traj_root = "../../data/trajs_precomp_lifetimes/"
+data_dir_lt_root = "../../data/precomp_lifetimes/"
 
 
 #----------------------------change r parameter-------------------------
@@ -24,9 +24,9 @@ c = 2.4;
 α = 0.005;
 
 #READ trajectories
-data_dir = data_dir_traj_root * "rp=rc/"
+data_dir = data_dir_traj_root * "c/"
 files_all = readdir(data_dir)
-traj_files = filter(f -> occursin(".txt", f), files_all)[2:end]
+traj_files = filter(f -> occursin(".txt", f), files_all)[2:2:end]
 trajs = Matrix{Float64}[]
 for i in 1:length(traj_files)
     println("Reading file " * traj_files[i] * "...")
@@ -34,15 +34,16 @@ for i in 1:length(traj_files)
     push!(trajs, traj)
 end
 #read params 
-rs = vec(readdlm(data_dir * files_all[1]))
+cs = vec(readdlm(data_dir * files_all[1]))
+r = parse(Float64,traj_files[1][10:12])
 
 #get lifetimes with different k, charting times 
 ks = [10, 50, 100]
-ns_chart = [10, 30, 50]
+ns_chart = [10, 20, 50]
 ts = collect(500:0.1:10500)
 
 #precompute lifetimes 
-savedir = data_dir_lt_root * "rp=rc/"
+savedir = data_dir_lt_root * "c/"
 mkpath(savedir)
 
 for (n_idx, n) in enumerate(ns_chart)
@@ -51,7 +52,7 @@ for (n_idx, n) in enumerate(ns_chart)
         traj = trajs[i][:,1:2:2N]
         L_ints,time_segments = integrate_activity(traj, ts, n)
         lts = get_lifetimes_integ(L_ints, ks[1])
-        writedlm(savedir * "lifetimes_integ_rp=rc=$(rs[i])_k_$(ks[1])_Δt_int$(n).txt", lts)
+        writedlm(savedir * "lifetimes_integ_rp=rc=$(r)_c=$(cs[i])_k_$(ks[1])_Δt_int$(n).txt", lts)
 
     end
 
@@ -66,18 +67,18 @@ include("chart_functions.jl")
 #-------------------------plot settings------------------------------
 
 #get lifetimes with different k, charting times 
-savedir = "../../paper_figs/lifetime_distributions/test8_origpar/"
-nbins = 50
+savedir = "../../paper_figs/lifetime_distributions/precomp_lifetimes/"
+nbins = 30
 figsize = (400, 800)
 legendfontsize = 8
 Δt = 1e-1 #sampling rate of trajs 
 
-#------------------------------rp=rc------------------------------
-data_dir_traj_root = "../../data/trajs_precomp_test8_origpar/"
-data_dir_lt_root = "../../data/lifetimes_precomp_test_integ_origpar/"
+#------------------------------plot test------------------------------
+data_dir_traj_root = "../../data/trajs_precomp_lifetimes/"
+data_dir_lt_root = "../../data/precomp_lifetimes/"
 
-data_dir_lt = data_dir_lt_root * "rp=rc/"
-data_dir_traj = data_dir_traj_root * "rp=rc/"
+data_dir_lt = data_dir_lt_root * "c/"
+data_dir_traj = data_dir_traj_root * "c/"
 files_trajs = readdir(data_dir_traj)
 
 rs = vec(readdlm(data_dir_traj * files_trajs[1]))
@@ -97,10 +98,10 @@ for (n_idx, n) in enumerate(ns_chart)
     colors_x = distinguishable_colors(length(lifetimes_x))
 
     pl_distrib_x = plot_distribs(lifetimes_x, n;
-        ps=rs, colors=colors_x, nbins=nbins, mode=:none,
+        ps=cs, colors=colors_x, nbins=nbins, mode=:none,
         scale=:log,
         title=L"k=10" * L",Δt=%$(n*Δt)",
-        label_par=L"r_c = r_p = ")
+        label_par=L"c = ")
 
     push!(plots_int, pl_distrib_x)
 end
@@ -111,15 +112,3 @@ pl_int = plot(plots_int..., layout=(3, 1), size=figsize,
 savefig(pl_topk, savedir * "lifetime_distributions_r_topk_shapes_recolor_lowr.png")
 
 
-
-#=
-for (Δt_idx, Δt) in enumerate(Δts_chart)
-    lifetimes_x, lifetimes_y = get_lifetimes(trajs, ks[1], Δt)
-
-    #save lifetimes 
-    for (i, lts) in enumerate(lifetimes_x)
-        writedlm(data_dir * "lifetimes_x_rp=rc=$(rs[i])_k_$(ks[1])_Δt$(Δt).txt", lts)
-    end
-
-end
-=#

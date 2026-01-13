@@ -57,7 +57,7 @@ wc2 = (N-1)/N
 u0 = generate_initial_condition(N)
 ds = create_ds(u0,[5,0.5,N];diffeq=diffeq) #no noise
 
-σ = 1e-9
+σ = 1e-6
 p_noisy = [5, 0.5, N, σ]
 ds_noise = create_ds_noisy(u0,p_noisy;diffeq=diffeq) #noise 
 #figure out how to calc lyap exp for noisy ds 
@@ -74,19 +74,19 @@ Ttr = 2000
 Ttrs = [Ttr]
 T = 5000
 lyap_vals = []
-
+d0=1e-12
 #calc lyapunov exponents
 @time for (i,Ttr) in enumerate(Ttrs)
     @show Ttr
     @time Λ = lyapunov_diagram(ds_noise,gs,ws; T=T, Ttr=Ttr, Δt=1.0, fp_settings=fp_settings, 
-        d0=1e-9, ut=1e-6, lt=1e-10,save=false,realtime_plotting=false,parallelize=false)
+        d0=d0, ut=1e-3, lt=1e-14,save=false,realtime_plotting=false,parallelize=false)
 
     #@time Λ = lyapunov_diagram(ds,gs,ws; T=T, Ttr=Ttr, Δt=0.1, fp_settings=fp_settings, 
     #d0=1e-9,save=false,realtime_plotting=false,parallelize=false)
     push!(lyap_vals,Λ)
 end
 
-savedir = "../../data/phasediag_data_N10_noise_1e-9/"
+savedir = "../../data/phasediag_data_N10_noise_$(σ)_d0_$(d0)_ut1e-3/"
 mkpath(savedir)
 writedlm(savedir * "phasediag_params.txt", hcat(ws, gs))
 writedlm(savedir * "lyap_values.txt", lyap_vals)
@@ -102,7 +102,8 @@ n_trajs = 500
 d0 = 1e-12
 nsteps = 15000
 g = 18.0
-w = 0.7
+w = 0.6
+ts = [1:nsteps;] ./ 1e2
 
 ds = create_ds(u0, [g, w, N]; diffeq=diffeq) #no noise
 #ds = Systems.lorenz()
@@ -126,15 +127,15 @@ for (i,u0) in enumerate(u0s)
 end
 dist_avg ./= n_trajs
 
-pl2 = plot(dist_avg, lc=:gray10, yscale=:log10,
+pl = plot(ts,dist_avg, lc=:gray10, yscale=:log10,
     label=L"\sigma = 0, d_0 = %$d0",
     title = L"g=%$g,w=%$w",
-    legend=:bottomright,
+    legend=:bottomright,lw=2,
     legendfontsize=12)
 
 #check noisy lyap
 #noise
-σ = 1e-9
+σ = 1e-6
 ds_noise = create_ds_noisy(u0, [g, w, N, σ]; diffeq=diffeq) #noise 
 traj_u0s, = trajectory(ds, 100; Ttr=3000) #generate init conds 
 
@@ -155,10 +156,40 @@ for (i, u0) in enumerate(u0s)
 end
 dist_avg_noise ./= n_trajs
 
-plot!(pl2, dist_avg_noise, lc=:red, yscale=:log10,
-    label=L"\sigma = 1e-9, d_0 = 1e-9",
-    legend=:bottomright,
-    legendfontsize=12)
+plot!(pl, ts, dist_avg_noise, lc=:red, yscale=:log10,
+    label=L"\sigma = %$σ, d_0 = %$d0",
+    legend=:bottomright,lw=2,
+    legendfontsize=12,dpi=300)
+#savefig(pl2, "../../paper_figs/lyapunov_tests_distance_noisy_avgfrom500_sigma1e-3.png")
+
+#check slopes 
+ts = [1:nsteps;] ./ 1e2
+interval = 1:300
+
+#noise
+itsct, slope = linreg(ts[interval],log10.(dist_avg_noise[interval]))
+plot!(ts[interval], 10 .^ (itsct .+ slope .* ts[interval]), 
+    lc=:gray30,label=L"\Lambda = %$slope")
+
+#noise
+interval = 300:3000
+itsct, slope = linreg(ts[interval], log10.(dist_avg_noise[interval]))
+plot!(ts[interval], 10 .^ (itsct .+ slope .* ts[interval]),
+    lc=:gray30, label=L"\Lambda = %$slope")
+
+#no noise
+interval = 1:300
+itsct, slope = linreg(ts[interval], log10.(dist_avg[interval]))
+plot!(ts[interval], 10 .^ (itsct .+ slope .* ts[interval]),
+    lc=:orange, label=L"\Lambda = %$slope")
+
+#no noise
+interval = 300:6000
+itsct, slope = linreg(ts[interval], log10.(dist_avg[interval]))
+plot!(ts[interval], 10 .^ (itsct .+ slope .* ts[interval]),
+    lc=:orange, label=L"\Lambda = %$slope")
+
+#slope / (-12) + 1 / 3
 
 
 #--------------read lyaps--------------------
@@ -169,17 +200,17 @@ ws = params[:,1]
 gs = params[:,2]
 N=10
 
-pl1 = plot_phase_diagram(lyap_vals[1],ws,gs,N;HEATMAP_DEFAULTS...,
+pl_lyaps = plot_phase_diagram(lyap_vals[1],ws,gs,N;HEATMAP_DEFAULTS...,
     ylabel=L"\frac{1}{\epsilon(N-1)}",clims=(-0.5,0.5),
     right_margin=6Plots.mm,
     left_margin=6Plots.mm,
     tickfontsize=tick_fontsize_large,
     guidefontsize=guide_fontsize_medium,
     xguidefontsize=guide_fontsize_large)
-pl2 = plot_phase_diagram(lyap_vals[2],ws_saved[:],gs_N[:],N;HEATMAP_DEFAULTS...)
-pl3 = plot_phase_diagram(lyap_vals[3],ws_saved[:],gs_N[:],N;HEATMAP_DEFAULTS...)
+#pl2 = plot_phase_diagram(lyap_vals[2],ws_saved[:],gs_N[:],N;HEATMAP_DEFAULTS...)
+#pl3 = plot_phase_diagram(lyap_vals[3],ws_saved[:],gs_N[:],N;HEATMAP_DEFAULTS...)
 #savefig(pl1,figs_dir*"N10_phasediagram_Ttr_max_$(Ttrs[1])_noise_1e-2"*".png")
-savefig(pl1,figs_dir*"N10_phasediagram_Ttr_max_$(Ttrs[1])"*".png")
+savefig(pl_lyaps,figs_dir*"N10_phasediagram_Ttr_max_$(Ttrs[1])"*".png")
 
 #savefig(pl2,"../../N5_phasediagram_Ttr_max_$(Ttrs[2])"*".png")
 #savefig(pl3,"../../N5_phasediagram_Ttr_max_$(Ttrs[3])"*".png")
