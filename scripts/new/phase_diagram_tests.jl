@@ -130,7 +130,7 @@ dist_avg ./= n_trajs
 pl = plot(ts,dist_avg, lc=:gray10, yscale=:log10,
     label=L"\sigma = 0, d_0 = %$d0",
     title = L"g=%$g,w=%$w",
-    legend=:bottomright,lw=2,
+    legend=:bottomright,lw=2,ticks=10,
     legendfontsize=12)
 
 #check noisy lyap
@@ -166,30 +166,36 @@ plot!(pl, ts, dist_avg_noise, lc=:red, yscale=:log10,
 ts = [1:nsteps;] ./ 1e2
 interval = 1:300
 
+ts_int = ts[interval]
 #noise
-itsct, slope = linreg(ts[interval],log10.(dist_avg_noise[interval]))
-plot!(ts[interval], 10 .^ (itsct .+ slope .* ts[interval]), 
-    lc=:gray30,label=L"\Lambda = %$slope")
+itsct, slope = linreg(ts_int,log10.(dist_avg_noise[interval]))
+λ = slope * log(10)
+plot!(ts[interval], 10 .^ (itsct .+ slope .* ts_int), 
+    lc=:gray30, label=L"\lambda = %$λ")
 
 #noise
 interval = 300:3000
-itsct, slope = linreg(ts[interval], log10.(dist_avg_noise[interval]))
-plot!(ts[interval], 10 .^ (itsct .+ slope .* ts[interval]),
-    lc=:gray30, label=L"\Lambda = %$slope")
+ts_int = ts[interval]
+itsct, slope = linreg(ts_int, log10.(dist_avg_noise[interval]))
+λ = slope * log(10)
+plot!(ts[interval], 10 .^ (itsct .+ slope .* ts_int),
+    lc=:gray30, label=L"\lambda = %$λ")
 
 #no noise
 interval = 1:300
-itsct, slope = linreg(ts[interval], log10.(dist_avg[interval]))
-plot!(ts[interval], 10 .^ (itsct .+ slope .* ts[interval]),
-    lc=:orange, label=L"\Lambda = %$slope")
+ts_int = ts[interval]
+itsct, slope = linreg(ts_int, log10.(dist_avg[interval]))
+λ = slope * log(10)
+plot!(ts_int, 10 .^ (itsct .+ slope .* ts_int),
+    lc=:orange, label=L"\lambda = %$λ")
 
 #no noise
-interval = 300:6000
-itsct, slope = linreg(ts[interval], log10.(dist_avg[interval]))
-plot!(ts[interval], 10 .^ (itsct .+ slope .* ts[interval]),
-    lc=:orange, label=L"\Lambda = %$slope")
-
-#slope / (-12) + 1 / 3
+interval = 2000:6000
+ts_int = ts[interval]
+itsct, slope = linreg(ts_int, log10.(dist_avg[interval]))
+λ = slope * log(10)
+plot!(ts_int, 10 .^ (itsct .+ slope .* ts_int),
+    lc=:orange, label=L"\lambda = %$λ")
 
 
 #--------------read lyaps--------------------
