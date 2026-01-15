@@ -4,7 +4,7 @@ using AttentionDynamics
 using OrdinaryDiffEq
 using DelimitedFiles
 using Plots,LaTeXStrings
-using LinearAlgebra
+using LinearAlgebra,StatsBase
 cd(@__DIR__)
 include("../../plotting/defaults.jl")
 include("../../plotting/plot_functions/lyapunov.jl")
@@ -68,6 +68,7 @@ ds_noise = create_ds_noisy(u0,p_noisy;diffeq=diffeq) #noise
 #---------------------time params----------------------
 T_fp = 100
 Ttr_fp = 100
+Ttr_init = 3000
 Δt_fp = 0.1
 fp_settings = [T_fp,Ttr_fp,Δt_fp]
 Ttr = 2000
@@ -97,71 +98,90 @@ writedlm(savedir * "lyap_values.txt", lyap_vals)
 #no noise vs noise case 
 
 #no noise
-
 n_trajs = 500
-d0 = 1e-12
-nsteps = 15000
+d0 = 1e-4
+nsteps = 65000
 g = 18.0
-w = 0.6
+w = 0.7
 ts = [1:nsteps;] ./ 1e2
 
+#----------------------systems----------------------
 ds = create_ds(u0, [g, w, N]; diffeq=diffeq) #no noise
 #ds = Systems.lorenz()
-traj_u0s, = trajectory(ds, 1000; Ttr=5000) #generate init conds 
+#noise
+σ = 1e-3
+ds_noise = create_ds_noisy(u0, [g, w, N, σ]; diffeq=diffeq) #noise 
 
-u0s = rand(traj_u0s,n_trajs)
+dim = dimension(ds)
+pds = ParallelDynamicalSystem(ds_noise, [u0, u0]) #dummy init
+
+traj_u0s, = trajectory(ds, 100; Ttr=Ttr_init) #generate init conds 
+u0s = rand(traj_u0s, n_trajs)
 #calc d(t) avgs
-dist_avg = zeros(nsteps)
-for (i,u0) in enumerate(u0s)
+d0s = [1e-12,1e-10,1e-8,1e-6,1e-4,1e-2]
+dmins = Float64[]
+dmaxs = Float64[]
+plots = []
+σs = [1e-12, 1e-10, 1e-8, 1e-6]
+d0 = 1e-12
+for σ in σs
+    @show σ
 
-    @show i
-    dim = dimension(ds)
-    pds = ParallelDynamicalSystem(ds, [u0 , u0 .+ rand(dim) .* d0/sqrt(dim) ])
-    d = zeros(nsteps)
-    for i in 1:nsteps
-        step!(pds)
-        states = current_states(pds)
-        dist_avg[i] += norm(states[1] .- states[2])
+    set_parameter!(pds,4,σ)
+    dist_avg = zeros(nsteps)
+    dists_all_pairs = Vector{Float64}[]
+
+    for (i,u0) in enumerate(u0s)
+
+        #@show i
+        reinit!(pds, [u0, u0 .+ rand(dim) .* d0 / sqrt(dim)])
+        dists = zeros(nsteps)
+        d = zeros(nsteps)
+        for i in 1:nsteps
+            step!(pds)
+            states = current_states(pds)
+            d = norm(states[1] .- states[2])
+
+            #save every dist for every pair 
+            dists[i] = d
+
+            #add to avg  
+            dist_avg[i] += d
+        end
+        push!(dists_all_pairs,dists)
     end
+    dist_avg ./= n_trajs
 
+    d_pair_maxs = [maximum(d[end-1000:end]) for d in dists_all_pairs]
+
+    dmax,dmax_idx = findmax(d_pair_maxs)
+    dmin, dmin_idx = findmin(d_pair_maxs)
+
+    @show dmax_idx, dmin_idx
+
+    #test plot 
+    pl = plot(dists_all_pairs[dmax_idx][end-2000:end],
+        lc=:red,yscale=:log10,
+        label=L"d_{max}(t)")
+
+    plot!(dists_all_pairs[dmin_idx][end-2000:end],
+        lc=:blue,
+        label=L"d_{min}(t)")
+
+    push!(plots,pl)
+
+    push!(dmins,dmin)
+    push!(dmaxs, dmax)
 end
-dist_avg ./= n_trajs
 
-pl = plot(ts,dist_avg, lc=:gray10, yscale=:log10,
+plot!(ts,dist_avg, lc=:lightblue, yscale=:log10,
     label=L"\sigma = 0, d_0 = %$d0",
     title = L"g=%$g,w=%$w",
     legend=:bottomright,lw=2,ticks=10,
     legendfontsize=12)
 
-#check noisy lyap
-#noise
-σ = 1e-6
-ds_noise = create_ds_noisy(u0, [g, w, N, σ]; diffeq=diffeq) #noise 
-traj_u0s, = trajectory(ds, 100; Ttr=3000) #generate init conds 
 
-u0s = rand(traj_u0s, n_trajs)
-#calc d(t) avgs
-dist_avg_noise = zeros(nsteps)
-for (i, u0) in enumerate(u0s)
-
-    @show i
-    pds = ParallelDynamicalSystem(ds_noise, [u0, u0 .+ rand(2N) .* d0 / sqrt(2N)])
-    d = zeros(nsteps)
-    for i in 1:nsteps
-        step!(pds)
-        states = current_states(pds)
-        dist_avg_noise[i] += norm(states[1] .- states[2])
-    end
-
-end
-dist_avg_noise ./= n_trajs
-
-plot!(pl, ts, dist_avg_noise, lc=:red, yscale=:log10,
-    label=L"\sigma = %$σ, d_0 = %$d0",
-    legend=:bottomright,lw=2,
-    legendfontsize=12,dpi=300)
-#savefig(pl2, "../../paper_figs/lyapunov_tests_distance_noisy_avgfrom500_sigma1e-3.png")
-
+#=
 #check slopes 
 ts = [1:nsteps;] ./ 1e2
 interval = 1:300
@@ -223,3 +243,4 @@ savefig(pl_lyaps,figs_dir*"N10_phasediagram_Ttr_max_$(Ttrs[1])"*".png")
 
 
 plot(ws,lyap_vals,ylims=(-0.2,Inf),labels = ["Ttrs=$(Ttrs[1])" "Ttrs=$(Ttrs[2])" "Ttrs=$(Ttrs[3])"])
+=#
