@@ -1,6 +1,6 @@
 export att_din!, att_din_original!, skipsum, create_original_ds, att_din_original_noisy!, create_original_mod_ds
 export create_ds, generate_initial_condition, rescaled_params, rescaling_factors
-export create_ds_noisy, create_ds_alle, create_ds_symLV
+export create_ds_noisy, create_ds_alle, create_ds_symLV, create_original_ds_noisy
 
 #sum skipping the i-th element
 function skipsum(u,i;step=2)
@@ -93,6 +93,7 @@ diffeq_default =  (abstol = 1.0e-6, reltol = 1.0e-6)
 function create_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din!,u0,p;diffeq=diffeq) end
 function create_integrator(ds,diffeq) integrator(ds;diffeq) end
 function create_original_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din_original!,u0,p;diffeq=diffeq) end
+function create_original_ds_noisy(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_original_noisy!, u0, p; diffeq=diffeq) end
 function create_original_mod_ds(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_original_mod!, u0, p; diffeq=diffeq) end
 function create_ds_noisy(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_noise!, u0, p; diffeq=diffeq) end
 function create_ds_alle(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_alle!, u0, p; diffeq=diffeq) end
