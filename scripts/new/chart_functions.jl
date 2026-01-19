@@ -206,8 +206,12 @@ function get_lifetimes(charts; exclude_one=true)
         end
 
         #if end of time series ended a streak
-        lifetime != 0 && (push!(lifetimes, lifetime))
-
+        if exclude_one == true
+            lifetime > 1 && (push!(lifetimes, lifetime))
+        else 
+            lifetime != 0 && (push!(lifetimes, lifetime))
+        end
+        
     end
 
     return lifetimes

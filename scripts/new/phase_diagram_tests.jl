@@ -132,7 +132,7 @@ u0s = rand(traj_u0s, n_pairs)
 #chaotic and regular flow with two initial distances 
 #add regular flow with noise 
 
-d0s = [1e-12,1e-5]
+d0s = [1e-16,1e-12,1e-5]
 dmins = Float64[]
 dmaxs = Float64[]
 plots = []
@@ -188,9 +188,9 @@ for ds in [ds,ds_noise]
 end
 
 #test plot
-pl = plot(legend=false, lw=2, yticks = 10.0 .^ [-12:2:2;],
-    yscale=:log10, ylabel=L"d{12}(t)", xlabel=L"t",
-    legendfontsize=12, ylims=(1e-13, 100),
+pl = plot(legend=false, lw=2, yticks = 10.0 .^ [-18:2:2;],
+    yscale=:log10, ylabel=L"d_{12}(t)", xlabel=L"t",
+    legendfontsize=12, ylims=(1e-19, 100),
     title=L"w=%$(ws[1]), \sigma=0")
     #label=L"N = %$N, g=%$g, w=%$w")
 
@@ -216,15 +216,15 @@ for (s,dists_sys) in enumerate(dists_all_sys)
             for (k,u0) in enumerate(u0s)
                 dists = dists_d0[k]
 
-                plot!(pl,ts, dists, lc=colors[k],lw=2,
+                plot!(pl,ts, dists, lc=colors[k],lw=1,
                     label=L"N = %$N, g=%$g, w=%$w")
 
             end 
         end 
     end
 end
-pl2 = plot(plots[1]...,plots[2]...,layout=(2,2),size=(600,400))
-
+pl2 = plot(plots[1]...,plots[2]...,layout=(2,2),size=(600,400),dpi=300)
+savefig(pl2,"../../paper_figs/initital_distance_scaling_test.png")
 #TODO: order parameter (λ) versus noise amplitude
 #including \sigma = 0 and two (one long and a short transient time)
 
@@ -249,13 +249,16 @@ for σ in σs
     push!(d_long,long_term_mean)
 end
 
-plot(σs,d_long,ylabel=L"d(t>>)",
+pl = plot(σs,d_long,ylabel=L"d(t>>)",
     xlabel=L"\sigma",xscale=:log10,
     yscale=:log10, xticks=σs ,
     legendfontsize=12,
     guidefontsize=22,
+    label=L"N=%$(N),w=%$(w),g=%$(g),\sigma=%$(σ)",
     legend=:bottomright,
-    st=:scatter,ms=3,mc=:gray10)
+    st=:scatter,ms=3,mc=:gray10,dpi=300)
+
+savefig(pl, "../../paper_figs/long_term_average_distance_vs_noise_scaling_test.png")
 
 #=
 #check slopes 
