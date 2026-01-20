@@ -31,10 +31,10 @@ gauss(x,μ,σ) = 1/(σ*sqrt(2π)) * exp(-(x - μ)^2/(2σ^2))
 nbins = 50
 figsize = (600,800)
 legendfontsize=10
-savedir = "../../paper_figs/lifetime_distributions/test8_origpar/"
+savedir = "../../paper_figs/lifetime_distributions/test10/"
 mkpath(savedir)
-data_dir_traj_root = "../../data/trajs_precomp_test8_origpar/"
-data_dir_lt_root = "../../data/lifetimes_precomp_test8_origpar/"
+data_dir_traj_root = "../../data/trajs_precomp_test10/"
+data_dir_lt_root = "../../data/lifetimes_precomp_test10/"
 
 
 #----------------------------change r parameter-------------------------
@@ -179,6 +179,48 @@ for (Δt_idx, Δt) in enumerate(Δts_chart)
     #save lifetimes 
     for (i, lts) in enumerate(lifetimes_x)
         writedlm(data_dir * "lifetimes_x_rc$(rs[i])_rp$(rc)_k_$(ks[1])_Δt$(Δt).txt", lts)
+    end
+
+end
+
+
+#----------------------------c----------------------------------
+
+#READ trajectories
+data_dir_traj = data_dir_traj_root * "c/"
+files_all = readdir(data_dir_traj)
+traj_files = filter(f -> occursin(".txt", f), files_all)[2:end]
+trajs = Matrix{Float64}[]
+for i in 1:length(traj_files)
+    println("Reading file " * traj_files[i] * "...")
+    traj = readdlm(data_dir_traj * traj_files[i], Float64)
+    push!(trajs, traj)
+end
+
+#read cs
+cs = vec(readdlm(data_dir_traj * files_all[1]))
+r = parse(Float64, files_all[1][end-6:end-4])
+
+data_dir = data_dir_lt_root * "c/"
+mkpath(data_dir)
+for (k_idx, k) in enumerate(ks)
+    lifetimes_x, lifetimes_y = get_lifetimes(trajs, k, Δts_chart[1])
+
+    #save lifetimes 
+    for (i, lts) in enumerate(lifetimes_x)
+        writedlm(data_dir * "lifetimes_x_rc$(r)_rp$(r)_k_$(k)_Δt$(Δts_chart[1])_c$(cs[i]).txt", lts)
+    end
+
+end
+
+data_dir = data_dir_lt_root * "c/"
+mkpath(data_dir)
+for (Δt_idx, Δt) in enumerate(Δts_chart)
+    lifetimes_x, lifetimes_y = get_lifetimes(trajs, ks[1], Δt)
+
+    #save lifetimes 
+    for (i, lts) in enumerate(lifetimes_x)
+    writedlm(data_dir * "lifetimes_x_rc$(r)_rp$(r)_k_$(ks[1])_Δt$(Δt)_c$(cs[i]).txt", lts)
     end
 
 end

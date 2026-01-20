@@ -1,4 +1,4 @@
-using Revise
+#using Revise
 using DynamicalSystems
 using AttentionDynamics
 using OrdinaryDiffEq
@@ -13,7 +13,7 @@ include("bif_floq_od_method_parameters.jl")
 function lyapunov_from_slope(ds, n_ens, nr_steps;d0=1e-12, Ttr_init=3000, T_init=100)
 
     traj_u0s, = trajectory(ds, T_init; Ttr=Ttr_init) #generate init conds 
-    u0s = rand(traj_u0s, nr_ens)
+    u0s = traj_u0s[rand(1:length(traj_u0s), nr_ens)]
     pds = ParallelDynamicalSystem(ds, [u0s[1], u0s[1]]) #dummy init
 
     #calc d(t) avgs
@@ -52,6 +52,7 @@ N = 10
 
 σ = 1e-6
 p_noisy = [5, 0.5, N, σ]
+u0 = generate_initial_condition(N)
 ds_noise = create_ds_noisy(u0, p_noisy; diffeq=diffeq) #noise 
 
 interval = 1:300
@@ -60,8 +61,9 @@ d0 = 1e-12
 nsteps = 15000
 ts = [1:nsteps;] ./ 1e2
 ts_int = ts[interval]
+lambdas = zeros(length(gs),length(ws))
 
-for (i, g) in enumerate(g)
+for (i, g) in enumerate(gs)
     @show g
     wc1 = (N - 1) / g
 
@@ -74,10 +76,25 @@ for (i, g) in enumerate(g)
         
         itsct, λ = linreg(ts_int, log.(d[interval]))
         @show λ
+        lambdas[i,j] = λ
     end
 end
 
-plot!(pl, ts, dist_avg_noise, lc=:red, yscale=:log10,
-    label=L"\sigma = %$σ, d_0 = %$d0",
-    legend=:bottomright, lw=2,
-    legendfontsize=12, dpi=300)
+savedir = "../../data/phasediag_data_N10_noise_$(σ)_d0_$(d0)_slopelyap/"
+mkpath(savedir)
+writedlm(savedir * "phasediag_params.txt", hcat(ws, gs))
+#writedlm(savedir * "lyap_values.txt", lambdas)
+
+#read in
+lambdas = readdlm(savedir*"lyap_values.txt")
+params = readdlm(savedir*"phasediag_params.txt")
+ws = params[:,1]
+gs = params[:,2]
+
+pl_lyaps = plot_phase_diagram(lambdas,ws,gs,N;HEATMAP_DEFAULTS...,
+    ylabel=L"\frac{1}{\epsilon(N- 1)}",clims=(-6,6),
+    right_margin=6Plots.mm,
+    left_margin=6Plots.mm,
+    tickfontsize=tick_fontsize_large,
+    guidefontsize=guide_fontsize_medium,
+    xguidefontsize=guide_fontsize_large)
