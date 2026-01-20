@@ -356,19 +356,20 @@ savefig(pl_ch, savedir*"lifetime_distributions_alpha_memory_charting time.png")
 #----------------------------change c parameter-------------------------
 #increase c -> increase competition 
 
-data_dir_traj_root = "../../data/trajs_precomp_test10/"
-data_dir_lt_root = "../../data/lifetimes_precomp_test10/"
-data_dir_lt = data_dir_lt_root * "c/"
-data_dir_traj = data_dir_traj_root * "c/"
+data_dir_traj_root = "../../data/trajs_precomp_test_c/"
+data_dir_lt_root = "../../data/lifetimes_precomp_test_c/"
+data_dir_lt = data_dir_lt_root * "c_long/"
+data_dir_traj = data_dir_traj_root * "c_long/"
 
 files_trajs = readdir(data_dir_traj)
 cs = vec(readdlm(data_dir_traj * files_trajs[1]))
-r = parse(Float64, files_trajs[1][end-6:end-4])
+r = parse(Float64, files_trajs[2][10:12])
+Δt = 5*1e-2
 
 plots_topk = []
 for (k_idx, k) in enumerate(ks)
 
-    data_files = filter(f -> occursin("Δt1_", f) && occursin("k_$(k)_", f), readdir(data_dir_lt))
+    data_files = filter(f -> occursin("chart_time_1_", f) && occursin("k_$(k)_", f), readdir(data_dir_lt))
     @show length(data_files)
     lifetimes_x = []
     for f in data_files
@@ -395,7 +396,7 @@ savefig(pl_topk, savedir * "lifetime_distributions_rp_rc_mismatch_change_rc_topk
 plots_charting = []
 for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
 
-    data_files = filter(f -> occursin("Δt$(Δt_chart)_", f) && occursin("k_10_", f), readdir(data_dir_lt))
+    data_files = filter(f -> occursin("chart_time_1_", f) && occursin("k_10_", f), readdir(data_dir_lt))
     @show length(data_files)
     lifetimes_x = []
     for f in data_files
@@ -414,6 +415,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
 
     push!(plots_charting, pl_distrib_x)
 end
-
+savedir = "../../paper_figs/lifetime_distributions/test_c_long/"
+mkpath(savedir)
 pl_ch = plot(plots_charting..., layout=(3, 1), size=figsize, legend=:bottomleft, legendfontsize=legendfontsize, dpi=300)
-savefig(pl_ch, savedir * "lifetime_distributions_rp_rc_mismatch_change_rc_charting time.png")
+savefig(pl_ch, savedir * "lifetime_distributions_change_c_charting time.png")

@@ -57,7 +57,7 @@ wc2 = (N - 1) / N
 
 #------------------------------solver settings----------------------------------
 dtmax = 1e-2 #5*1e-2
-diffeq = (alg=Tsit5(), dt=1e-3, dtmax=dtmax, adaptive=true, maxiters=1e8)
+diffeq = (alg=Tsit5(), dt=1e-2, dtmax=dtmax, adaptive=false, maxiters=1e8)
 #diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-2, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
 

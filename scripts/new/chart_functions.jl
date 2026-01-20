@@ -126,6 +126,30 @@ function get_lifetimes(trajs::Vector{Matrix{Float64}}, k, Δt_chart)
 
 end
 
+function get_lifetimes(traj::Matrix{Float64}, k, Δt_chart)
+
+    T,d = size(traj)
+    N = Int(d / 2)
+
+
+    xs = @view traj[1:Δt_chart:T, 1:2:2*N]
+    ys = @view traj[1:Δt_chart:T, 2:2:2*N]
+    l = size(xs)[1]
+    #@show length(xs),length(ys)
+
+    #build top charts 
+    #charts = get_top_charts(sts,k,op.encoding)
+    charts_x = stack([sortperm(xs[i, :]) for i in 1:l])'[:, end-k+1:end]
+    charts_y = stack([sortperm(ys[i, :]) for i in 1:l])'[:, end-k+1:end]
+
+    #get lifetimes
+    lts_x = get_lifetimes(charts_x)
+    lts_y = get_lifetimes(charts_y)
+
+    return lts_x, lts_y
+
+end
+
 function plot_distribs(lifetimes, Δt_chart; ps, colors, mode=:none, nbins=50, scale=:log,
     xlabel=L"\log(\tau^{(x)}_k \cdot \Delta t)", title="lifetime distribution", label_par="")
 

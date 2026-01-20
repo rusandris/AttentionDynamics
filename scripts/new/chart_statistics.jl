@@ -31,10 +31,11 @@ gauss(x,μ,σ) = 1/(σ*sqrt(2π)) * exp(-(x - μ)^2/(2σ^2))
 nbins = 50
 figsize = (600,800)
 legendfontsize=10
+
 savedir = "../../paper_figs/lifetime_distributions/test10/"
 mkpath(savedir)
-data_dir_traj_root = "../../data/trajs_precomp_test10/"
-data_dir_lt_root = "../../data/lifetimes_precomp_test10/"
+data_dir_traj_root = "../../data/trajs_precomp_test_c/"
+data_dir_lt_root = "../../data/lifetimes_precomp_test_c/"
 
 
 #----------------------------change r parameter-------------------------
@@ -185,42 +186,53 @@ end
 
 
 #----------------------------c----------------------------------
-
+Δt = 5*1e-2
 #READ trajectories
-data_dir_traj = data_dir_traj_root * "c/"
+data_dir_traj = data_dir_traj_root * "c_long/"
 files_all = readdir(data_dir_traj)
 traj_files = filter(f -> occursin(".txt", f), files_all)[2:end]
+
+#=
+#read trajs together
 trajs = Matrix{Float64}[]
 for i in 1:length(traj_files)
     println("Reading file " * traj_files[i] * "...")
     traj = readdlm(data_dir_traj * traj_files[i], Float64)
     push!(trajs, traj)
 end
+=#
 
 #read cs
 cs = vec(readdlm(data_dir_traj * files_all[1]))
-r = parse(Float64, files_all[1][end-6:end-4])
+r = parse(Float64, files_all[2][10:12])
 
-data_dir = data_dir_lt_root * "c/"
+data_dir = data_dir_lt_root * "c_long/"
 mkpath(data_dir)
 for (k_idx, k) in enumerate(ks)
-    lifetimes_x, lifetimes_y = get_lifetimes(trajs, k, Δts_chart[1])
+    @show k
+    #read each traj at a time 
+    for i in 1:length(traj_files)
+        @show i
+        traj = readdlm(data_dir_traj * traj_files[i], Float64)
+        lifetimes_x, _ = get_lifetimes(traj, k, Δts_chart[1])
+        writedlm(data_dir * "lifetimes_x_rc$(r)_rp$(r)_k_$(k)_Δt_$(Δt)_chart_time_$(Δts_chart[1])_c$(cs[i]).txt", lifetimes_x)
 
-    #save lifetimes 
-    for (i, lts) in enumerate(lifetimes_x)
-        writedlm(data_dir * "lifetimes_x_rc$(r)_rp$(r)_k_$(k)_Δt$(Δts_chart[1])_c$(cs[i]).txt", lts)
     end
-
+    
 end
-
-data_dir = data_dir_lt_root * "c/"
+ks = [10,50,100]
+Δts_chart = [1,100,500,1000]
+data_dir = data_dir_lt_root * "c_long/"
 mkpath(data_dir)
-for (Δt_idx, Δt) in enumerate(Δts_chart)
-    lifetimes_x, lifetimes_y = get_lifetimes(trajs, ks[1], Δt)
+for (Δt_idx, time_chart) in enumerate(Δts_chart)
+    @show time_chart
+    #read each traj at a time 
+    for i in 1:length(traj_files)
+        @show i
+        traj = readdlm(data_dir_traj * traj_files[i], Float64)
+        lifetimes_x, _ = get_lifetimes(traj, ks[1], time_chart)
+        writedlm(data_dir * "lifetimes_x_rc$(r)_rp$(r)_k_$(ks[1])_Δt_$(Δt)_chart_time_$(time_chart)_c$(cs[i]).txt", lifetimes_x)
 
-    #save lifetimes 
-    for (i, lts) in enumerate(lifetimes_x)
-    writedlm(data_dir * "lifetimes_x_rc$(r)_rp$(r)_k_$(ks[1])_Δt$(Δt)_c$(cs[i]).txt", lts)
     end
 
 end

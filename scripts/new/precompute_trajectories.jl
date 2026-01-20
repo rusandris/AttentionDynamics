@@ -69,7 +69,7 @@ u02[1:2:end] .= x0
 ds = create_original_ds(u02, deepcopy(p_orig); diffeq=diffeq)
 
 #length of precomputed trajs 
-T = 1000 #10000 #100 #5000
+T = 10000 #10000 #100 #5000
 Ttr = 500 #500
 Δt = 5*1e-2
 
@@ -253,9 +253,10 @@ for (i, traj) in enumerate(trajs)
 end
 pl_trajs = plot(plots_trajs..., layout=(length(cs), 2), size=(600, 800), dpi=300)
 
-savedir = "../../data/trajs_precomp_lifetimes_test_c/c/"
+savedir = "../../data/trajs_precomp_test_c/c_long/"
 mkpath(savedir)
 savefig(pl_trajs, savedir * "trajs_x_y_change_c.png")
+writedlm(savedir * "cs.txt", cs)
 
 
 #save trajectories into file 
