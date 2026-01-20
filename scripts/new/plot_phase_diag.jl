@@ -61,6 +61,15 @@ ylims!(pl_crit_curve,(0,10))
 xlims!(pl_crit_curve, (0.1, 0.4))
 savefig(pl_crit_curve,"../../paper_figs/")
 
-#TODO: 
-#map different parts of the phase diagram
-#plot lyapunov exp, avg \tau and avg. inequality
+#change cs
+r_test = 16.0
+cs = [1.5:0.3:2.5;]
+
+w_g_c = rescaled_params.(r_test, r_test, K, cs, α, N)
+w_c = [w_g_c[i][1] for i in 1:length(w_g_c)]
+g_c = [w_g_c[i][2] for i in 1:length(w_g_c)]
+
+plot!(pl_crit_curve, w_c, g_c ./ (N - 1),
+    mc=:blue, lc=:blue ,lw=1, arrow=:arrow,
+    label=label=L"c \in [%$(cs[1]),%$(cs[end])]",ms=4,
+    xlims=(0.0,0.5),ylims=(0.,25),markershape=:circle)
