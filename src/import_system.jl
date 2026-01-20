@@ -1,6 +1,6 @@
-export att_din!, att_din_original!, skipsum, create_original_ds, create_original_mod_ds
+export att_din!, att_din_original!, skipsum, create_original_ds, att_din_original_noisy!, create_original_mod_ds
 export create_ds, generate_initial_condition, rescaled_params, rescaling_factors
-export create_ds_noisy, create_ds_alle, create_ds_symLV
+export create_ds_noisy, create_ds_alle, create_ds_symLV, create_original_ds_noisy
 
 #sum skipping the i-th element
 function skipsum(u,i;step=2)
@@ -38,6 +38,16 @@ function att_din_original!(du,u,p,t)
     for i in 1:2:(2*N)
         du[i] = rp*u[i]*(1 - rc/K*u[i+1] - c*skipsum(u,i))
         du[i+1] = u[i] - α*u[i+1]
+    end
+end
+
+#system definition (in-place) with original parameters
+function att_din_original_noisy!(du, u, p, t)
+    rp, rc, K, c, α, σ = p
+    N = Int(length(u) / 2)
+    for i in 1:2:(2*N)
+        du[i] = rp * u[i] * (1 - rc / K * u[i+1] - c * skipsum(u, i)) + σ * rand()
+        du[i+1] = u[i] - α * u[i+1]
     end
 end
 
@@ -83,6 +93,7 @@ diffeq_default =  (abstol = 1.0e-6, reltol = 1.0e-6)
 function create_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din!,u0,p;diffeq=diffeq) end
 function create_integrator(ds,diffeq) integrator(ds;diffeq) end
 function create_original_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din_original!,u0,p;diffeq=diffeq) end
+function create_original_ds_noisy(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_original_noisy!, u0, p; diffeq=diffeq) end
 function create_original_mod_ds(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_original_mod!, u0, p; diffeq=diffeq) end
 function create_ds_noisy(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_noise!, u0, p; diffeq=diffeq) end
 function create_ds_alle(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_alle!, u0, p; diffeq=diffeq) end
