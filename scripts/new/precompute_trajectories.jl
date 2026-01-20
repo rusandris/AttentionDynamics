@@ -37,8 +37,8 @@ N = 300
 
 #original params
 #rp=3.0;rc = 3.0;K = 1.0;α = 5*1e-3;c=1.8
-r_const = 10.0
-rc = r_const
+r_const = 9.0
+rc = r_const 
 rp = r_const #9.0;
 K = 1.0;
 c = 2.4;
@@ -69,9 +69,9 @@ u02[1:2:end] .= x0
 ds = create_original_ds(u02, deepcopy(p_orig); diffeq=diffeq)
 
 #length of precomputed trajs 
-T = 10000 #10000 #100 #5000
+T = 1000 #10000 #100 #5000
 Ttr = 500 #500
-Δt = 1e-1
+Δt = 5*1e-2
 
 #----------------------------change r parameter-------------------------
 # try rp = rc scenario
@@ -223,12 +223,12 @@ for i in 1:length(trajs)
     traj = trajs[i]
     writedlm(savedir * "trajs_rp_$(rp)_rc$(rc)_K$(K)_c$(c)_α$(αs4[i])_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).txt", Matrix(traj))
 end
-
+=#
 #----------------------------change c parameter-------------------------
 #increase c -> increase competition 
 
 
-cs = [1.5:0.3:2.5;]
+cs = [1.5:1.0:4.5;]
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
@@ -251,9 +251,9 @@ for (i, traj) in enumerate(trajs)
 
     push!(plots_trajs, pl_x, pl_y)
 end
-pl_trajs = plot(plots_trajs..., layout=(length(rs), 2), size=(600, 800), dpi=300)
+pl_trajs = plot(plots_trajs..., layout=(length(cs), 2), size=(600, 800), dpi=300)
 
-savedir = "../../data/trajs_precomp_lifetimes_test5/c/"
+savedir = "../../data/trajs_precomp_lifetimes_test_c/c/"
 mkpath(savedir)
 savefig(pl_trajs, savedir * "trajs_x_y_change_c.png")
 
@@ -263,4 +263,3 @@ for i in 1:length(trajs)
     traj = trajs[i]
     writedlm(savedir * "trajs_rp_$(rp)_rc$(rc)_K$(K)_c$(cs[i])_α$(α)_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).txt", Matrix(traj))
 end
-=#

@@ -41,11 +41,11 @@ N = 300
 
 #original params
 #rp=3.0;rc = 3.0;K = 1.0;α = 5*1e-3;c=1.8
-r_const = 10.0
+r_const = 9.0
 rc = r_const
 rp = r_const #9.0;
 K = 1.0;
-c = 2.4;
+c = 4.4;
 α = 0.005;
 w, g = rescaled_params(rp, rc, K, c, α, N)
 

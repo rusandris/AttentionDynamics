@@ -118,7 +118,7 @@ u0 = rand(2N) * 0.1
 ds = create_ds(u0, [g, w, N]; diffeq=diffeq) #no noise
 #ds = Systems.lorenz()
 #noise
-σ = 1e-6
+σ = 1e-3
 ds_noise = create_ds_noisy(u0, [g, w, N, σ]; diffeq=diffeq) #noise 
 
 dim = dimension(ds)
@@ -136,7 +136,7 @@ d0s = [1e-16,1e-12,1e-5]
 dmins = Float64[]
 dmaxs = Float64[]
 plots = []
-σs = [1e-12, 1e-6]
+#σs = [1e-12, 1e-6]
 ws = [0.6,0.7]
 dists_all_sys = []
 
@@ -203,6 +203,7 @@ plot!(plots_noise[2], title=L"w=%$(ws[2]), \sigma=%$σ", ylabel="", yformatter=:
 plots = [plots_orig,plots_noise]
 
 colors = [:gray10, :gray30, :gray50]
+colors = [:orange,:green,:purple]
 
 for (s,dists_sys) in enumerate(dists_all_sys)
     pls = plots[s]
