@@ -197,6 +197,76 @@ function plot_distribs(lifetimes, Δt_chart; ps, colors, mode=:none, nbins=50, s
     return pl_distrib
 end
 
+function get_distrib(τs, Δt_chart; binning=:auto, color, mode=:none, nbins=50, scale=:log)
+    min_lts, max_lts = extrema(τs .* Δt_chart)
+
+    if binning ==:exp 
+        #apply exponential binning
+        b = max_lts^(1 / nbins) #base 
+        bin_edges = min_lts .* b .^ [0:1:nbins;]
+        h = fit(Histogram, τs .* Δt_chart, bin_edges)
+    elseif binning ==:lin
+        bin_edges = range(min_lts * Δt_chart, max_lts * Δt_chart; length=nbins)
+        h = fit(Histogram, τs .* Δt_chart, bin_edges)
+    else 
+        h = fit(Histogram, τs .* Δt_chart;nbins=nbins)
+    end
+    #bin_width = Float64(bin_edges.step)
+    
+    h = normalize(h, mode=mode)
+    #bin_centres = bin_edges[1:end-1] .+ 0.5 * bin_width
+    #@show bin_edges
+
+    #automatic cutoff: throw out empty bins 
+    #coff = findfirst(x->iszero(x),h.weights)
+    probs = h.weights
+
+    if binning == :auto 
+        X = h.edges[1][1:end-1]
+        Y = probs
+    else
+        if scale == :log
+            X = log10.(bin_edges[1:end-2])
+            Y = log10.(probs[1:end-1])
+        elseif scale == :lin
+            X = bin_edges[1:end-2]
+            Y = probs[1:end-1]
+        end
+
+    end
+
+    return X,Y
+
+end 
+
+function plot_distrib(τs, Δt_chart; binning=:auto, color, mode=:none, ms = 2, nbins=50, scale=:log,
+    xlabel=L"\log(\tau^{(x)}_k \cdot \Delta t)", title="lifetime distribution", label_par="")
+
+    X,Y = get_distrib(τs, Δt_chart; binning=binning, color=color, mode=mode, nbins=nbins, scale=scale)
+
+    #plot together
+    plot(X, Y, markershape=:circle, ms=ms, 
+        ylabel="log(count)",xlabel=xlabel,
+        mc=color, lc=color, title=title,
+        label=label_par, dpi=300)
+
+end
+
+
+function plot_distrib!(pl,τs, Δt_chart; binning=:auto, color, ms=2 ,mode=:none, nbins=50, scale=:log,
+    xlabel=L"\log(\tau^{(x)}_k \cdot \Delta t)", title="lifetime distribution", label_par="")
+
+    X, Y = get_distrib(τs, Δt_chart; binning=binning, color=color, mode=mode, nbins=nbins, scale=scale)
+
+    #plot together
+    plot!(pl, X, Y, markershape=:circle, ms=ms,
+        ylabel="log(count)",xlabel=xlabel,
+        mc=color, lc=color, title=title,
+        label=label_par, dpi=300)
+
+end
+
+
 #calculate lifetimes by counting consecutive appearances
 function get_lifetimes(charts; exclude_one=true)
     tlen, k = size(charts)

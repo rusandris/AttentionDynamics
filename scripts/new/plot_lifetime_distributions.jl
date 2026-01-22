@@ -364,8 +364,11 @@ data_dir_traj = data_dir_traj_root * "c_long/"
 files_trajs = readdir(data_dir_traj)
 cs = vec(readdlm(data_dir_traj * files_trajs[1]))
 r = parse(Float64, files_trajs[2][10:12])
-Δt = 5*1e-2
+#Δt = 5*1e-2
+Δt = parse(Float64, files_trajs[2][end-6:end-4])
 
+
+#=
 plots_topk = []
 for (k_idx, k) in enumerate(ks)
 
@@ -391,6 +394,61 @@ end
 
 pl_topk = plot(plots_topk..., layout=(3, 1), size=figsize, legendfontsize=legendfontsize, dpi=300)
 savefig(pl_topk, savedir * "lifetime_distributions_rp_rc_mismatch_change_rc_topk_lowr.png")
+=#
+
+#test one-by-one
+files_instant = readdir(data_dir_lt * "/instant/")
+lifetimes_c1 = vec(readdlm(data_dir_lt * "/instant/"*files_instant[1]))
+lifetimes_c2 = vec(readdlm(data_dir_lt * "/instant/" * files_instant[2]))
+
+pl_distrib_c = plot_distrib(lifetimes_c1, 10;
+    color=:gray10, nbins=40, mode=:none,
+    scale=:log, binning=:exp,
+    title=L"k=20" * L",Δt=%$(10*Δt)",
+    label_par=L"c = %$(cs[1])")
+
+plot_distrib!(pl_distrib_c, lifetimes_c2, 10;
+    color=:purple, nbins=40, mode=:none,
+    scale=:log, binning=:exp,
+    title=L"k=20" * L",Δt=%$(10*Δt)",
+    label_par=L"c = %$(cs[2])",
+    xlabel=L"\log(\tau)")
+
+files_integ = readdir(data_dir_lt * "/integrated/")
+lifetimes_c_integ1 = vec(readdlm(data_dir_lt * "/integrated/" * files_integ[1]))
+lifetimes_c_integ2 = vec(readdlm(data_dir_lt * "/integrated/" * files_integ[2]))
+
+pl = plot() 
+chart_times = [1,5,10]
+colors = [:gray10, :gray40, :gray70]
+
+for (i,f) in enumerate(files_integ[[5,9,1]])
+    chart_time = chart_times[i]
+    lifetimes_c_integ = vec(readdlm(data_dir_lt * "/integrated/" * f))
+    color = colors[i]
+    pl_distrib_c_integ = plot_distrib!(pl,lifetimes_c_integ, chart_time;
+        color=color, nbins=30, mode=:none,
+        scale=:log,binning=:exp,
+        title=L"k=20",
+        label_par=L"c = %$(cs[1]), Δt=%$(chart_time*Δt)")
+end
+
+colors = [:purple, :red, :orange]
+
+for (i,f) in enumerate(files_integ[[6,10,2]])
+    chart_time = chart_times[i]
+    lifetimes_c_integ = vec(readdlm(data_dir_lt * "/integrated/" * f))
+    color = colors[i]
+    plot_distrib!(pl, lifetimes_c_integ, chart_time;
+        color=color, nbins=30, mode=:none,
+        scale=:log, binning=:exp,
+        title=L"k=20" ,
+        label_par=L"c = %$(cs[2]), Δt=%$(chart_time*Δt)",
+        xlabel=L"log(\tau)")
+end
+savedir = "../../paper_figs/lifetime_distributions/test_c_long/"
+mkpath(savedir)
+savefig(pl, savedir * "lifetime_distributions_change_c_charting time_integrated_log_log_exp_bin.png")
 
 
 plots_charting = []
