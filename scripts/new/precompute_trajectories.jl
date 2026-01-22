@@ -267,11 +267,11 @@ end
 
 #------------------try varied delay system---------------------
 αs = rand(1e-6:1e-7:1e-2, 300)
-ds_vd = create_original_varied_delay(u02, (rp, rc, K, c, αs); diffeq=diffeq)
+ds_vd = create_original_varied_delay(u02, (rp, rc, K, 4.4, αs); diffeq=diffeq)
 traj, times = trajectory(ds_vd, T; Ttr=Ttr, Δt=Δt)
-#traj_test, times_test = trajectory(ds_vd, 100; Ttr=100, Δt=Δt)
+traj_test, times_test = trajectory(ds_vd, 100; Ttr=100, Δt=0.1)
 
-#plot(times_test[1:500], Matrix(traj_test[1:500, 1:2:2N]),legend=false)
+plot(times_test[1:500], Matrix(traj_test[1:500, 1:2:2N]),legend=false)
 savedir = "../../data/trajs_precomp_test_varied_delay/1e-6_1e-2/"
 mkpath(savedir)
 writedlm(savedir * "trajs_rp_$(rp)_rc$(rc)_K$(K)_c$(c)_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).txt", Matrix(traj))
@@ -292,8 +292,23 @@ rps = rand(6.0:1e-2:30.0, 300)
 
 ds_vrd = create_original_varied_rate_delay(u02, (rps, rc, K, c, αs); diffeq=diffeq)
 traj, times = trajectory(ds_vrd, T ; Ttr=Ttr, Δt=Δt)
-traj_test, times_test = trajectory(ds_vrd, 300; Ttr=500, Δt=Δt)
-plot(times_test[1:3000], traj_test[1:3000, 23], legend=false)
+traj_test, times_test = trajectory(ds_vrd, 300; Ttr=500, Δt=0.1)
+plot(times_test[1:800], Matrix(traj_test[1:800, 1:2:2N]), legend=false)
+savedir = "../../data/trajs_precomp_test_varied_rate_delay/"
+mkpath(savedir)
+writedlm(savedir * "trajs_rc$(rc)_K$(K)_c$(c)_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).txt", Matrix(traj))
+
+#------------------try varied rate and delay system---------------------
+#rps = rand(6.0:1e-2:30.0, 300)
+rps = fill(9.0,300)
+#αs = rand(1e-6:1e-7:1e-1, 300)
+αs = fill(α, 300)
+cs = [fill(1.1,150)...,fill(4.4,150)...]
+
+ds_vp = create_original_varied_params(u02, (rps, rc, K, cs, αs); diffeq=diffeq)
+traj, times = trajectory(ds_vp, T; Ttr=Ttr, Δt=Δt)
+traj_test, times_test = trajectory(ds_vp, 230; Ttr=300, Δt=0.1)
+plot(times_test, Matrix(traj_test[:, 1:2:2N]), legend=false)
 savedir = "../../data/trajs_precomp_test_varied_rate_delay/"
 mkpath(savedir)
 writedlm(savedir * "trajs_rc$(rc)_K$(K)_c$(c)_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).txt", Matrix(traj))
