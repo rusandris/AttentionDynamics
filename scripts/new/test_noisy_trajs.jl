@@ -116,3 +116,4 @@ for i in 1:length(trajs)
     traj = trajs[i]
     writedlm(savedir * "trajs_rp=rc$(rs[i])_K$(K)_c$(c)_α$(α)_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).txt", Matrix(traj))
 end
+

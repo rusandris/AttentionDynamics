@@ -24,6 +24,7 @@ cd(@__DIR__)
 #show inequality on fig
 #separate lifetimes from plotting and save 
 
+
 include("chart_functions.jl")
 
 gauss(x,μ,σ) = 1/(σ*sqrt(2π)) * exp(-(x - μ)^2/(2σ^2))
@@ -188,9 +189,37 @@ end
 #----------------------------c----------------------------------
 Δt = 5*1e-2
 #READ trajectories
+data_dir_traj_root = "../../data/trajs_precomp_test_c/"
 data_dir_traj = data_dir_traj_root * "c_long/"
 files_all = readdir(data_dir_traj)
 traj_files = filter(f -> occursin(".txt", f), files_all)[2:end]
+
+#=
+#test one-by-one
+traj = readdlm(data_dir_traj * traj_files[1], Float64)
+#instant
+lifetimes_c, _ = get_lifetimes(traj, 20, 5)
+
+pl_distrib_c = plot_distrib(lifetimes_c, 5;
+    color=:gray10, nbins=40, mode=:none,
+    scale=:log,
+    title=L"k=10" * L",Δt=%$(1*Δt)",
+    label_par=L"r_c = $(r), r_p = $(r)")
+
+
+#integrated
+ts = [0.0:Δt:10000;]
+L_ints, time_segments = integrate_activity(traj, ts, 5)
+lts_integ = get_lifetimes_integ(L_ints, 20)
+
+pl_distrib_c_integ = plot_distrib(lts_integ, 5;
+    color=:gray10, nbins=50, mode=:none,
+    scale=:log,
+    title=L"k=10" * L",Δt=%$(1*Δt)",
+    label_par=L"r_c = $(r), r_p = $(r)")
+
+=#
+
 
 #=
 #read trajs together
@@ -205,6 +234,8 @@ end
 #read cs
 cs = vec(readdlm(data_dir_traj * files_all[1]))
 r = parse(Float64, files_all[2][10:12])
+Δt = parse(Float64, files_all[2][end-6:end-4])
+
 
 data_dir = data_dir_lt_root * "c_long/"
 mkpath(data_dir)
@@ -220,19 +251,106 @@ for (k_idx, k) in enumerate(ks)
     end
     
 end
+
 ks = [10,50,100]
-Δts_chart = [1,100,500,1000]
+Δts_chart = [1,5,10]
+ts = [0.0:Δt:10000;]
+
+k=20
 data_dir = data_dir_lt_root * "c_long/"
-mkpath(data_dir)
+mkpath(data_dir*"/instant/")
+mkpath(data_dir*"/integrated/")
 for (Δt_idx, time_chart) in enumerate(Δts_chart)
     @show time_chart
     #read each traj at a time 
     for i in 1:length(traj_files)
         @show i
         traj = readdlm(data_dir_traj * traj_files[i], Float64)
-        lifetimes_x, _ = get_lifetimes(traj, ks[1], time_chart)
-        writedlm(data_dir * "lifetimes_x_rc$(r)_rp$(r)_k_$(ks[1])_Δt_$(Δt)_chart_time_$(time_chart)_c$(cs[i]).txt", lifetimes_x)
+
+        #instant
+        lifetimes_x, _ = get_lifetimes(traj, k, time_chart)
+        writedlm(data_dir * "/instant/lifetimes_x_rc$(r)_rp$(r)_k_$(k)_Δt_$(Δt)_chart_time_$(time_chart)_c$(cs[i]).txt", lifetimes_x)
+
+        L_ints, time_segments = integrate_activity(traj, ts, time_chart)
+        lts_integ = get_lifetimes_integ(L_ints, k)
+        writedlm(data_dir * "/integrated/lifetimes_x_rc$(r)_rp$(r)_k_$(k)_Δt_$(Δt)_chart_time_$(time_chart)_c$(cs[i]).txt", lts_integ)
 
     end
 
 end
+
+#------------------try varied delay system---------------------
+data_dir_traj_root = "../../data/trajs_precomp_test_varied_delay/"
+data_dir_traj = data_dir_traj_root * "1e-6_1e-2/"
+files_all = readdir(data_dir_traj)
+traj_files = filter(f -> occursin(".txt", f), files_all)
+r = parse(Float64, files_all[1][10:12])
+
+
+traj = readdlm(data_dir_traj * traj_files[1], Float64)
+lifetimes_x1, _ = get_lifetimes(traj, 10, 1)
+
+
+pl_distrib_x1 = plot_distrib(lifetimes_x1, 1;
+    color=:gray10, nbins=50, mode=:none,
+    scale=:log,
+    title=L"k=10" * L",Δt=%$(1*Δt)",
+    label_par=L"r_c = $(r), r_p = $(r)")
+
+#try integrated variables
+ts = [0.0:Δt:10000;]
+L_ints, time_segments = integrate_activity(traj, ts, 10)
+lts_integ_x1 = get_lifetimes_integ(L_ints, 20)
+
+pl_distrib_x1_integ = plot_distrib(lts_integ_x1, 5;
+    color=:gray10, nbins=40, mode=:none,
+    scale=:log,
+    title=L"k=10" * L",Δt=%$(1*Δt)",
+    label_par=L"r_c = $(r), r_p = $(r)")
+
+
+#------------------try varied rate system---------------------
+data_dir_traj_root = "../../data/trajs_precomp_test_varied_rate/"
+data_dir_traj = data_dir_traj_root * "6_20/"
+files_all = readdir(data_dir_traj)
+traj_files = filter(f -> occursin(".txt", f), files_all)
+r = parse(Float64, files_all[1][10:12])
+
+
+traj = readdlm(data_dir_traj * traj_files[2], Float64)
+lifetimes_x2, _ = get_lifetimes(traj, 10, 5)
+
+
+pl_distrib_x2 = plot_distrib(lifetimes_x2, 1;
+    color=:gray10, nbins=30, mode=:none,
+    scale=:log,
+    title=L"k=10" * L",Δt=%$(1*Δt)",
+    label_par=L"r_c = $(r), r_p = $(r)")
+
+#------------------try varied rate, delay system---------------------
+data_dir_traj_root = "../../data/trajs_precomp_test_varied_rate_delay/"
+data_dir_traj = data_dir_traj_root
+files_all = readdir(data_dir_traj)
+traj_files = filter(f -> occursin(".txt", f), files_all)
+r = parse(Float64, files_all[1][9:11])
+Δt = parse(Float64, files_all[1][end-6:end-4])
+
+traj = readdlm(data_dir_traj * traj_files[1], Float64)
+lifetimes_x3, _ = get_lifetimes(traj, 20, 1)
+
+pl_distrib_x3 = plot_distrib(lifetimes_x3, 1;
+    color=:gray10, nbins=30, mode=:none,
+    scale=:log,
+    title=L"k=10" * L",Δt=%$(1*Δt)",
+    label_par=L"r_c = $(r), r_p = $(r)")
+
+#try integrated variables
+ts = [0.0:Δt:10000;]
+L_ints, time_segments = integrate_activity(traj, ts, 5)
+lts_integ = get_lifetimes_integ(L_ints, 20)
+
+pl_distrib_x3_integ = plot_distrib(lts_integ, 5;
+    color=:gray10, nbins=50, mode=:none,
+    scale=:log,
+    title=L"k=10" * L",Δt=%$(1*Δt)",
+    label_par=L"r_c = $(r), r_p = $(r)")
