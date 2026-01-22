@@ -222,7 +222,7 @@ function lyapunov_diagram(ds, gvalues, wvalues; pidx=[1, 2], T, Ttr, Δt, fp_set
 		#create pds (parallel system) 
 		#for a lower level call to lyapunov
 		s = current_state(ds)
-		states = [s, s]
+		states = [s, s .+ rand(2N) .* d0 / sqrt(2N)]
 		pds = ParallelDynamicalSystem(ds,states)
 
 		lyapunov_diagram!(Λ,pds,gvalues,wvalues;pidx=pidx, T=T, Ttr=Ttr, Δt=Δt,fp_settings=fp_settings, d0=d0, ut=ut, lt=lt)
@@ -261,7 +261,7 @@ function lyapunov_diagram_parallel!(Λ,ds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9,
 
 	#init pds states to initial state of ds
 	s = initial_state(ds)
-	states = [s, s]
+    states = [s, s .+ rand(2N) .* d0 / sqrt(2N)]
 	gs_ti = zeros(Int,length(gvalues))
 
 	#start threads wrt g values (columns in the lyap. diag.)
@@ -308,7 +308,7 @@ end
 
 function calc_lyap_row!(Λ,pds,gvalues,witer,gindex;pidx=2, T, Ttr, Δt,fp_settings=[100,100,0.1], d0=1e-9, ut=1e-6, lt=1e-12)
 	wl = length(witer)
-	N = Int(dimension(ds) / 2)
+	N = Int(dimension(pds) / 2)
 	wc2 = (N-1)/N
 	wc1 = (N-1)/gvalues[gindex]
 	T_fp,Ttr_fp,Δt_fp = fp_settings
@@ -321,6 +321,7 @@ function calc_lyap_row!(Λ,pds,gvalues,witer,gindex;pidx=2, T, Ttr, Δt,fp_setti
 		(w <= 1.0 && w > wc2) && continue
 
 		set_parameter!(pds,pidx,w)
+        @show current_parameters(pds)
 		reinit!(pds)
 		@show w
 		#@show current_state(pds)[1]
