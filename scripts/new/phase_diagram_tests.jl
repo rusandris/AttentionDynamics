@@ -33,6 +33,22 @@ function trajpair_distance(ds, n_ens, nr_steps; d0=1e-12, Ttr_init=3000, T_init=
     return dist_avg
 end
 
+function trajpair_distance(pds, nr_steps, u0; d0=1e-12)
+
+    dim = dimension(pds)
+    reinit!(pds, [u0, u0 .+ rand(dim) .* d0 / sqrt(dim)])
+    
+    #calc d(t) avgs
+    d = zeros(nsteps)
+    for i in 1:nsteps
+        step!(pds)
+        states = current_states(pds)
+        d[i] += norm(states[1] .- states[2])
+    end
+    return d
+end
+
+
 #N=7 chaotic regime (g,w,N =  [10.051282051282051, 0.65, 7.0]) dissapears for Ttr = 10^7
 #N=6 it dissapears for shorter transients
 
@@ -74,7 +90,7 @@ wc2 = (N-1)/N
 #---------------------time params----------------------
 T_fp = 100
 Ttr_fp = 100
-Ttr_init = 3000
+Ttr_init = 10000
 Δt_fp = 0.1
 fp_settings = [T_fp,Ttr_fp,Δt_fp]
 Ttr = 2000
@@ -105,14 +121,14 @@ writedlm(savedir * "lyap_values.txt", lyap_vals)
 
 #no noise
 n_pairs = 3
-nsteps = 1500
+nsteps = 15000
 N = 10
 g = 18.0
-w = 0.7
+w = 0.6
 ts = [1:nsteps+1;] ./ 1e2
 
-#diffeq = (alg=Tsit5(), dt=1e-2, adaptive=false, maxiters=1e15)
-diffeq = (alg=RK4(), dt=1e-2, adaptive=false, maxiters=1e15)
+diffeq = (alg=Tsit5(), dt=1e-2, adaptive=false, maxiters=1e15)
+#diffeq = (alg=RK4(), dt=1e-2, adaptive=false, maxiters=1e15)
 u0 = rand(2N) * 0.1
 #----------------------systems----------------------
 ds = create_ds(u0, [g, w, N]; diffeq=diffeq) #no noise
@@ -124,13 +140,9 @@ ds_noise = create_ds_noisy(u0, [g, w, N, σ]; diffeq=diffeq) #noise
 dim = dimension(ds)
 
 
-#initial conditions
-traj_u0s, = trajectory(ds, 100; Ttr=Ttr_init) #generate init conds 
-u0s = rand(traj_u0s, n_pairs)
-
 #TODO: make a summary plot for initial distance scaling
 #chaotic and regular flow with two initial distances 
-#add regular flow with noise 
+#different transients  1000, 10000
 
 d0s = [1e-16,1e-12,1e-5]
 dmins = Float64[]
@@ -140,13 +152,16 @@ plots = []
 ws = [0.6,0.7]
 dists_all_sys = []
 
-for ds in [ds,ds_noise]
+for sys in [ds,ds_noise]
     dists_params = []
     for w in ws 
         dists_d0s = []
         @show w
-        set_parameter!(ds,2,w)
-        pds = ParallelDynamicalSystem(ds, [u0, u0]) #dummy init
+        set_parameter!(sys,2,w)
+        #initial conditions
+        traj_u0s, = trajectory(ds, 1000; Ttr=Ttr_init) #generate init conds 
+        u0s = rand(traj_u0s, n_pairs)
+        pds = ParallelDynamicalSystem(sys, [u0, u0]) #dummy init
         for d0 in d0s
             dists_all_pairs = Vector{Float64}[]
             @show d0
@@ -191,15 +206,15 @@ end
 pl = plot(legend=false, lw=2, yticks = 10.0 .^ [-18:2:2;],
     yscale=:log10, ylabel=L"d_{12}(t)", xlabel=L"t",
     legendfontsize=12, ylims=(1e-19, 100),
-    title=L"w=%$(ws[1]), \sigma=0")
+    title=L"w=%$(ws[1]), \sigma=0");
     #label=L"N = %$N, g=%$g, w=%$w")
 
 plots_orig = [pl, deepcopy(pl)]
 plots_noise = [deepcopy(pl), deepcopy(pl)]
 
-plot!(plots_orig[2], title=L"w=%$(ws[2]), \sigma=0",ylabel="",yformatter=:none)
-plot!(plots_noise[1], title=L"w=%$(ws[1]), \sigma=%$σ")
-plot!(plots_noise[2], title=L"w=%$(ws[2]), \sigma=%$σ", ylabel="", yformatter=:none)
+plot!(plots_orig[2], title=L"w=%$(ws[2]), \sigma=0",ylabel="",yformatter=:none);
+plot!(plots_noise[1], title=L"w=%$(ws[1]), \sigma=%$σ");
+plot!(plots_noise[2], title=L"w=%$(ws[2]), \sigma=%$σ", ylabel="", yformatter=:none);
 plots = [plots_orig,plots_noise]
 
 colors = [:gray10, :gray30, :gray50]
@@ -224,10 +239,12 @@ for (s,dists_sys) in enumerate(dists_all_sys)
         end 
     end
 end
+
 pl2 = plot(plots[1]...,plots[2]...,layout=(2,2),size=(600,400),dpi=300)
-savefig(pl2,"../../paper_figs/initital_distance_scaling_test.png")
+savefig(pl2,"../../paper_figs/distance_scaling_test_3pairs_Ttr$(Ttr_init)_noise$(σ).png")
 #TODO: order parameter (λ) versus noise amplitude
 #including \sigma = 0 and two (one long and a short transient time)
+
 
 σs = [10.0 .^ [-14:1:-1;]...]
 lambdas = Float64[]
@@ -261,16 +278,130 @@ pl = plot(σs,d_long,ylabel=L"d(t>>)",
 
 savefig(pl, "../../paper_figs/long_term_average_distance_vs_noise_scaling_test.png")
 
-#=
-#check slopes 
+#-------------------------local lyap exp along traj-----------------------------
+
+traj_u0s, = trajectory(ds, 500; Δt=1e-2 ,Ttr=Ttr_init) #generate init conds 
+lambdas = Float64[]
+interval=1:300
+for u0 in traj_u0s
+    #λ = lyapunov(ds, 5; u0=u0, Ttr=0, d0_lower=1e-14, d0_upper=1e-8, d0=1e-12, Δt=1.0)
+    
+    d = trajpair_distance(pds, nsteps, u0; d0=1e-12)
+    itsct, λ = linreg(ts[interval], log.(d[interval]))
+    push!(lambdas, λ)
+end
+
+pl_colortraj = plot(traj_u0s[1:10000, 1], traj_u0s[1:10000, 2],st=:scatter,
+    zcolor=lambdas[1:10000], ms=1.8, c=cgrad(:RdBu, rev=true),clims=(0.0,5.0),
+    markerstrokewidth=0.0,ylabel = L"y_1",xlabel=L"x_1",
+    label="initial slope of " * L"d_{12}(t), d_0=%$d0",dpi=300,
+    title=L"N=%$(N),g=%$(g),w=%$(w)")
+
+savefig(pl_colortraj,"colored_traj_chaotic_part_initial_slope_long.png")    
+#------------------------plot lyapunov function inside info----------------------------
+traj_u0s, = trajectory(ds, 1000; Δt=1e-2, Ttr=Ttr_init)
+u0s = rand(traj_u0s, 5)
+#color = :red #:orange
+pl_lyaps = plot()
+pl_logratios = plot()
+colors = distinguishable_colors(length(u0s))
+for (i,u0) in enumerate(u0s)
+    pds = ParallelDynamicalSystem(ds, [u0, u0 .+ rand(2N) .* d0 / sqrt(2N)])
+    #reinit!(pds);
+    λ = 0.0;
+    t_prev = 0.0
+    lyaps_inner = Float64[]
+    exit_times = Float64[]
+    log_ratios = Float64[]
+    while current_time(pds) < 100.0
+        states = current_states(pds)
+        d = norm(states[2] .- states[1])
+        @show d
+        while lt ≤ d ≤ ut
+            step!(pds, 0.01, true)
+            states = current_states(pds)
+            d = norm(states[2] .- states[1])
+            #@show d
+        end
+
+        t = current_time(pds)
+        @show t, d
+        a = d / d0
+        @show log(a)
+        λ += log(a)
+        @show λ / t
+
+        push!(lyaps_inner, λ / t)
+        push!(exit_times, t)
+        push!(log_ratios, log(a)) #/(t-t_prev))
+        t_prev = t
+        λrescale!(pds, a)
+    end
+
+    plot!(pl_lyaps,exit_times,lyaps_inner,markershape=:circle,
+        ms=2,lc=colors[i],mc=colors[i],xlabel=L"t_i",ylims=(0.0,5.0),
+        ylabel=L"\frac{1}{\sum t_i} \sum \ln \frac{d_i}{d_0}",
+        title="lyap exp after each rescaling"* "\n" *L"ut = %$(ut), lt = %$(lt), d0=%$d0",
+        left_margin=6Plots.mm,label="")
+
+    plot!(pl_logratios,exit_times, log_ratios, markershape=:circle,
+        ms=2, lc=colors[i], mc=colors[i], xlabel=L"t_i",
+        ylabel=L" \ln \frac{d_i}{d_0}",
+        title="log(d(t)/d0) after each rescaling" * "\n" * L"ut = %$(ut), lt = %$(lt), d0=%$d0",
+        left_margin=6Plots.mm, label="")
+
+end
+plot!(pl_lyaps,dpi=300)
+plot!(pl_logratios, ylims = (8,12),dpi=300)
+savefig(pl_lyaps,"../../paper_figs/lyapunov_function_tests2.png")
+savefig(pl_logratios, "../../paper_figs/logratios_function_tests.png")
+
+#---------------------overall average distance scaling with slopes-------------------
+
+nsteps = 15000 
+nr_ens = 100
+d0 = 1e-12
+w = 0.6
+set_parameter!(ds,2,0.6)
+d = trajpair_distance(ds, nr_ens, nsteps; d0=d0,Ttr_init=1000, T_init=3000)
+
 ts = [1:nsteps;] ./ 1e2
+pl = plot(ts, d, lc=:gray10, yscale=:log10,
+    label=L"d_0 = %$d0",
+    title=L"g=%$g,w=%$w",dpi=300,
+    lw=2, ticks=10,legend=:bottomright,
+    legendfontsize=12, ylims=(1e-13, 100))
+
+
+#check slopes 
+
 interval = 1:300
 
 ts_int = ts[interval]
-#noise
-itsct, slope = linreg(ts_int,log10.(dist_avg_noise[interval]))
+
+#no noise
+interval = 1:300
+ts_int = ts[interval]
+itsct, slope = linreg(ts_int, log10.(d[interval]))
 λ = slope * log(10)
-plot!(ts[interval], 10 .^ (itsct .+ slope .* ts_int), 
+plot!(ts_int, 10 .^ (itsct .+ slope .* ts_int),
+    lc=:orange, label=L"\lambda = %$λ")
+
+#no noise
+interval = 2000:6000
+ts_int = ts[interval]
+itsct, slope = linreg(ts_int, log10.(d[interval]))
+λ = slope * log(10)
+plot!(ts_int, 10 .^ (itsct .+ slope .* ts_int),
+    lc=:orange, label=L"\lambda = %$λ")
+
+savefig(pl,"../../paper_figs/chaotic_average_distance_scaling_slopes.png")
+
+#=
+#noise
+itsct, slope = linreg(ts_int, log10.(d[interval]))
+λ = slope * log(10)
+plot!(ts[interval], 10 .^ (itsct .+ slope .* ts_int),
     lc=:gray30, label=L"\lambda = %$λ")
 
 #noise
@@ -280,24 +411,9 @@ itsct, slope = linreg(ts_int, log10.(dist_avg_noise[interval]))
 λ = slope * log(10)
 plot!(ts[interval], 10 .^ (itsct .+ slope .* ts_int),
     lc=:gray30, label=L"\lambda = %$λ")
+=#
 
-#no noise
-interval = 1:300
-ts_int = ts[interval]
-itsct, slope = linreg(ts_int, log10.(dist_avg[interval]))
-λ = slope * log(10)
-plot!(ts_int, 10 .^ (itsct .+ slope .* ts_int),
-    lc=:orange, label=L"\lambda = %$λ")
-
-#no noise
-interval = 2000:6000
-ts_int = ts[interval]
-itsct, slope = linreg(ts_int, log10.(dist_avg[interval]))
-λ = slope * log(10)
-plot!(ts_int, 10 .^ (itsct .+ slope .* ts_int),
-    lc=:orange, label=L"\lambda = %$λ")
-
-
+#=
 #--------------read lyaps--------------------
 data_dir = "../../data/phasediag_data_N10_noise_1e-4/"
 lyap_vals = reshape(readdlm(data_dir*"lyap_values.txt"),(50,50))
