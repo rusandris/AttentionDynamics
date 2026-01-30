@@ -279,7 +279,7 @@ pl = plot(σs,d_long,ylabel=L"d(t>>)",
 savefig(pl, "../../paper_figs/long_term_average_distance_vs_noise_scaling_test.png")
 
 #-------------------------local lyap exp along traj-----------------------------
-
+#TODO: time average equals ensemble average along trajectory?
 traj_u0s, = trajectory(ds, 500; Δt=1e-2 ,Ttr=Ttr_init) #generate init conds 
 lambdas = Float64[]
 interval=1:300
@@ -299,15 +299,26 @@ pl_colortraj = plot(traj_u0s[1:10000, 1], traj_u0s[1:10000, 2],st=:scatter,
 
 savefig(pl_colortraj,"colored_traj_chaotic_part_initial_slope_long.png")    
 #------------------------plot lyapunov function inside info----------------------------
+
+#noiseless
 traj_u0s, = trajectory(ds, 1000; Δt=1e-2, Ttr=Ttr_init)
 u0s = rand(traj_u0s, 5)
 #color = :red #:orange
 pl_lyaps = plot()
 pl_logratios = plot()
 colors = distinguishable_colors(length(u0s))
+
+#noisey system
+d0 = 1e-8 
+σ = 1e-6 #0.0
+ut = 1e-3;
+lt = 1e-12;
+set_parameter!(ds_noise,4,σ)
 for (i,u0) in enumerate(u0s)
-    pds = ParallelDynamicalSystem(ds, [u0, u0 .+ rand(2N) .* d0 / sqrt(2N)])
+    #pds = ParallelDynamicalSystem(ds, [u0, u0 .+ rand(2N) .* d0 / sqrt(2N)])
     #reinit!(pds);
+
+    pds = ParallelDynamicalSystem(ds_noise, [u0, u0 .+ rand(2N) .* d0 / sqrt(2N)])
     λ = 0.0;
     t_prev = 0.0
     lyaps_inner = Float64[]
@@ -335,26 +346,26 @@ for (i,u0) in enumerate(u0s)
         push!(exit_times, t)
         push!(log_ratios, log(a)) #/(t-t_prev))
         t_prev = t
-        λrescale!(pds, a)
+        ChaosTools.λrescale!(pds, a)
     end
 
     plot!(pl_lyaps,exit_times,lyaps_inner,markershape=:circle,
         ms=2,lc=colors[i],mc=colors[i],xlabel=L"t_i",ylims=(0.0,5.0),
         ylabel=L"\frac{1}{\sum t_i} \sum \ln \frac{d_i}{d_0}",
-        title="lyap exp after each rescaling"* "\n" *L"ut = %$(ut), lt = %$(lt), d0=%$d0",
+        title="lyap exp after each rescaling"* "\n" *L"ut = %$(ut), lt = %$(lt), d_0=%$(d0), \sigma=%$σ",
         left_margin=6Plots.mm,label="")
 
     plot!(pl_logratios,exit_times, log_ratios, markershape=:circle,
         ms=2, lc=colors[i], mc=colors[i], xlabel=L"t_i",
         ylabel=L" \ln \frac{d_i}{d_0}",
-        title="log(d(t)/d0) after each rescaling" * "\n" * L"ut = %$(ut), lt = %$(lt), d0=%$d0",
+        title="log(d(t)/d0) after each rescaling" * "\n" * L"ut = %$(ut), lt = %$(lt), d_0=%$(d0), \sigma=%$σ ",
         left_margin=6Plots.mm, label="")
 
 end
-plot!(pl_lyaps,dpi=300)
+plot!(pl_lyaps, dpi=300, ylims=(0, 12))
 plot!(pl_logratios, ylims = (8,12),dpi=300)
-savefig(pl_lyaps,"../../paper_figs/lyapunov_function_tests2.png")
-savefig(pl_logratios, "../../paper_figs/logratios_function_tests.png")
+savefig(pl_lyaps,"../../paper_figs/lyapunov_function_tests_noise_sigma_$σ.png")
+savefig(pl_logratios, "../../paper_figs/logratios_function_tests_noise_$σ.png")
 
 #---------------------overall average distance scaling with slopes-------------------
 
