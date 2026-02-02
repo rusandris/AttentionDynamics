@@ -124,17 +124,17 @@ n_pairs = 3
 nsteps = 15000
 N = 10
 g = 18.0
-w = 0.6
+w = 0.7
 ts = [1:nsteps+1;] ./ 1e2
 
-diffeq = (alg=Tsit5(), dt=1e-2, adaptive=false, maxiters=1e15)
+diffeq = (alg=Tsit5(), dtmax=1e-2, adaptive=true, maxiters=1e15)
 #diffeq = (alg=RK4(), dt=1e-2, adaptive=false, maxiters=1e15)
 u0 = rand(2N) * 0.1
 #----------------------systems----------------------
 ds = create_ds(u0, [g, w, N]; diffeq=diffeq) #no noise
 #ds = Systems.lorenz()
 #noise
-σ = 1e-3
+σ = 1e-6
 ds_noise = create_ds_noisy(u0, [g, w, N, σ]; diffeq=diffeq) #noise 
 
 dim = dimension(ds)
@@ -144,7 +144,7 @@ dim = dimension(ds)
 #chaotic and regular flow with two initial distances 
 #different transients  1000, 10000
 
-d0s = [1e-16,1e-12,1e-5]
+d0s = [1e-12,1e-6,1e-3]
 dmins = Float64[]
 dmaxs = Float64[]
 plots = []
@@ -229,7 +229,7 @@ for (s,dists_sys) in enumerate(dists_all_sys)
         dists_p = dists_sys[i]
         for (j,d0) in enumerate(d0s)
             dists_d0 = dists_p[j]
-            for (k,u0) in enumerate(u0s)
+            for k in 1:n_pairs
                 dists = dists_d0[k]
 
                 plot!(pl,ts, dists, lc=colors[k],lw=1,
@@ -241,7 +241,7 @@ for (s,dists_sys) in enumerate(dists_all_sys)
 end
 
 pl2 = plot(plots[1]...,plots[2]...,layout=(2,2),size=(600,400),dpi=300)
-savefig(pl2,"../../paper_figs/distance_scaling_test_3pairs_Ttr$(Ttr_init)_noise$(σ).png")
+savefig(pl2,"../../paper_figs/distance_scaling_test_3pairs_d01e-12_1e-6_1e-3_Ttr$(Ttr_init)_noise$(σ).png")
 #TODO: order parameter (λ) versus noise amplitude
 #including \sigma = 0 and two (one long and a short transient time)
 
