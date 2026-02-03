@@ -414,6 +414,8 @@ plot_distrib!(pl_distrib_c, lifetimes_c2, 10;
     label_par=L"c = %$(cs[2])",
     xlabel=L"\log(\tau)")
 
+#---------------------------lifetimes from integrated values------------------------------------ 
+
 files_integ = readdir(data_dir_lt * "/integrated/")
 lifetimes_c_integ1 = vec(readdlm(data_dir_lt * "/integrated/" * files_integ[1]))
 lifetimes_c_integ2 = vec(readdlm(data_dir_lt * "/integrated/" * files_integ[2]))
@@ -421,15 +423,16 @@ lifetimes_c_integ2 = vec(readdlm(data_dir_lt * "/integrated/" * files_integ[2]))
 pl = plot() 
 chart_times = [1,5,10]
 colors = [:gray10, :gray40, :gray70]
+nbins = 30
 
 for (i,f) in enumerate(files_integ[[5,9,1]])
     chart_time = chart_times[i]
     lifetimes_c_integ = vec(readdlm(data_dir_lt * "/integrated/" * f))
     color = colors[i]
-    pl_distrib_c_integ = plot_distrib!(pl,lifetimes_c_integ, chart_time;
-        color=color, nbins=30, mode=:none,
-        scale=:log,binning=:exp,
-        title=L"k=20",
+    pl_distrib_c_integ = plot_distrib!(pl, lifetimes_c_integ, chart_time * Δt;
+        color=color, nbins=nbins, mode=:none,
+        scale=:log,binning=:exp,st=:path,
+        title=L"k=20", ms=4,
         label_par=L"c = %$(cs[1]), Δt=%$(chart_time*Δt)")
 end
 
@@ -439,16 +442,17 @@ for (i,f) in enumerate(files_integ[[6,10,2]])
     chart_time = chart_times[i]
     lifetimes_c_integ = vec(readdlm(data_dir_lt * "/integrated/" * f))
     color = colors[i]
-    plot_distrib!(pl, lifetimes_c_integ, chart_time;
-        color=color, nbins=30, mode=:none,
-        scale=:log, binning=:exp,
-        title=L"k=20" ,
+    plot_distrib!(pl, lifetimes_c_integ, chart_time * Δt;
+        color=color, nbins=nbins, mode=:none,
+        scale=:log, binning=:exp,st=:path,
+        title=L"k=20", ms=4,
         label_par=L"c = %$(cs[2]), Δt=%$(chart_time*Δt)",
-        xlabel=L"log(\tau)")
+        xlabel=L"log(\tau \cdot \Delta t)")
 end
+plot!(pl,legend=:outertopright)
 savedir = "../../paper_figs/lifetime_distributions/test_c_long/"
 mkpath(savedir)
-savefig(pl, savedir * "lifetime_distributions_change_c_charting time_integrated_log_log_exp_bin.png")
+savefig(pl, savedir * "lifetime_distributions_change_c_charting time_integrated_log_log_exp_bin_fixed.png")
 
 
 plots_charting = []
@@ -465,7 +469,7 @@ for (Δt_idx, Δt_chart) in enumerate(Δts_chart)
     @show length(lifetimes_x)
     colors_x = distinguishable_colors(length(lifetimes_x))
 
-    pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart;
+    pl_distrib_x = plot_distribs(lifetimes_x, Δt_chart*Δt;
         ps=cs, colors=colors_x, nbins=nbins, mode=:none,
           scale=:log,
         title=L"k=%$(ks[1])" * L",Δt=%$(Δt_chart*Δt)",

@@ -239,29 +239,29 @@ function get_distrib(τs, Δt_chart; binning=:auto, color, mode=:none, nbins=50,
 
 end 
 
-function plot_distrib(τs, Δt_chart; binning=:auto, color, mode=:none, ms = 2, nbins=50, scale=:log,
-    xlabel=L"\log(\tau^{(x)}_k \cdot \Delta t)", title="lifetime distribution", label_par="")
+function plot_distrib(τs, Δt_chart; binning=:auto, color=:gray10, st=:scatter, mode=:none, ms=2, nbins=50, scale=:log,
+    xlabel=L"\log(\tau^{(x)}_k \cdot \Delta t)", ylabel=L"\log(count)", title="lifetime distribution", label_par="")
 
     X,Y = get_distrib(τs, Δt_chart; binning=binning, color=color, mode=mode, nbins=nbins, scale=scale)
 
     #plot together
     plot(X, Y, markershape=:circle, ms=ms, 
-        ylabel="log(count)",xlabel=xlabel,
+        ylabel=ylabel,xlabel=xlabel,
         mc=color, lc=color, title=title,
         label=label_par, dpi=300)
 
 end
 
 
-function plot_distrib!(pl,τs, Δt_chart; binning=:auto, color, ms=2 ,mode=:none, nbins=50, scale=:log,
-    xlabel=L"\log(\tau^{(x)}_k \cdot \Delta t)", title="lifetime distribution", label_par="")
+function plot_distrib!(pl,τs, Δt_chart; binning=:auto, color=gray10,st=:scatter, ms=2 ,mode=:none, nbins=50, scale=:log,
+    xlabel=L"\log(\tau^{(x)}_k \cdot \Delta t)", ylabel=L"\log(count)", title="lifetime distribution", label_par="")
 
     X, Y = get_distrib(τs, Δt_chart; binning=binning, color=color, mode=mode, nbins=nbins, scale=scale)
 
     #plot together
     plot!(pl, X, Y, markershape=:circle, ms=ms,
-        ylabel="log(count)",xlabel=xlabel,
-        mc=color, lc=color, title=title,
+        ylabel=ylabel,xlabel=xlabel,st=st,
+        mc=color,markerstrokecolor=color, lc=color, title=title,
         label=label_par, dpi=300)
 
 end

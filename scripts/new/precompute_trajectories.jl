@@ -227,14 +227,20 @@ end
 #----------------------------change c parameter-------------------------
 #increase c -> increase competition 
 
-
-cs = [1.5:1.0:4.5;]
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
 
+#range of c
+cs = [2.0:0.4:3.4;]
+
+#other params
+K = 1.0;
+c = 2.4;
+α = 0.005;
 
 u01 = 0.1 .* rand(2N)
+p_orig = [rp, rc, K, c, α]
 
 ds = create_original_ds(u01, deepcopy(p_orig); diffeq=diffeq)
 

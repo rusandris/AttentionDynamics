@@ -5,8 +5,9 @@ cd(@__DIR__)
 nbins = 50
 figsize = (600, 800)
 legendfontsize = 10
-data_dir_traj_root = "../../data/trajs_precomp_test8_origpar/"
-data_dir_lt_root = "../../data/lifetimes_precomp_test_integ_origpar/"
+data_dir_lt_root = "../../data/lifetimes_precomp_test_c/"
+data_dir_traj_root = "../../data/trajs_precomp_test_c/"
+data_dir_traj = data_dir_traj_root * "c_long/"
 
 
 #----------------------------change r parameter-------------------------
@@ -22,8 +23,7 @@ c = 2.4;
 α = 0.005;
 
 #READ trajectories
-data_dir = data_dir_traj_root * "rp/"
-files_all = readdir(data_dir)
+files_all = readdir(data_dir_traj)
 traj_files = filter(f -> occursin(".txt", f), files_all)[2:end][[4,1,2,3]]
 trajs = Matrix{Float64}[]
 
