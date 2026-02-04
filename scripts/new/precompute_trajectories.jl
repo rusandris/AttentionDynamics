@@ -232,20 +232,19 @@ end
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
 
 #range of c
-cs = [2.0:0.4:3.4;]
+cs = [1.4:0.2:2.4;]
 
 #other params
 K = 1.0;
-c = 2.4;
+rp = 10;rc=10;
 α = 0.005;
 
 u01 = 0.1 .* rand(2N)
-p_orig = [rp, rc, K, c, α]
+p = [rp, rc, K, c, α]
 
-ds = create_original_ds(u01, deepcopy(p_orig); diffeq=diffeq)
+ds = create_original_ds(u01, deepcopy(p); diffeq=diffeq)
 
 #precompute trajectories 
-set_parameters!(ds, p_orig)
 trajs = precompute_trajectories(ds, cs, 4, Δt, T, Ttr)
 
 #plot parts of trajectories  
@@ -259,7 +258,7 @@ for (i, traj) in enumerate(trajs)
 end
 pl_trajs = plot(plots_trajs..., layout=(length(cs), 2), size=(600, 800), dpi=300)
 
-savedir = "../../data/trajs_precomp_test_c/c_long/"
+savedir = "../../data/trajs_precomp_test_c/c_low/"
 mkpath(savedir)
 savefig(pl_trajs, savedir * "trajs_x_y_change_c.png")
 writedlm(savedir * "cs.txt", cs)
