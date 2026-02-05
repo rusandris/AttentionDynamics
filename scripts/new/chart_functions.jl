@@ -152,7 +152,6 @@ end
 
 
 #TODO: implement statistically significant binning
-#TODO: implement one-for-all binning scheme
 
 function get_distrib(τs; binning=:auto, mode=:none, nbins=50, scale=:log)
     
@@ -183,7 +182,6 @@ function get_distrib(τs, bin_edges; mode=:none, scale=:log)
     X = h.edges[1][1:end-1]
 
     any(iszero.(Y)) && @warn "There are bins with zero probability!"
-    @show findall(y -> iszero(y), Y)
     @show length(unique(Y))
     @show Y
     if scale == :log
@@ -193,6 +191,25 @@ function get_distrib(τs, bin_edges; mode=:none, scale=:log)
     return X, Y
     
 end
+
+#determine exponential bin edges so that each contains at least m points
+function autohist(y;m=10,nbins=50,b=10) 
+    ymin,ymax = extrema(y) #interval to cover
+
+    n = nbins #start from here
+    bins = b .^ range(log(b, ymin), log(b, ymax), length=nbins)
+    h = fit(Histogram, y, bins)
+    n_min = 0
+    while true
+        h = fit(Histogram, y, bins)
+        n_min = minimum(h.weights)
+        n_min >= m && break
+
+        n = n - 1 
+        bins = b .^ range(log(b, ymin), log(b, ymax), length=n)
+    end
+    return bins,h.weights
+end 
 
 function plot_distrib(τs, Δt_chart; binning=:auto, color=:gray10, st=:scatter, mode=:none, ms=2, nbins=50, scale=:log,
     xlabel=L"\log(\tau^{(x)}_k \cdot \Delta t)", ylabel=L"\log(count)", title="lifetime distribution", label_par="")
@@ -270,35 +287,28 @@ end
 #calculate a measure of inequality at each charting time 
 #average distance (difference in absolute value) between the first and last position 
 
-function get_inequality(trajs, k, Δt_chart)
+function get_inequality(traj, k, Δt_chart)
 
-    T,d = size(trajs[1]) 
-    N = Int(d / 2)
+    T,d = size(traj) 
 
     ineq_avgs = []
-    for traj in trajs
-        #sampling with charting time 
-        xs = traj[1:Δt_chart:T, 1:2:2*N]
-        ys = traj[1:Δt_chart:T, 2:2:2*N]
+    #sampling with charting time 
+    xs = traj[1:Δt_chart:T, 1:d]
 
-        x_ineqs = Float64[]
-        y_ineqs = Float64[]
-        for t in 1:T
-            #take top k at each t
-            x_topk = sort(xs[t,:]; rev=true)[1:k]
-            y_topk = sort(ys[t,:]; rev=true)[1:k]
+    x_ineqs = Float64[]
+    x_topk_vals = Vector{Float64}[]
+    for t in 1:size(xs)[1]
+        #take top k at each t
+        x_topk = sort(xs[t,:]; rev=true)[1:k]
 
-            #take differences
-            x_ineq = x_topk[1] - x_topk[end]
-            y_ineq = y_topk[1] - y_topk[end]
+        #take relative differences 
+        x_ineq = (x_topk[1] - x_topk[end]) / x_topk[end]
 
-            push!(x_ineqs, x_ineq)
-            push!(y_ineqs, y_ineq)
-        end
-        #take mean and push to vec
-        push!(ineq_avgs, (mean(x_ineqs), mean(y_ineqs)))
+        push!(x_ineqs, x_ineq)
+        push!(x_topk_vals,x_topk)
     end
-    return ineq_avgs
+    #take mean and push to vec
+    return extrema(x_ineqs),mean(x_ineqs), x_topk_vals
 end
 
 lognormal(x, μ, σ) = 1 / (x * σ * sqrt(2π)) * exp(-(log10(x) - μ)^2 / (2 * σ^2))
