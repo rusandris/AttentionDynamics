@@ -185,7 +185,7 @@ for i in 1:length(trajs)
 end
 
 
-#=
+
 #----------------------------change α parameter-------------------------
 #increase α -> decrease memory length 
 
@@ -194,36 +194,36 @@ end
 #gs4 = rs ./ α
 #αs4 = rp ./ gs4
 
-αs4 = [0.01, 0.0085, 0.0025, 0.00175]
-rescaled_params.(rp, rp, K, c, αs4, N)
+αs = [0.001, 0.005, 0.008, 0.01]
+rescaled_params.(rp, rp, K, c, αs, N)
 
 #loop over memory length
 #precompute trajectories 
 set_parameters!(ds, p_orig)
-trajs = precompute_trajectories(ds, αs4, 5, Δt, T, Ttr)
+trajs = precompute_trajectories(ds, αs, 5, Δt, T, Ttr)
 
 #plot parts of trajectories  
 plots_trajs = []
 
 for traj in trajs
     pl_x = plot(Matrix(traj[1:500, 1:2:2N]), legend=false)
-    pl_y = plot(Matrix(traj[1:8500, 2:2:16]), legend=false)
+    pl_y = plot(Matrix(traj[1:500, 2:2:16]), legend=false)
 
     push!(plots_trajs, pl_x, pl_y)
 end
 
-pl_trajs = plot(plots_trajs..., layout=(length(rs), 2), size=(600, 800), dpi=300)
+pl_trajs = plot(plots_trajs..., layout=(length(αs), 2), size=(600, 800), dpi=300)
 
-savedir = "../../data/trajs_precomp_lifetimes_test5/alpha/"
+savedir = "../../data/trajs_precomp_lifetimes_alpha/"
 mkpath(savedir)
 savefig(pl_trajs, savedir * "trajs_x_y_change_alpha.png")
 
 #save trajectories into file 
 for i in 1:length(trajs)
-    traj = trajs[i]
-    writedlm(savedir * "trajs_rp_$(rp)_rc$(rc)_K$(K)_c$(c)_α$(αs4[i])_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).txt", Matrix(traj))
+    traj = vcat(Matrix(trajs[i])[:,1:2:600]...)
+    write(savedir * "trajs_rp_$(rp)_rc$(rc)_K$(K)_c$(c)_α$(αs[i])_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat", traj)
 end
-=#
+
 #----------------------------change c parameter-------------------------
 #increase c -> increase competition 
 
