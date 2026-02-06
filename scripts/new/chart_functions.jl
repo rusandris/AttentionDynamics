@@ -208,6 +208,7 @@ function autohist(y;m=10,nbins=50,b=10)
         n = n - 1 
         bins = b .^ range(log(b, ymin), log(b, ymax), length=n)
     end
+
     return bins,h.weights
 end 
 

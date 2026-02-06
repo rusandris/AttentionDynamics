@@ -56,6 +56,9 @@ for (i,f) in enumerate(files_trajs)
 
         #get exponential binning automatically adjusted for each
         bins_exp, counts_exp = autohist(lts; m=1, nbins=nbins)
+        #normalize by bin width
+        counts_exp = counts_exp ./ diff(bins_exp)
+        bins_exp = sqrt.( [bins_exp[i] * bins_exp[i+1] for i in 1:length(bins_exp)-1] ) #right edges
 
         #get linear binning automatically adjusted for each
         h = fit(Histogram, lts; nbins=nbins)
@@ -63,8 +66,12 @@ for (i,f) in enumerate(files_trajs)
         bins_lin = h.edges[1]
         counts_lin = h.weights
 
+        counts_lin = counts_lin ./ diff(bins_lin)
+        bins_lin = sqrt.([bins_lin[i] * bins_lin[i+1] for i in 1:length(bins_lin)-1]) #right edges
+
+
         #make plots 
-        plot!(plots_expbin[j], log10.(bins_exp[1:end-1]), log10.(counts_exp), markershape=markershapes[j],
+        plot!(plots_expbin[j], log10.(bins_exp), log10.(counts_exp), markershape=markershapes[j],
             mc=color, markerstrokecolor=color, 
             lc=color, 
             dpi=300,
@@ -73,7 +80,7 @@ for (i,f) in enumerate(files_trajs)
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
 
-        plot!(plots_linbin[j], log10.(bins_lin[1:end-1]), log10.(counts_lin), markershape=markershapes[j],
+        plot!(plots_linbin[j], log10.(bins_lin), log10.(counts_lin), markershape=markershapes[j],
             mc=color, markerstrokecolor=color,
             lc=color,
             dpi=300,
@@ -95,7 +102,7 @@ plot!(pl_loglog[2],legend=:topright)
 
 savedir = "../../paper_figs/lifetime_distributions/test_alpha/"
 mkpath(savedir)
-savefig(pl_all, savedir * "lifetime_distributions_k10_change_alpha_charting time_0.2_2_integrated_log_log_explin_bin_separated_properbins.png")
+savefig(pl_all, savedir * "lifetime_distributions_k10_change_alpha_charting time_0.2_2_integrated_log_log_explin_bin_separated_properbins_bin_norm.png")
 
 #=
 
