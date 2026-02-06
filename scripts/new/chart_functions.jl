@@ -288,29 +288,52 @@ end
 #calculate a measure of inequality at each charting time 
 #average distance (difference in absolute value) between the first and last position 
 
-function get_inequality(traj, k, Δt_chart)
+function chart_stats(traj, k, Δt_chart)
 
     T,d = size(traj) 
 
-    ineq_avgs = []
     #sampling with charting time 
     xs = traj[1:Δt_chart:T, 1:d]
 
     x_ineqs = Float64[]
     x_topk_vals = Vector{Float64}[]
+    x_topk_idxs = Vector{Int64}[]
     for t in 1:size(xs)[1]
-        #take top k at each t
-        x_topk = sort(xs[t,:]; rev=true)[1:k]
+        #build chart top k at each t
+        xt = xs[t, :]
+        chart = reverse(sortperm(xt)[end-k+1:end])
+        x_topk = sort(xt; rev=true)[1:k]
+        #@show x_topk .== reverse(xt[chart])
 
         #take relative differences 
         x_ineq = (x_topk[1] - x_topk[end]) / x_topk[end]
 
         push!(x_ineqs, x_ineq)
         push!(x_topk_vals,x_topk)
+        push!(x_topk_idxs, chart)
     end
     #take mean and push to vec
-    return extrema(x_ineqs),mean(x_ineqs), x_topk_vals
+    return x_topk_idxs,x_topk_vals, extrema(x_ineqs),mean(x_ineqs)
 end
+
+function consecutive_occurrences(charts)
+    idxs_active = unique(stack(charts))
+    occs_idxs = []
+    for i in idxs_active
+        occs = zeros(length(charts))
+        for (c,chart) in enumerate(charts)
+            rank = indexin(i,chart)[1]
+            if isnothing(rank)
+                occs[c] = NaN
+            else 
+                occs[c] = rank
+            end
+        end
+        push!(occs_idxs,occs)
+    end
+    return occs_idxs
+end
+
 
 lognormal(x, μ, σ) = 1 / (x * σ * sqrt(2π)) * exp(-(log10(x) - μ)^2 / (2 * σ^2))
 

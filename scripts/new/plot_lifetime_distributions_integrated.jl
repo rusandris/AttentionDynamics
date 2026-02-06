@@ -91,7 +91,7 @@ for (i,f) in enumerate(files_trajs)
     end
 end
 pl_expbin = plot(plots_expbin..., layout=(1, 2),size=(800,300), plot_title="expbin",
-    legend=:bottomleft, left_margin=6Plots.mm)
+    legend=:bottomleft, left_margin=6Plots.mm, bottom_margin=6Plots.mm)
 
 pl_linbin = plot(plots_linbin..., layout=(1, 2), size=(800, 300), plot_title="linbin",
     legend=:bottomleft, left_margin=6Plots.mm)
@@ -103,6 +103,7 @@ plot!(pl_loglog[2],legend=:topright)
 savedir = "../../paper_figs/lifetime_distributions/test_alpha/"
 mkpath(savedir)
 savefig(pl_all, savedir * "lifetime_distributions_k10_change_alpha_charting time_0.2_2_integrated_log_log_explin_bin_separated_properbins_bin_norm.png")
+savefig(pl_expbin, savedir * "lifetime_distributions_k10_change_alpha_charting time_0.2_2_integrated_log_log_exp_bin_separated_properbins_bin_norm.png")
 
 #=
 
@@ -122,16 +123,3 @@ end
 plot!(pl,legend=:outertopright)
 =#
 
-#=
-
-ex,m,x_topk = get_inequality(traj,10,5)
-
-pl_topk = plot(legend=false,size=(1000,300),dpi=300,ylims=(0.0,0.07),
-    ylabel=L"x_i",xlabel=L"t",guidefontsize=14,left_margin=6Plots.mm,bottom_margin=6Plots.mm)
-
-for i in topk_indxs
-    plot!([ts[i]],x_topk[i]',st=:scatter,mc=colors')
-    vline!([ts[i]],lc=:gray50,lw=1,la=0.3)
-end
-
-=#
