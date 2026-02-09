@@ -184,8 +184,6 @@ for i in 1:length(trajs)
     writedlm(savedir * "trajs_rc$(rs[i])_rp$(rp)_K$(K)_c$(c)_α$(α)_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).txt", Matrix(traj))
 end
 
-
-
 #----------------------------change α parameter-------------------------
 #increase α -> decrease memory length 
 

@@ -26,12 +26,62 @@ pl_lyaps = plot_phase_diagram(lyap_vals,ws,gs,N;HEATMAP_DEFAULTS...,
     colorbar_ticks = [-0.5,0.0,0.5])
 
 #fill in with analytical eigenvalues
-λ_a = -1
+λa = -1
 λ_b(g,w,N) = g*(1-1/(N-1)*1/(1/w-1)) 
+lyap_vals_filled = deepcopy(lyap_vals)
+for (j,g) in enumerate(gs) 
+    for (i,w) in enumerate(ws)
+        w < (N-1)/N && continue
+
+        λb = λ_b(g, w, N)
+        lyap_vals_filled[j, i] = max(λa, λb)
+        max(λa, λb) > -1.0 && @info "largest eigenvalue at $(w),$(g): $(max(λa, λb))"
+    end
+end
 
 
+pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws, gs, N; HEATMAP_DEFAULTS...,
+    ylabel=L"\frac{1}{\epsilon(N-1)}", clims=(-0.5, 0.5),
+    right_margin=6Plots.mm,
+    left_margin=6Plots.mm,
+    tickfontsize=tick_fontsize_large,
+    guidefontsize=guide_fontsize_medium,
+    xguidefontsize=guide_fontsize_large,
+    colorbar_title="",
+    colorbar_ticks=[-0.5, 0.0, 0.5])
 
-savefig(pl_lyaps,figs_dir*"N10_phasediagram_Ttr_max_$(Ttrs[1])"*".png")
+ws_example = [0.5, 0.65, 0.75, 0.92]
+g_example = 15.75
+hline!([g_example / (N - 1)], ls=:dot, la=0.5, lw=2, lc=:gray10, label="")
+plot!(ws_example, fill(g_example / (N - 1), 4),
+    ms=5, st=:scatter, mc=:orange,markerstrokecolor=:orange,
+    label="")
+
+#add annotations 
+labels = ["A", "B", "C", "D"]
+x_annot_offsets = [0.01, 0.0, 0.0, -0.05]
+for (i, pl) in enumerate(ws_example)
+    xpos = ws_example[i] + x_annot_offsets[i]
+    ypos = g_example/(N-1) * 1.05
+    annotate!(pl_lyaps_filled, xpos, ypos, text(labels[i], :gray10, :center, 18))
+end
+pl_lyaps_filled
+
+#add original param curves
+αs = range(0.08,0.15;length=20)
+rp = 2.0; rc = 2.0; K = 1.0; c = 3.0; α = 0.1
+w_g_pairs_alpha = rescaled_params.(rp, rc, K, c, αs, N)
+ws = [w_g_pairs_alpha[i][1] for i in 1:length(w_g_pairs_alpha)]
+gs = [w_g_pairs_alpha[i][2] for i in 1:length(w_g_pairs_alpha)]
+
+color = :lime
+plot!(pl_lyaps_filled, w_c, g_c ./ (N - 1),
+    mc=:lime, lc=:lime, lw=1, arrow=:arrow,ms=4,
+    markershape=:circle,markerstrokecolor=:lime,
+    label=L"\alpha \in [%$(αs[1]),%$(αs[end])]",
+    legend=:topright)
+
+savefig(pl_lyaps_filled,figs_dir*"N10_phasediagram_extended_filled_Ttr_1000"*"labeled.png")
 
 
 
