@@ -23,17 +23,17 @@ for (i,w) in enumerate(ws)
 
     pl = plot( xlabel=L"t",
         guidefontsize=18, legendfontsize=9, 
-        tickfontsize=10,xlims=(Ttr,Ttr+50),
-        title=L"N = %$N"*L", 1/\epsilon = %$(g), w = %$w")
+        tickfontsize=10,xlims=(Ttr,Ttr+50))
+        #title=L"N = %$N"*L", 1/\epsilon = %$(g), w = %$w")
 
     plot!(t, Matrix(traj[:,1:2:2N]), lw=3, label="")
 
     if i == 1
         x_fp = 1.0
-        hline!([x_fp], ls=:dash, lc=:gray10,lw=2, label=L"x^*_N = 1")
+        hline!([x_fp], ls=:dash, lc=:gray10,lw=2,label="") #label=L"x^*_N = 1")
     elseif i == 4
         x_fp = 1.0/(1-w)
-        hline!([x_fp], ls=:dash, lc=:gray10, lw=2, label=L"x^*_1 = \frac{1}{1 - w}")
+        hline!([x_fp], ls=:dash, lc=:gray10, lw=2, label="") #label=L"x^*_1 = \frac{1}{1 - w}")
     end
     push!(plots,pl)
 end

@@ -1,8 +1,43 @@
 using Plots, LaTeXStrings
 using AttentionDynamics
+using DelimitedFiles
+cd(@__DIR__)
+include("../../plotting/defaults.jl")
+include("../../plotting/plot_functions/lyapunov.jl")
 
 #-------------------------plot phase diagram---------------------
-#check lifetime distributions while keeping rp/alpha constant
+
+#--------------read lyaps--------------------
+data_dir = "../../data/phasediag_data_N10_extended_d0_1.0e-9_ut1e-6/"
+lyap_vals = reshape(readdlm(data_dir*"lyap_values.txt"),(60,60))
+params = readdlm(data_dir*"phasediag_params.txt")
+ws = params[:,1]
+gs = params[:,2]
+N=10
+
+pl_lyaps = plot_phase_diagram(lyap_vals,ws,gs,N;HEATMAP_DEFAULTS...,
+    ylabel=L"\frac{1}{\epsilon(N-1)}",clims=(-0.5,0.5),
+    right_margin=6Plots.mm,
+    left_margin=6Plots.mm,
+    tickfontsize=tick_fontsize_large,
+    guidefontsize=guide_fontsize_medium,
+    xguidefontsize=guide_fontsize_large,
+    colorbar_title="",
+    colorbar_ticks = [-0.5,0.0,0.5])
+
+#fill in with analytical eigenvalues
+λ_a = -1
+λ_b(g,w,N) = g*(1-1/(N-1)*1/(1/w-1)) 
+
+
+
+savefig(pl_lyaps,figs_dir*"N10_phasediagram_Ttr_max_$(Ttrs[1])"*".png")
+
+
+
+#=
+#-------------------plot original parameter curves on phase diagram-------------
+
 N=300
 rc = 9.0;
 rp = 9.0;
@@ -73,3 +108,5 @@ plot!(pl_crit_curve, w_c, g_c ./ (N - 1),
     mc=:blue, lc=:blue ,lw=1, arrow=:arrow,
     label=label=L"c \in [%$(cs[1]),%$(cs[end])]",ms=4,
     xlims=(0.0,0.5),ylims=(0.,25),markershape=:circle)
+
+=#

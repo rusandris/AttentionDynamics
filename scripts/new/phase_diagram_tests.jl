@@ -424,30 +424,3 @@ plot!(ts[interval], 10 .^ (itsct .+ slope .* ts_int),
     lc=:gray30, label=L"\lambda = %$λ")
 =#
 
-#=
-#--------------read lyaps--------------------
-data_dir = "../../data/phasediag_data_N10_noise_1e-4/"
-lyap_vals = reshape(readdlm(data_dir*"lyap_values.txt"),(50,50))
-params = readdlm(data_dir*"phasediag_params.txt")
-ws = params[:,1]
-gs = params[:,2]
-N=10
-
-pl_lyaps = plot_phase_diagram(lyap_vals[1],ws,gs,N;HEATMAP_DEFAULTS...,
-    ylabel=L"\frac{1}{\epsilon(N-1)}",clims=(-0.5,0.5),
-    right_margin=6Plots.mm,
-    left_margin=6Plots.mm,
-    tickfontsize=tick_fontsize_large,
-    guidefontsize=guide_fontsize_medium,
-    xguidefontsize=guide_fontsize_large)
-#pl2 = plot_phase_diagram(lyap_vals[2],ws_saved[:],gs_N[:],N;HEATMAP_DEFAULTS...)
-#pl3 = plot_phase_diagram(lyap_vals[3],ws_saved[:],gs_N[:],N;HEATMAP_DEFAULTS...)
-#savefig(pl1,figs_dir*"N10_phasediagram_Ttr_max_$(Ttrs[1])_noise_1e-2"*".png")
-savefig(pl_lyaps,figs_dir*"N10_phasediagram_Ttr_max_$(Ttrs[1])"*".png")
-
-#savefig(pl2,"../../N5_phasediagram_Ttr_max_$(Ttrs[2])"*".png")
-#savefig(pl3,"../../N5_phasediagram_Ttr_max_$(Ttrs[3])"*".png")
-
-
-plot(ws,lyap_vals,ylims=(-0.2,Inf),labels = ["Ttrs=$(Ttrs[1])" "Ttrs=$(Ttrs[2])" "Ttrs=$(Ttrs[3])"])
-=#
