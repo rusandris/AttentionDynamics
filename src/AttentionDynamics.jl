@@ -24,7 +24,6 @@ module AttentionDynamics
 
 	export map_to_integer,map_timeseries_to_integer,map_timeseries_to_binarystate,map_to_integer,map_to_binarystate,bifurcation_diagram,filter_repetitions,flip_randomstates
 	export orbit_diagram,save_od_data
-	export evolve_system,ts_to_file
 	export create_ds,create_integrator
 	export count_limitcycles,find_limitcycle,findall_limcycles,findall_limcycles_many_systems
 	export create_pinteg,lyapunov_curve,lyapunov_curves,lyapunov_diagram,replace_infs!
