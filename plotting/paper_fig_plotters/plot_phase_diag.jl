@@ -67,23 +67,94 @@ for (i, pl) in enumerate(ws_example)
 end
 pl_lyaps_filled
 
-#add original param curves
-αs = range(0.08,0.15;length=20)
-rp = 2.0; rc = 2.0; K = 1.0; c = 3.0; α = 0.1
+#----------------------------add original param curves---------------------------
+
+
+#---------------rp------------------
+
+rs = range(1.65, 2.0; length=3)
+rc = 2.0;
+K = 1.0;
+c = 3.0;
+α = 0.1;
+w_g_pairs_rp = rescaled_params.(rs, rc, K, c, α, N)
+ws = [w_g_pairs_rp[i][1] for i in 1:length(w_g_pairs_rp)]
+gs = [w_g_pairs_rp[i][2] for i in 1:length(w_g_pairs_rp)]
+
+color = :darkgreen
+plot!(pl_lyaps_filled, ws, gs ./ (N - 1),
+    mc=color, lc=color, lw=1, arrow=:arrow, ms=4,
+    markershape=:circle, markerstrokecolor=color,
+    label=L"r_c = %$(rc),r_p \in [%$(rs[1]),%$(rs[end])]",
+    legend=:topright)
+
+plot!(pl_lyaps_filled, legendfontsize=10)
+
+#---------------alpha------------------
+#only coincides with r curve if rp=rc
+
+αs = range(0.1,0.1*2/1.65;length=5)
+rp = 2.0; rc =2.0; K = 1.0; c = 3.0; α = 0.1
 w_g_pairs_alpha = rescaled_params.(rp, rc, K, c, αs, N)
 ws = [w_g_pairs_alpha[i][1] for i in 1:length(w_g_pairs_alpha)]
 gs = [w_g_pairs_alpha[i][2] for i in 1:length(w_g_pairs_alpha)]
 
 color = :lime
-plot!(pl_lyaps_filled, w_c, g_c ./ (N - 1),
+plot!(pl_lyaps_filled, ws, gs ./ (N - 1),
     mc=:lime, lc=:lime, lw=1, arrow=:arrow,ms=4,
     markershape=:circle,markerstrokecolor=:lime,
     label=L"\alpha \in [%$(αs[1]),%$(αs[end])]",
     legend=:topright)
 
+#---------------c------------------
+
+cs = range(3.0, 3.0/αs[end]*αs[1]; length=2)
+rp = 2.0;rc = 2.0; K = 1.0; α = αs[end];
+w_g_pairs_cs = rescaled_params.(rp, rc, K, cs, α, N)
+ws = [w_g_pairs_cs[i][1] for i in 1:length(w_g_pairs_cs)]
+gs = [w_g_pairs_cs[i][2] for i in 1:length(w_g_pairs_cs)]
+
+color = :cyan
+plot!(pl_lyaps_filled, ws, gs ./ (N - 1),
+    mc=color, lc=color, lw=1, arrow=:arrow, ms=4,
+    markershape=:circle, markerstrokecolor=color,
+    label=L"c \in [%$(cs[1]),%$(cs[end])]",
+    legend=:topright)
+
+#---------------r------------------
+
+rs = range(1.0, 3.0; length=20)
+K = 1.0; c = 3.0;α = 0.1;
+w_g_pairs_rs = rescaled_params.(rs, rs, K, c, α, N)
+ws = [w_g_pairs_rs[i][1] for i in 1:length(w_g_pairs_rs)]
+gs = [w_g_pairs_rs[i][2] for i in 1:length(w_g_pairs_rs)]
+
+color = :orange
+plot!(pl_lyaps_filled, ws, gs ./ (N - 1),
+    mc=color, lc=color, lw=1, arrow=:arrow, ms=4,
+    markershape=:circle, markerstrokecolor=color,
+    label=L"r_p = r_c \in [%$(rs[1]),%$(rs[end])]",
+    legend=:topright)
+
+#---------------rc------------------
+
+rs = range(1.0, 3.0; length=20)
+rp = 2.0; K = 1.0;c = 3.0;α = 0.1;
+w_g_pairs_rc = rescaled_params.(rp, rs, K, c, α, N)
+ws = [w_g_pairs_rc[i][1] for i in 1:length(w_g_pairs_rc)]
+gs = [w_g_pairs_rc[i][2] for i in 1:length(w_g_pairs_rc)]
+
+color = :blue3
+plot!(pl_lyaps_filled, ws, gs ./ (N - 1),
+    mc=color, lc=color, lw=1, arrow=:arrow, ms=4,
+    markershape=:circle, markerstrokecolor=color,
+    label=L"r_p = %$(rp),r_c \in [%$(rs[1]),%$(rs[end])]",
+    legend=:topright)
+
+plot!(pl_lyaps_filled, legendfontsize=10)
+
+
 savefig(pl_lyaps_filled,figs_dir*"N10_phasediagram_extended_filled_Ttr_1000"*"labeled.png")
-
-
 
 #=
 #-------------------plot original parameter curves on phase diagram-------------

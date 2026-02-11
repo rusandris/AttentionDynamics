@@ -9,27 +9,6 @@ using DelimitedFiles
 cd(@__DIR__)
 
 
-function precompute_trajectories(ds, ps, p_idx, Δt=1e-1, T_traj=5000, Ttr=1000)
-
-    #precomputed trajs
-    trajs = []
-    for p in ps
-
-        if p_idx isa Vector
-            for i in p_idx
-                set_parameter!(ds, i, p)
-            end
-        else
-            set_parameter!(ds, p_idx, p)
-        end
-
-        #solve systems to get trajectory
-        @time traj, times = trajectory(ds, T_traj; Ttr=Ttr, Δt=Δt)
-        push!(trajs, traj)
-    end
-    return trajs
-end
-
 #-----------------------------------time params---------------------------------------
 
 #length of precomputed trajs 
@@ -48,40 +27,80 @@ u0 = rand(2N) * 0.1
 
 ds = create_ds(u0, [g, w, N]; diffeq=diffeq2) #no noise
 
-#parameters to change 
-gs = [21.11111111111111, 15.200000000000001]
-ws = [0.5612009237875288, 0.6398104265402844]
 
-#plot parts of trajectories  
-plots_trajs = []
+savedir_root = "../../data/trajs_precomp_rescaled_triangle/"
+mkpath(savedir_root)
+
+#-------------------change rp---------------------
+#parameters to change 
+gs = [16.499999999999996, 20.0]
+ws = [0.574468085106383, 0.574468085106383]
+
+p_sets = [[gs[i], ws[i]] for i in 1:length(gs)]
 
 #precompute trajectories
-savedir = "../../data/trajs_precomp_rescaled_alpha/"
+savedir = savedir_root * "rp_ic10/"
+mkpath(savedir)
+writedlm(savedir * "g_params.txt", gs)
+writedlm(savedir * "w_params.txt", ws)
+
+nr_ics = 10
+
+precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=1e-1,
+    T_traj=T, Ttr=Ttr, savedir=savedir, filename="_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
+
+#-------------------change alpha---------------------
+#parameters to change 
+gs = [20.0, 16.499999999999996]
+ws = [0.574468085106383, 0.6206896551724138]
+
+p_sets = [[gs[i],ws[i]] for i in 1:length(gs)]
+
+#precompute trajectories
+savedir = savedir_root*"alpha_ic10/"
+mkpath(savedir)
 writedlm(savedir*"g_params.txt", gs)
 writedlm(savedir*"w_params.txt", ws)
 
+nr_ics = 10
+
+precompute_trajectories(ds, nr_ics, p_sets, [1,2]; Δt=1e-1,
+    T_traj=T, Ttr=Ttr, savedir=savedir, filename="_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
+
+#-------------------change competition---------------------
+#parameters to change 
+gs = [16.499999999999996, 16.499999999999996]
+ws = [0.6206896551724138, 0.5744680851063829]
+
+p_sets = [[gs[i], ws[i]] for i in 1:length(gs)]
+
+#precompute trajectories
+savedir = savedir_root * "c_ic10/"
 mkpath(savedir)
-plots_trajs = []
+writedlm(savedir * "g_params.txt", gs)
+writedlm(savedir * "w_params.txt", ws)
 
-for i in 1:length(ws)
-    @show i
-    #set parameters
-    w = ws[i]
-    g = gs[i]
+nr_ics = 10
 
-    set_parameter!(ds, 1, g)
-    set_parameter!(ds, 2, w)
+precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=1e-1,
+    T_traj=T, Ttr=Ttr, savedir=savedir, filename="_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
 
-    #solve systems to get trajectory
-    @time traj, times = trajectory(ds, T; Ttr=Ttr, Δt=Δt)
+#-------------------change r---------------------
+#parameters to change 
+gs = [14.210526315789473, 18.421052631578945]
+ws = [0.6551724137931035, 0.5944380069524914]
 
-    pl = plot(Matrix(traj[1:500, 1:2:2N]), title=L"w=%$(w),g=%$(g)",legend=false)
-    push!(plots_trajs,pl)
+p_sets = [[gs[i], ws[i]] for i in 1:length(gs)]
 
-    xs = vcat(Matrix(traj)[:,1:2:end]...)
-    write(savedir * "trajs_g_$(g)_w$(w)_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat", xs)
+#precompute trajectories
+savedir = savedir_root * "rp=rc_ic10/"
+mkpath(savedir)
+writedlm(savedir * "g_params.txt", gs)
+writedlm(savedir * "w_params.txt", ws)
 
-end
+nr_ics = 10
 
-pl_trajs = plot(plots_trajs..., layout=(2, 1), size=(1000, 300), dpi=300)
-savefig(pl_trajs, savedir * "trajs_x_change_alpha.png")
+precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=1e-1,
+    T_traj=T, Ttr=Ttr, savedir=savedir, filename="_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
+
+
