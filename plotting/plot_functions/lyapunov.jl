@@ -69,7 +69,7 @@ function plot_phase_diagram(Λ,wvalues,gvalues,N;plot_critical_curve=true,kwargs
 	#plot bifurcation curves
 	plot_critical_curve && plot!(pl,wvalues,critical_curve_adim.(wvalues);kwargs...,ls=:dash,label="") #label=L"g_c(w)")
 	plot!(pl,[(N-1)/N,(N-1)/N],[gvalues[1],gvalues[end]]./(N-1);kwargs...,ls=:dash,label="")#label=L"w_{d}=(N-1)/N")	
-	plot!(ylims=(gvalues[1]/(N-1),gvalues[end]/(N-1)),xlims=(wvalues[1],wvalues[end]))
+	#plot!(ylims=(gvalues[1]/(N-1),gvalues[end]/(N-1)),xlims=(wvalues[1],wvalues[end]))
 	return pl
 end
 

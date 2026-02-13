@@ -13,7 +13,7 @@ cd(@__DIR__)
 
 #length of precomputed trajs 
 T = 100000 #10000 #100 #5000
-Ttr = 500 #500
+Ttr = 1000 #500
 Δt = 1e-1 #5*1e-2
 
 #-----------------------------------setup system--------------------------------------
@@ -27,9 +27,24 @@ u0 = rand(2N) * 0.1
 
 ds = create_ds(u0, [g, w, N]; diffeq=diffeq2) #no noise
 
-
-savedir_root = "../../data/trajs_precomp_rescaled_triangle/"
+savedir_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
 mkpath(savedir_root)
+#read params of alpha curve 
+params_curve = readdlm("../../data/lifetime_distributions_rescaled_alpha_curve/B_param_pairs.txt")
+
+p_sets = [ params_curve[p,[2,1]] for p in 1:3]
+
+#precompute trajectories
+savedir = savedir_root
+mkpath(savedir)
+
+nr_ics = 10
+
+precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=1e-1,
+    T_traj=T, Ttr=Ttr, savedir=savedir, filename="_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
+
+
+#=
 
 #-------------------change rp---------------------
 #parameters to change 
@@ -103,4 +118,5 @@ nr_ics = 10
 precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=1e-1,
     T_traj=T, Ttr=Ttr, savedir=savedir, filename="_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
 
+=#
 

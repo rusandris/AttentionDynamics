@@ -4,51 +4,59 @@ cd(@__DIR__)
 include("../../scripts/new/chart_functions.jl")
 
 #general parameters
-colors = [:lime, :cyan, :orange, :darkgreen]
+#colors = [:lime, :cyan, :orange, :darkgreen]
+colors = [:lime, :cyan, :gray10]
 markershapes = [:circle, :cross]
 
 nbins = 30 #[25,10]
 #chart_times = [0.1, 1.0] #[1.0,2.0]
-chart_time = 0.5 #1.0 #0.1
+chart_time = 0.1 #0.1 #1.0 #0.1 #0.5
 k = 4
 
-data_dir_traj_root = "../../data/trajs_precomp_rescaled/"
-subdirs = readdir(data_dir_traj_root)
+data_dir_traj_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
+#read params
+files = readdir(data_dir_traj_root)
+params = readdlm(data_dir_traj_root * files[1])
+ws = params[:,1]
+gs = params[:,2]
+gs_rounded = round.(gs; digits=4)
+ws_rounded = round.(ws; digits=4)
+
+
+#traj specific parameters (not from filename, hardcoded)
+N = 10
+Δt_traj = 0.1 #sampling of trajectories
+T = 100000
+t = [0.0:Δt:T;]
+data_shape = (Int(T / Δt) + 1, N)
+
+#subdirs = readdir(data_dir_traj_root)
+subdirs = [""]
 plots = []
+pls = [plot(), plot(), plot()]
 
 for (dir_idx,data_dir_traj) in enumerate(subdirs)
     @show data_dir_traj
-    path = data_dir_traj_root * data_dir_traj * "/"
-    pls = [plot(), plot(), plot()]
-    color = colors[dir_idx]
+    #path = data_dir_traj_root * data_dir_traj * "/"
+    path = data_dir_traj_root 
+    @show path
+    #pls = [plot(), plot(), plot()]
 
     #---------------------------read precomputed trajectories------------------------------------ 
     dir_content = readdir(path)
     files = dir_content[findall(f -> occursin(".txt",f) || occursin(".dat",f),dir_content)]
-
-    #read params
-    gs = vec(readdlm(path * files[1]))
-    ws = vec(readdlm(path * files[end]))
-    gs_rounded = round.(gs; digits=4)
-    ws_rounded = round.(ws; digits=4)
 
     files_trajs = files[findall(f -> occursin(".dat", f), files)] #select binary only
     nr_ics = Int(length(files_trajs)/length(gs))
 
     files_trajs_ics = [files_trajs[findall(f -> occursin("g$(gs[i])_w$(ws[i])", f), files_trajs)] for i in 1:length(gs)]
 
-    #traj specific parameters from filename
-    N = parse(Int64, files_trajs[1][end-34:end-33])
-    Δt = parse(Float64, files_trajs[1][end-10:end-8]) #sampling of trajectories
-    T = parse(Float64, files_trajs[1][end-30:end-25])
-    t = [0.0:Δt:T;]
-    data_shape = (Int(T / Δt) + 1, N)
-
     #-----------------------------compute and gather lifetimes------------------------------
 
     #loop through parameters (corresponding filesets)
     for (i,fileset) in enumerate(files_trajs_ics)
 
+        color = colors[i]
         lifetimes_all = Int64[]
 
         #read each initial condition file 
@@ -65,7 +73,7 @@ for (dir_idx,data_dir_traj) in enumerate(subdirs)
             savefig(plot(traj[1:500,:],legend=false,title=fname,size=(1200,300)),path*"figs/"*fname*".png")
             
             #integrate activity segment to segment
-            int_act, time_segments = integrate_activity(traj, t, Int(chart_time / Δt))
+            int_act, time_segments = integrate_activity(traj, t, Int(chart_time / Δt_traj))
             
             lts = get_lifetimes_integ(int_act, k)
             @show length(lts)
@@ -97,7 +105,7 @@ for (dir_idx,data_dir_traj) in enumerate(subdirs)
 
         #make plots 
         plot!(pls[1], log10.(bins_discrete), log10.(counts_discrete), 
-            markershape=markershapes[i],#st=:scatter,
+            markershape=:circle,#st=:scatter,
             mc=color, markerstrokecolor=color,
             lc=color,
             dpi=300,
@@ -107,7 +115,7 @@ for (dir_idx,data_dir_traj) in enumerate(subdirs)
             ylabel=L"\log(count)")
 
         plot!(pls[2], log10.(bins_exp), log10.(counts_exp),
-            markershape=markershapes[i], #st=:scatter,
+            markershape=:circle, #st=:scatter,
             mc=color, markerstrokecolor=color,
             lc=color,
             dpi=300,
@@ -117,12 +125,12 @@ for (dir_idx,data_dir_traj) in enumerate(subdirs)
             ylabel=L"\log(count)")
 
         plot!(pls[3], log10.(bins_lin), log10.(counts_lin), 
-            markershape=markershapes[i], #st=:scatter,
+            markershape=:circle, #st=:scatter,
             mc=color, markerstrokecolor=color,
             lc=color,
             dpi=300,
             title=L"k=%$k", ms=4,
-            label=L"Lw = %$(ws_rounded[i]), g = %$(gs_rounded[i]), Δt=%$(chart_time)",
+            label=L"w = %$(ws_rounded[i]), g = %$(gs_rounded[i]), Δt=%$(chart_time)",
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
     end
@@ -140,6 +148,8 @@ pl_all = plot(plots_reorder..., layout=(3, 4), size=(1200, 800),dpi=300)
 
 savedir = "../../paper_figs/lifetime_distributions_rescaled/"
 mkpath(savedir)
+savefig(pls[1], savedir * "lifetime_distributions_rescaled_k$(k)_change_orig_param_charting time_$(chart_time)_integrated_log_log_discrete_Btriangle_10ic.png")
+
 savefig(pl_all, savedir * "lifetime_distributions_rescaled_k$(k)_change_orig_param_charting time_0.5_integrated_log_log_discrete_bin_exp_bin_linbin_properbins_bin_norm_10ic.png")
 savefig(pl_expbin, savedir * "lifetime_distributions_rescaled_k$(k)_change_alpha_charting time_0.1_1_integrated_log_log_exp_bin_separated_properbins_bin_norm_10ic.png")
 

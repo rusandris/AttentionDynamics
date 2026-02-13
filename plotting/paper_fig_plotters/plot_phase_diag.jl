@@ -8,14 +8,19 @@ include("../../plotting/plot_functions/lyapunov.jl")
 #-------------------------plot phase diagram---------------------
 
 #--------------read lyaps--------------------
-data_dir = "../../data/phasediag_data_N10_extended_d0_1.0e-9_ut1e-6/"
-lyap_vals = reshape(readdlm(data_dir*"lyap_values.txt"),(60,60))
+figs_dir = "../../paper_figs/"
+#data_dir = "../../data/phasediag_data_N10_extended_d0_1.0e-9_ut1e-6/"
+data_dir = "../../data/phasediag_data_N10_extended3_80x80/"
+lyap_vals = reshape(readdlm(data_dir*"lyap_values_Ttr1000.txt"),(80,80))
 params = readdlm(data_dir*"phasediag_params.txt")
 ws = params[:,1]
 gs = params[:,2]
 N=10
 
-pl_lyaps = plot_phase_diagram(lyap_vals,ws,gs,N;HEATMAP_DEFAULTS...,
+pl_lyaps = plot_phase_diagram(lyap_vals,ws,gs,N;
+    xlims=(0.0, 1.0),
+    ylims=(gs[1],gs[end])./(N-1),
+    HEATMAP_DEFAULTS...,
     ylabel=L"\frac{1}{\epsilon(N-1)}",clims=(-0.5,0.5),
     right_margin=6Plots.mm,
     left_margin=6Plots.mm,
@@ -23,7 +28,8 @@ pl_lyaps = plot_phase_diagram(lyap_vals,ws,gs,N;HEATMAP_DEFAULTS...,
     guidefontsize=guide_fontsize_medium,
     xguidefontsize=guide_fontsize_large,
     colorbar_title="",
-    colorbar_ticks = [-0.5,0.0,0.5])
+    colorbar_ticks = [-0.5,0.0,0.5],
+    x_ticks = [0.0, 0.5, 1.0])
 
 #fill in with analytical eigenvalues
 λa = -1
@@ -39,8 +45,10 @@ for (j,g) in enumerate(gs)
     end
 end
 
-
-pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws, gs, N; HEATMAP_DEFAULTS...,
+pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws, gs, N; 
+    xlims=(0.0, 1.0),
+    ylims=(gs[1], gs[end]) ./ (N - 1),
+    HEATMAP_DEFAULTS...,
     ylabel=L"\frac{1}{\epsilon(N-1)}", clims=(-0.5, 0.5),
     right_margin=6Plots.mm,
     left_margin=6Plots.mm,
@@ -48,22 +56,30 @@ pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws, gs, N; HEATMAP_DEFAUL
     guidefontsize=guide_fontsize_medium,
     xguidefontsize=guide_fontsize_large,
     colorbar_title="",
-    colorbar_ticks=[-0.5, 0.0, 0.5])
+    colorbar_ticks=[-0.5, 0.0, 0.5],
+    x_ticks=[0.0, 0.5, 1.0])
 
-ws_example = [0.5, 0.65, 0.75, 0.92]
-g_example = 15.75
+
+#------------------------plot example param values------------------
+ms = 5
+color_default = :gray10
+ws_example = [0.4, 0.55, 0.8, 0.95]
+g_example = 18.00
+example_colors = [color_default, color_default, color_default, :gray60]
+
 hline!([g_example / (N - 1)], ls=:dot, la=0.5, lw=2, lc=:gray10, label="")
 plot!(ws_example, fill(g_example / (N - 1), 4),
-    ms=5, st=:scatter, mc=:orange,markerstrokecolor=:orange,
+    ms=ms, st=:scatter, mc=example_colors,
+    markerstrokewidth=0.0,
     label="")
 
 #add annotations 
-labels = ["A", "B", "C", "D"]
-x_annot_offsets = [0.01, 0.0, 0.0, -0.05]
+labels = [L"A", L"B_2", L"C", L"D"]
+x_annot_offsets = [0.0, 0.05, 0.0, 0.0]
 for (i, pl) in enumerate(ws_example)
     xpos = ws_example[i] + x_annot_offsets[i]
-    ypos = g_example/(N-1) * 1.05
-    annotate!(pl_lyaps_filled, xpos, ypos, text(labels[i], :gray10, :center, 18))
+    ypos = g_example/(N-1) * 0.92
+    annotate!(pl_lyaps_filled, xpos, ypos, text(labels[i], example_colors[i], :center, 18))
 end
 pl_lyaps_filled
 
@@ -72,54 +88,92 @@ pl_lyaps_filled
 
 #---------------rp------------------
 
-rs = range(1.65, 2.0; length=3)
-rc = 2.0;
+rc = 1.8;
 K = 1.0;
-c = 3.0;
-α = 0.1;
-w_g_pairs_rp = rescaled_params.(rs, rc, K, c, α, N)
-ws = [w_g_pairs_rp[i][1] for i in 1:length(w_g_pairs_rp)]
-gs = [w_g_pairs_rp[i][2] for i in 1:length(w_g_pairs_rp)]
+c0 = 2.5;
+α0 = 0.1;
 
-color = :darkgreen
-plot!(pl_lyaps_filled, ws, gs ./ (N - 1),
-    mc=color, lc=color, lw=1, arrow=:arrow, ms=4,
-    markershape=:circle, markerstrokecolor=color,
-    label=L"r_c = %$(rc),r_p \in [%$(rs[1]),%$(rs[end])]",
-    legend=:topright)
+#B is one corner of the triangle
+w_B2 = ws_example[2]
+g_B2 = g_example
+#rp_B1 = g_example*α0
 
-plot!(pl_lyaps_filled, legendfontsize=10)
+#intersection of vertical and alpha curve 
+g_alpha(w,rp,rc,K,c) = rp*K*c/rc * (1/w-1) #alpha curve
+
+#check if alpha curve passes through B3
+rp_B2 = rc/(K*c0)*g_B2/(1/w_B2-1)
+
+g_B2 = g_alpha(w_B1, rp_B2, rc, K, c0)
+w_B1 = 0.52
+w_B3 = 0.65
+w_B1_B3 = [w_B1:0.001:w_B3;]
+gs_alpha = g_alpha.(w_B1_B3, rp_B2, rc, K, c0) #alpha curve
+g_B1 = gs_alpha[1]
+g_B3 = gs_alpha[end]
+#plot triangle 
+plot!([w_B1], [g_B3 / (N - 1)], ms=ms, mc=:lime, markerstrokewidth=0.0, st=:scatter, label="")
+plot!([w_B1], [g_B2 / (N - 1)], ms=ms, mc=:cyan, markerstrokewidth=0.0, st=:scatter, label="")
+plot!(w_B1_B3, gs_alpha ./ (N - 1), st=:scatter, ms=0.1, la=0.5, lw=2, lc=:gray10, label="")
+plot!([w_B1, w_B1], [g_B3, g_B2] ./ (N - 1), ls=:dot, la=0.5, lw=2, lc=:gray10, label="")
+
+annotate!(pl_lyaps_filled, w_B1 - 0.01, g_B3 / (N - 1) + 0.1, text(L"B_1", :lime, :right, 14))
+annotate!(pl_lyaps_filled, w_B1, g_B2 / (N - 1) + 0.1, text(L"B_2", :cyan, :right, 14))
+
+#save three B parameter pairs into file 
+params_savedir = "../../data/lifetime_distributions_rescaled_alpha_curve/"
+mkpath(params_savedir)
+writedlm("../../data/lifetime_distributions_rescaled_alpha_curve/B_param_pairs.txt", hcat([w_B1, w_B2, w_B3], [g_B1, g_B2, g_B3]))
+
+#plot!([w_B3], [g_B3 / (N - 1)], ms=6, mc=:cyan, st=:scatter)
+
+savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended3_80x80_filled_Ttr_10000_" * "labeled_triangle.png")
+
+
+#=
+rs = range(rp_B1, rp_B2; length=3)
+w_g_pairs_rp = rescaled_params.(rs, rc, K, c0, α0, N)
+ws_rp = [w_g_pairs_rp[i][1] for i in 1:length(w_g_pairs_rp)]
+gs_rp = [w_g_pairs_rp[i][2] for i in 1:length(w_g_pairs_rp)]
+
 
 #---------------alpha------------------
 #only coincides with r curve if rp=rc
-
-αs = range(0.1,0.1*2/1.65;length=5)
-rp = 2.0; rc =2.0; K = 1.0; c = 3.0; α = 0.1
-w_g_pairs_alpha = rescaled_params.(rp, rc, K, c, αs, N)
-ws = [w_g_pairs_alpha[i][1] for i in 1:length(w_g_pairs_alpha)]
-gs = [w_g_pairs_alpha[i][2] for i in 1:length(w_g_pairs_alpha)]
-
-color = :lime
-plot!(pl_lyaps_filled, ws, gs ./ (N - 1),
-    mc=:lime, lc=:lime, lw=1, arrow=:arrow,ms=4,
-    markershape=:circle,markerstrokecolor=:lime,
-    label=L"\alpha \in [%$(αs[1]),%$(αs[end])]",
-    legend=:topright)
+αs = range(α_B1, α_B3; length=3)
+w_g_pairs_alpha = rescaled_params.(rp_B2, rc, K, c0, αs, N)
+ws_alpha = [w_g_pairs_alpha[i][1] for i in 1:length(w_g_pairs_alpha)]
+gs_alpha = [w_g_pairs_alpha[i][2] for i in 1:length(w_g_pairs_alpha)]
 
 #---------------c------------------
+c_B3 = c0
+c_B1 = c0
 
-cs = range(3.0, 3.0/αs[end]*αs[1]; length=2)
+cs = range(3.0, 3.0/αs[end]*αs[1]; length=5)
 rp = 2.0;rc = 2.0; K = 1.0; α = αs[end];
 w_g_pairs_cs = rescaled_params.(rp, rc, K, cs, α, N)
-ws = [w_g_pairs_cs[i][1] for i in 1:length(w_g_pairs_cs)]
-gs = [w_g_pairs_cs[i][2] for i in 1:length(w_g_pairs_cs)]
+ws_c = [w_g_pairs_cs[i][1] for i in 1:length(w_g_pairs_cs)]
+gs_c = [w_g_pairs_cs[i][2] for i in 1:length(w_g_pairs_cs)]
 
-color = :cyan
-plot!(pl_lyaps_filled, ws, gs ./ (N - 1),
-    mc=color, lc=color, lw=1, arrow=:arrow, ms=4,
-    markershape=:circle, markerstrokecolor=color,
-    label=L"c \in [%$(cs[1]),%$(cs[end])]",
-    legend=:topright)
+#plot triangle 
+plot!(pl_lyaps_filled, ws_rp, gs_rp ./ (N - 1),
+    mc=[:darkgreen, :darkgreen, :lime],
+    markershape=:circle,lc=:darkgreen,
+    markerstrokewidth=0.0,
+    ms=[6,3,6],label="")
+
+plot!(pl_lyaps_filled, ws_alpha, gs_alpha ./ (N - 1),
+    mc=[:lime, :lime, :lime, :lime, :cyan],
+    markershape=:circle, lc=:lime,
+    markerstrokewidth=0.0,
+    ms=[6,3,6], label="")
+
+plot!(pl_lyaps_filled, ws_c, gs_c ./ (N - 1),
+    mc=[:cyan, :cyan, :cyan, :cyan, :darkgreen],
+    markershape=:circle, lc=:cyan,
+    markerstrokewidth=0.0,
+    ms=[6,3,6], label="")
+
+
 
 #---------------r------------------
 
@@ -156,7 +210,6 @@ plot!(pl_lyaps_filled, legendfontsize=10)
 
 savefig(pl_lyaps_filled,figs_dir*"N10_phasediagram_extended_filled_Ttr_1000"*"labeled.png")
 
-#=
 #-------------------plot original parameter curves on phase diagram-------------
 
 N=300
