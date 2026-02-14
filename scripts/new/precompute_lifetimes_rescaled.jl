@@ -17,11 +17,12 @@ data_shape = (Int(T / Δt_traj) + 1, N)
 k = 4
 
 #trajectory path
-#data_dir_traj_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
-data_dir_traj_root = "../../data/trajs_precomp_rescaled_vertical/"
+data_dir_traj_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
+#data_dir_traj_root = "../../data/trajs_precomp_rescaled_vertical_test/"
 
 #save path 
-savedir = "../../data/lifetimes_precomp_rescaled_vertical/"
+#savedir = "../../data/lifetimes_precomp_rescaled_vertical_test/"
+savedir = "../../data/lifetimes_precomp_rescaled_alpha_curve/"
 mkpath(savedir)
 
 #read params
@@ -29,6 +30,7 @@ files = readdir(data_dir_traj_root)
 params = readdlm(data_dir_traj_root * files[1])
 writedlm(savedir*"B_param_pairs.txt",params)#save params also here
 #params = [0.45 22.5; 0.5 22.5; 0.55 22.5]
+#params = [0.62 15.75; 0.63 15.75; 0.64 15.75]
 ws = params[:,1]
 gs = params[:,2]
 gs_rounded = round.(gs; digits=4)

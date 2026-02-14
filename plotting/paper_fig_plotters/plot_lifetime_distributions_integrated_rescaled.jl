@@ -10,12 +10,15 @@ markershapes = [:circle, :cross]
 nbins = 30 #[25,10]
 
 #lifetimes path 
-data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_vertical/"
+#data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_vertical_test/"
+data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_alpha_curve/"
+
 #read params
 files = readdir(data_dir_traj_root)
 files_lifetime = files[findall(f -> occursin(".dat", f), files)] #select binary only
 params = readdlm(data_dir_traj_root * files[1])
 #params = [0.45 22.5; 0.5 22.5; 0.55 22.5]
+#params = [0.62 15.75; 0.63 15.75; 0.64 15.75]
 ws = params[:,1]
 gs = params[:,2]
 gs_rounded = round.(gs; digits=4)
@@ -41,8 +44,9 @@ files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time",
 for (i, fileset) in enumerate(files_lifetime_by_time)
     pls = [plot(), plot(), plot()]#init empty 3-plot
     chart_time = chart_times[i]
+    @show chart_time
     for (j,f) in enumerate(fileset)
-
+        @show f
         #read lifetimes
         lifetimes = reinterpret(Int64, read(data_dir_traj_root * f))
         color = colors[j]
@@ -77,7 +81,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=4,
-            label=L"w = %$(ws_rounded[i]), g = %$(gs_rounded[i])",
+            label=L"w = %$(ws_rounded[j]), g = %$(gs_rounded[j])",
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
 
@@ -87,7 +91,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=4,
-            label=L"w = %$(ws_rounded[i]), g = %$(gs_rounded[i])",
+            label=L"w = %$(ws_rounded[j]), g = %$(gs_rounded[j])",
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
 
@@ -97,7 +101,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=4,
-            label=L"w = %$(ws_rounded[i]), g = %$(gs_rounded[i])",
+            label=L"w = %$(ws_rounded[j]), g = %$(gs_rounded[j])",
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
     end
@@ -111,8 +115,7 @@ pl_all = plot(plots_reorder..., layout=(3, 3), size=(1000, 800),
 
 savedir = "../../paper_figs/lifetime_distributions_rescaled/"
 mkpath(savedir)
-pl_all = plot(pls...,layout=(3,1),size=(400,800))
-savefig(pl_all, savedir * "lifetime_distributions_rescaled_k$(k)_change_orig_param_charting time_$(chart_time)_integrated_log_log_discrete_exp_linbin_verticalB_10ic.png")
+savefig(pl_all, savedir * "lifetime_distributions_rescaled_k$(k)_integrated_log_log_discrete_exp_linbin_alpha_curve_10ic.png")
 
 
 #=

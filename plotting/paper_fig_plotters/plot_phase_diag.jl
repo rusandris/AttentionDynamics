@@ -63,8 +63,11 @@ pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws, gs, N;
 #------------------------plot example param values------------------
 ms = 5
 color_default = :gray10
-ws_example = [0.3, 0.48, 0.7, 0.95]
-g_example = 22.50
+#ws_example = [0.3, 0.48, 0.7, 0.95]
+#ws_example = [0.3, 0.63, 0.8, 0.95]
+w_B2 = 0.5
+ws_example = [0.3, w_B2, 0.7, 0.95]
+g_example = 22.5 #9*1.75
 example_colors = [color_default, color_default, color_default, :gray60]
 
 hline!([g_example / (N - 1)], ls=:dot, la=0.5, lw=2, lc=:gray10, label="")
@@ -85,9 +88,32 @@ pl_lyaps_filled
 
 #add two more points to B phase
 
-w_B1 = 0.43
-w_B3 = 0.53
+#w_B1 = 0.43
+#w_B3 = 0.53
 
+#alpha curve version 
+rc = 1.8;K = 1.0;c0 = 2.5;α0 = 0.1;
+g_alpha(w, rp, rc, K, c) = rp * K * c / rc * (1 / w - 1) #alpha curve
+g_B2 = g_example
+#check if alpha curve passes through B3
+#rp_B2 = rc / (K * c0) * g_B2 / (1 / w_B2 - 1)
+
+w_B1 = 0.47
+w_B3 = 0.55
+w_B1_B3 = [w_B1:0.001:w_B3;]
+gs_alpha = g_alpha.(w_B1_B3, rp_B2, rc, K, c0) #alpha curve
+g_B1 = gs_alpha[1]; g_B3 = gs_alpha[end]
+
+plot!(w_B1_B3, gs_alpha ./ (N - 1), st=:scatter, ms=0.1, la=0.5, lw=2, lc=:gray10, label="")
+plot!([w_B1, w_B3], [g_B1, g_B3] ./ (N - 1),
+    ms=ms, st=:scatter, mc=[:lime, :cyan],
+    markerstrokewidth=0.0,
+    label="")
+
+annotate!(pl_lyaps_filled, w_B1-0.01, g_B1 / (N - 1), text(L"B_1", :lime, :right, 14))
+annotate!(pl_lyaps_filled, w_B3+0.01, g_B3 / (N - 1), text(L"B_3", :cyan, :left, 14))
+
+#=
 plot!([w_B1,w_B3],[g_example, g_example] ./ (N-1),
     ms=ms, st=:scatter, mc=[:lime,:cyan],
     markerstrokewidth=0.0,
@@ -95,18 +121,12 @@ plot!([w_B1,w_B3],[g_example, g_example] ./ (N-1),
 
 annotate!(pl_lyaps_filled, w_B1, g_example/(N-1)*1.05, text(L"B_1", :lime, :center, 14))
 annotate!(pl_lyaps_filled, w_B3-0.02, g_example/(N-1)*1.05, text(L"B_3", :cyan, :center, 14))
+=#
 
 mkpath("../../data/trajs_precomp_rescaled_vertical")
 writedlm("../../data/trajs_precomp_rescaled_vertical/B_param_pairs.txt", hcat([w_B1, w_B2, w_B3], [g_example, g_example, g_example]))
 
-
-
-
-savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended3_80x80_filled_Ttr_100000_" * "labeled_verticalB.png")
-
-
-
-
+savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended3_80x80_filled_Ttr_100000_" * "labeled_alpha_curve.png")
 
 
 
