@@ -7,16 +7,15 @@ include("../../scripts/new/chart_functions.jl")
 #colors = [:lime, :cyan, :orange, :darkgreen]
 colors = [:lime, :cyan, :gray10]
 markershapes = [:circle, :cross]
-
 nbins = 30 #[25,10]
-#chart_times = [0.1, 1.0] #[1.0,2.0]
-chart_time = 0.1 #0.1 #1.0 #0.1 #0.5
-k = 4
 
-data_dir_traj_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
+#lifetimes path 
+data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_vertical/"
 #read params
 files = readdir(data_dir_traj_root)
+files_lifetime = files[findall(f -> occursin(".dat", f), files)] #select binary only
 params = readdlm(data_dir_traj_root * files[1])
+#params = [0.45 22.5; 0.5 22.5; 0.55 22.5]
 ws = params[:,1]
 gs = params[:,2]
 gs_rounded = round.(gs; digits=4)
@@ -27,79 +26,47 @@ ws_rounded = round.(ws; digits=4)
 N = 10
 Δt_traj = 0.1 #sampling of trajectories
 T = 100000
-t = [0.0:Δt:T;]
-data_shape = (Int(T / Δt) + 1, N)
+t = [0.0:Δt_traj:T;]
+data_shape = (Int(T / Δt_traj) + 1, N)
+k = 4
 
-#subdirs = readdir(data_dir_traj_root)
-subdirs = [""]
 plots = []
-pls = [plot(), plot(), plot()]
+#pls = [plot(), plot(), plot()]
 
-for (dir_idx,data_dir_traj) in enumerate(subdirs)
-    @show data_dir_traj
-    #path = data_dir_traj_root * data_dir_traj * "/"
-    path = data_dir_traj_root 
-    @show path
-    #pls = [plot(), plot(), plot()]
+chart_times = [0.1, 0.5 ,1.0] #[1.0,2.0]
+#chart_time = 0.1 #0.1 #1.0 #0.1 #0.5
+files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times]#select binary only
 
-    #---------------------------read precomputed trajectories------------------------------------ 
-    dir_content = readdir(path)
-    files = dir_content[findall(f -> occursin(".txt",f) || occursin(".dat",f),dir_content)]
 
-    files_trajs = files[findall(f -> occursin(".dat", f), files)] #select binary only
-    nr_ics = Int(length(files_trajs)/length(gs))
+for (i, fileset) in enumerate(files_lifetime_by_time)
+    pls = [plot(), plot(), plot()]#init empty 3-plot
+    chart_time = chart_times[i]
+    for (j,f) in enumerate(fileset)
 
-    files_trajs_ics = [files_trajs[findall(f -> occursin("g$(gs[i])_w$(ws[i])", f), files_trajs)] for i in 1:length(gs)]
-
-    #-----------------------------compute and gather lifetimes------------------------------
-
-    #loop through parameters (corresponding filesets)
-    for (i,fileset) in enumerate(files_trajs_ics)
-
-        color = colors[i]
-        lifetimes_all = Int64[]
-
-        #read each initial condition file 
-        #compute lifetimes for each
-        for f in fileset
-            @show f
-            fname, = splitext(f)
-            
-            #read trajectory
-            traj = Matrix(reshape(reinterpret(Float64, read(path * f)), data_shape))
-
-            #save traj pl
-            mkpath(path*"figs/")
-            savefig(plot(traj[1:500,:],legend=false,title=fname,size=(1200,300)),path*"figs/"*fname*".png")
-            
-            #integrate activity segment to segment
-            int_act, time_segments = integrate_activity(traj, t, Int(chart_time / Δt_traj))
-            
-            lts = get_lifetimes_integ(int_act, k)
-            @show length(lts)
-            push!(lifetimes_all,lts...)
-        end
+        #read lifetimes
+        lifetimes = reinterpret(Int64, read(data_dir_traj_root * f))
+        color = colors[j]
 
         #--------------------------get binning for lifetimes--------------------------
 
         #preset bins, one for each possible \tau value (discrete)
-        bin_edges = minimum(lifetimes_all):1:maximum(lifetimes_all)
-        h_discrete = fit(Histogram, Float64.(lifetimes_all), bin_edges)
+        bin_edges = minimum(lifetimes):1:maximum(lifetimes)
+        h_discrete = fit(Histogram, Float64.(lifetimes), bin_edges)
         bins_discrete = h_discrete.edges[1][1:end-1]
         counts_discrete = h_discrete.weights
 
         #get exponential binning automatically adjusted for each
-        bins_exp, counts_exp = autohist(lifetimes_all; m=1, nbins=nbins)
+        bins_exp, counts_exp = autohist(lifetimes; m=1, nbins=nbins)
         #normalize by bin width
         counts_exp = counts_exp ./ diff(bins_exp)
         bins_exp = sqrt.([bins_exp[i] * bins_exp[i+1] for i in 1:length(bins_exp)-1]) #right edges
 
         #get linear binning automatically adjusted for each
-        h_lin = fit(Histogram, lifetimes_all; nbins=nbins)
+        h_lin = fit(Histogram, lifetimes; nbins=nbins)
 
         bins_lin = h_lin.edges[1]
         counts_lin = h_lin.weights
-
+        
         counts_lin = counts_lin ./ diff(bins_lin)
         bins_lin = sqrt.([bins_lin[i] * bins_lin[i+1] for i in 1:length(bins_lin)-1]) #right edges
 
@@ -109,8 +76,8 @@ for (dir_idx,data_dir_traj) in enumerate(subdirs)
             mc=color, markerstrokecolor=color,
             lc=color,
             dpi=300,
-            title=L"k=%$k", ms=4,
-            label=L"w = %$(ws_rounded[i]), g = %$(gs_rounded[i]), Δt=%$(chart_time)",
+            title=L"\Delta t = %$(chart_time)", ms=4,
+            label=L"w = %$(ws_rounded[i]), g = %$(gs_rounded[i])",
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
 
@@ -119,8 +86,8 @@ for (dir_idx,data_dir_traj) in enumerate(subdirs)
             mc=color, markerstrokecolor=color,
             lc=color,
             dpi=300,
-            title=L"k=%$k", ms=4,
-            label=L"w = %$(ws_rounded[i]), g = %$(gs_rounded[i]), Δt=%$(chart_time)",
+            title=L"\Delta t = %$(chart_time)", ms=4,
+            label=L"w = %$(ws_rounded[i]), g = %$(gs_rounded[i])",
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
 
@@ -129,29 +96,24 @@ for (dir_idx,data_dir_traj) in enumerate(subdirs)
             mc=color, markerstrokecolor=color,
             lc=color,
             dpi=300,
-            title=L"k=%$k", ms=4,
-            label=L"w = %$(ws_rounded[i]), g = %$(gs_rounded[i]), Δt=%$(chart_time)",
+            title=L"\Delta t = %$(chart_time)", ms=4,
+            label=L"w = %$(ws_rounded[i]), g = %$(gs_rounded[i])",
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
     end
-    push!(plots,pls)
+        push!(plots,pls)
 end
 
-pl_expbin = plot(plots_expbin..., layout=(1, 2), size=(800, 300), plot_title="expbin",
-    legend=:bottomleft, left_margin=6Plots.mm, bottom_margin=6Plots.mm)
 
-pl_linbin = plot(plots_linbin..., layout=(1, 2), size=(800, 300), plot_title="linbin",
-    legend=:bottomleft, left_margin=6Plots.mm)
-
-plots_reorder = [plots[i][j] for j in 1:3 for i in 1:4]
-pl_all = plot(plots_reorder..., layout=(3, 4), size=(1200, 800),dpi=300)
+plots_reorder = [plots[i][j] for j in 1:3 for i in 1:3]
+pl_all = plot(plots_reorder..., layout=(3, 3), size=(1000, 800),
+    plot_title=L"N=%$N,k=%$k", dpi=300)
 
 savedir = "../../paper_figs/lifetime_distributions_rescaled/"
 mkpath(savedir)
-savefig(pls[1], savedir * "lifetime_distributions_rescaled_k$(k)_change_orig_param_charting time_$(chart_time)_integrated_log_log_discrete_Btriangle_10ic.png")
+pl_all = plot(pls...,layout=(3,1),size=(400,800))
+savefig(pl_all, savedir * "lifetime_distributions_rescaled_k$(k)_change_orig_param_charting time_$(chart_time)_integrated_log_log_discrete_exp_linbin_verticalB_10ic.png")
 
-savefig(pl_all, savedir * "lifetime_distributions_rescaled_k$(k)_change_orig_param_charting time_0.5_integrated_log_log_discrete_bin_exp_bin_linbin_properbins_bin_norm_10ic.png")
-savefig(pl_expbin, savedir * "lifetime_distributions_rescaled_k$(k)_change_alpha_charting time_0.1_1_integrated_log_log_exp_bin_separated_properbins_bin_norm_10ic.png")
 
 #=
 bin_edges = minimum(lifetimes):1:maximum(lifetimes)

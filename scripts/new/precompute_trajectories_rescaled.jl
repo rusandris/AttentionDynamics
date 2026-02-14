@@ -27,10 +27,11 @@ u0 = rand(2N) * 0.1
 
 ds = create_ds(u0, [g, w, N]; diffeq=diffeq2) #no noise
 
-savedir_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
+#savedir_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
+savedir_root = "../../data/trajs_precomp_rescaled_vertical/"
 mkpath(savedir_root)
 #read params of alpha curve 
-params_curve = readdlm("../../data/lifetime_distributions_rescaled_alpha_curve/B_param_pairs.txt")
+params_curve = readdlm(savedir_root*"/B_param_pairs.txt")
 
 p_sets = [ params_curve[p,[2,1]] for p in 1:3]
 

@@ -11,7 +11,7 @@ include("../../plotting/plot_functions/lyapunov.jl")
 figs_dir = "../../paper_figs/"
 #data_dir = "../../data/phasediag_data_N10_extended_d0_1.0e-9_ut1e-6/"
 data_dir = "../../data/phasediag_data_N10_extended3_80x80/"
-lyap_vals = reshape(readdlm(data_dir*"lyap_values_Ttr1000.txt"),(80,80))
+lyap_vals = reshape(readdlm(data_dir*"lyap_values_Ttr10000.txt"),(80,80))
 params = readdlm(data_dir*"phasediag_params.txt")
 ws = params[:,1]
 gs = params[:,2]
@@ -63,8 +63,8 @@ pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws, gs, N;
 #------------------------plot example param values------------------
 ms = 5
 color_default = :gray10
-ws_example = [0.4, 0.55, 0.8, 0.95]
-g_example = 18.00
+ws_example = [0.3, 0.48, 0.7, 0.95]
+g_example = 22.50
 example_colors = [color_default, color_default, color_default, :gray60]
 
 hline!([g_example / (N - 1)], ls=:dot, la=0.5, lw=2, lc=:gray10, label="")
@@ -75,16 +75,45 @@ plot!(ws_example, fill(g_example / (N - 1), 4),
 
 #add annotations 
 labels = [L"A", L"B_2", L"C", L"D"]
-x_annot_offsets = [0.0, 0.05, 0.0, 0.0]
+x_annot_offsets = [0.0, 0.0, 0.0, 0.0]
 for (i, pl) in enumerate(ws_example)
     xpos = ws_example[i] + x_annot_offsets[i]
-    ypos = g_example/(N-1) * 0.92
+    ypos = g_example/(N-1) * 0.95
     annotate!(pl_lyaps_filled, xpos, ypos, text(labels[i], example_colors[i], :center, 18))
 end
 pl_lyaps_filled
 
-#----------------------------add original param curves---------------------------
+#add two more points to B phase
 
+w_B1 = 0.43
+w_B3 = 0.53
+
+plot!([w_B1,w_B3],[g_example, g_example] ./ (N-1),
+    ms=ms, st=:scatter, mc=[:lime,:cyan],
+    markerstrokewidth=0.0,
+    label="")
+
+annotate!(pl_lyaps_filled, w_B1, g_example/(N-1)*1.05, text(L"B_1", :lime, :center, 14))
+annotate!(pl_lyaps_filled, w_B3-0.02, g_example/(N-1)*1.05, text(L"B_3", :cyan, :center, 14))
+
+mkpath("../../data/trajs_precomp_rescaled_vertical")
+writedlm("../../data/trajs_precomp_rescaled_vertical/B_param_pairs.txt", hcat([w_B1, w_B2, w_B3], [g_example, g_example, g_example]))
+
+
+
+
+savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended3_80x80_filled_Ttr_100000_" * "labeled_verticalB.png")
+
+
+
+
+
+
+
+
+
+#=
+#----------------------------add original param curves---------------------------
 
 #---------------rp------------------
 
@@ -92,6 +121,7 @@ rc = 1.8;
 K = 1.0;
 c0 = 2.5;
 α0 = 0.1;
+
 
 #B is one corner of the triangle
 w_B2 = ws_example[2]
@@ -104,9 +134,9 @@ g_alpha(w,rp,rc,K,c) = rp*K*c/rc * (1/w-1) #alpha curve
 #check if alpha curve passes through B3
 rp_B2 = rc/(K*c0)*g_B2/(1/w_B2-1)
 
-g_B2 = g_alpha(w_B1, rp_B2, rc, K, c0)
-w_B1 = 0.52
-w_B3 = 0.65
+g_B2 = g_alpha(w_B2, rp_B2, rc, K, c0)
+w_B1 = 0.43
+w_B3 = 0.53
 w_B1_B3 = [w_B1:0.001:w_B3;]
 gs_alpha = g_alpha.(w_B1_B3, rp_B2, rc, K, c0) #alpha curve
 g_B1 = gs_alpha[1]
@@ -120,6 +150,7 @@ plot!([w_B1, w_B1], [g_B3, g_B2] ./ (N - 1), ls=:dot, la=0.5, lw=2, lc=:gray10, 
 annotate!(pl_lyaps_filled, w_B1 - 0.01, g_B3 / (N - 1) + 0.1, text(L"B_1", :lime, :right, 14))
 annotate!(pl_lyaps_filled, w_B1, g_B2 / (N - 1) + 0.1, text(L"B_2", :cyan, :right, 14))
 
+
 #save three B parameter pairs into file 
 params_savedir = "../../data/lifetime_distributions_rescaled_alpha_curve/"
 mkpath(params_savedir)
@@ -128,7 +159,7 @@ writedlm("../../data/lifetime_distributions_rescaled_alpha_curve/B_param_pairs.t
 #plot!([w_B3], [g_B3 / (N - 1)], ms=6, mc=:cyan, st=:scatter)
 
 savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended3_80x80_filled_Ttr_10000_" * "labeled_triangle.png")
-
+=#
 
 #=
 rs = range(rp_B1, rp_B2; length=3)
