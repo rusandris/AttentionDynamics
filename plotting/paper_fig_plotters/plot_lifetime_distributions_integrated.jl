@@ -1,7 +1,7 @@
 using DelimitedFiles
 using Plots, LaTeXStrings
 cd(@__DIR__)
-include("chart_functions.jl")
+include("../../scripts/new/chart_functions.jl")
 
 
 #---------------------------lifetimes from integrated values------------------------------------ 
@@ -38,6 +38,7 @@ nbins = 30 #[25,10]
 chart_times = [0.2,2.0] #[1.0,2.0]
 data_shape = (Int(T/Δt)+1,300)
 k = 10
+lifetimes_all = []
 
 for (i,f) in enumerate(files_trajs)
     @show f
@@ -53,12 +54,15 @@ for (i,f) in enumerate(files_trajs)
         #integrate activity segment to segment 
         int_act, time_segments = integrate_activity(traj, t, Int(chart_time / Δt))
         lts = get_lifetimes_integ(int_act, k)
+        push!(lifetimes_all,lts)
 
         #get exponential binning automatically adjusted for each
-        bins_exp, counts_exp = autohist(lts; m=1, nbins=nbins)
+        bins_exp, counts_exp = autohist(lts; m=1, nbins=nbins,mode=:pdf)
+        
         #normalize by bin width
-        counts_exp = counts_exp ./ diff(bins_exp)
-        bins_exp = sqrt.( [bins_exp[i] * bins_exp[i+1] for i in 1:length(bins_exp)-1] ) #right edges
+        #counts_exp = counts_exp ./ diff(bins_exp)
+        #bins_exp = sqrt.( [bins_exp[i] * bins_exp[i+1] for i in 1:length(bins_exp)-1] ) #right edges
+
 
         #get linear binning automatically adjusted for each
         h = fit(Histogram, lts; nbins=nbins)
@@ -71,7 +75,7 @@ for (i,f) in enumerate(files_trajs)
 
 
         #make plots 
-        plot!(plots_expbin[j], log10.(bins_exp), log10.(counts_exp), markershape=markershapes[j],
+        plot!(plots_expbin[j], log10.(bins_exp[1:end-1]), log10.(counts_exp), markershape=markershapes[j],
             mc=color, markerstrokecolor=color, 
             lc=color, 
             dpi=300,
@@ -90,8 +94,13 @@ for (i,f) in enumerate(files_trajs)
             ylabel=L"\log(count)")
     end
 end
-pl_expbin = plot(plots_expbin..., layout=(1, 2),size=(800,300), plot_title="expbin",
+pl_expbin = plot(plots_expbin..., ylims=(-6,1),layout=(1, 2),size=(800,300), plot_title="expbin",
     legend=:bottomleft, left_margin=6Plots.mm, bottom_margin=6Plots.mm)
+
+#plot parabola 
+x = range(2,500;length=1000)
+y = parabolic.(x,-4/3,16/9)
+plot!(pl_expbin[1],log10.(x) .+ 1.0,log10.(y) .- 1,lw=2,lc=:gray10,ls=:dot)
 
 pl_linbin = plot(plots_linbin..., layout=(1, 2), size=(800, 300), plot_title="linbin",
     legend=:bottomleft, left_margin=6Plots.mm)
