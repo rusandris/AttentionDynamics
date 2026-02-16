@@ -1,15 +1,7 @@
-using Revise
-using ComplexityMeasures
-using BifurcationKit
-using AttentionDynamics
-using OrdinaryDiffEq
-using StateTransitionNetworks
-using DynamicalSystems
-using StatsBase
-using Plots, LaTeXStrings
-using LinearAlgebra
-using DelimitedFiles
-using Integrals
+export get_lifetimes,get_lifetimes_integ, get_distrib, integrate_activity
+export chart_stats, consecutive_occurrences
+export autohist, parabolic, linear #plot_distrib,plot_distrib!
+
 
 #generate top charts from symbolic timeseries
 function get_top_charts(sts, k, encoding)
@@ -56,7 +48,7 @@ function get_lifetimes(ds::DynamicalSystem, ps, p_idxs, Δt, k=10, T_traj=5000, 
 
 end
 
-function get_lifetimes(trajs::Vector{<:StateSpaceSet}, k, Δt_chart)
+function get_lifetimes(trajs, k, Δt_chart)
 
     N = Int(dimension(ds) / 2)
     T = length(trajs[1])
@@ -212,6 +204,7 @@ function autohist(y;m=10,nbins=50,b=10,mode=:none)
     return h.edges[1],h.weights
 end 
 
+#=
 function plot_distrib(τs, Δt_chart; binning=:auto, color=:gray10, st=:scatter, mode=:none, ms=2, nbins=50, scale=:log,
     xlabel=L"\log(\tau^{(x)}_k \cdot \Delta t)", ylabel=L"\log(count)", title="lifetime distribution", label_par="")
 
@@ -238,7 +231,7 @@ function plot_distrib!(pl,τs, Δt_chart; binning=:auto, color=gray10,st=:scatte
         label=label_par, dpi=300)
 
 end
-
+=#
 
 #calculate lifetimes by counting consecutive appearances
 function get_lifetimes(charts; exclude_one=true)
@@ -337,15 +330,12 @@ end
 
 lognormal(x, μ, σ) = 1 / (x * σ * sqrt(2π)) * exp(-(log10(x) - μ)^2 / (2 * σ^2))
 parabolic(L, a, b) = 10^(-a*log10(L)-b*log10.(L)^2)
+linear(L, a, b) = 10^(a * log10(L) + b )
 
 function perm_entropy(charts)
 
 
 end
-
-
-#TODO: 
-#implement chart building from integrated variables
 
 function get_lifetimes_integ(Is, k)
 
@@ -355,7 +345,7 @@ function get_lifetimes_integ(Is, k)
 
 end
 
-function integrate_activity(traj, ts, n::Int; method=TrapezoidalRule())
+function integrate_activity(traj, ts, n::Int; method=Integrals.TrapezoidalRule())
     #T = length(traj)
     #l = length(traj[1])
     T,l = size(traj)

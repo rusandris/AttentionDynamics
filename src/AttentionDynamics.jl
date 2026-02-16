@@ -4,20 +4,22 @@ module AttentionDynamics
 	using StatsBase
 	using DataStructures
 	using Colors
-	using Setfield
-	using BifurcationKit
-	const BK=BifurcationKit
-	using DifferentialEquations
+	#using Setfield
+	#using BifurcationKit
+	#const BK=BifurcationKit
+	#using DifferentialEquations
 	using LinearAlgebra
 	using DelimitedFiles
+    using Integrals
 
 	include("map.jl")
 	include("produce_od.jl")
 	include("evolve_system.jl")
 	include("import_system.jl")
+    include("chart_functions.jl")
 	include("count_limitcycles.jl")
 	include("lyapunov.jl")
-	include("find_periodic_orbit.jl")
+	#include("find_periodic_orbit.jl")
 	include("jacobian.jl")
 	include("scaling_laws.jl")
 

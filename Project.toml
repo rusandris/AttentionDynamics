@@ -4,12 +4,11 @@ authors = ["rusandris <rusandris@gmail.com>"]
 version = "0.1.0"
 
 [deps]
-BifurcationKit = "0f109fa4-8a5d-4b75-95aa-f515264e7665"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
-DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 DynamicalSystems = "61744808-ddfa-5f27-97ff-6e42cc95d634"
+Integrals = "de52edbc-65ea-441a-8357-d3a637375a31"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"

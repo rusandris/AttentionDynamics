@@ -1,6 +1,5 @@
 export precompute_trajectories,save_trajectory
 
-#TODO: different initial conditions and save efficiently
 function precompute_trajectories(ds, nr_ics, ps::Vector{Float64}, p_idx, Δt=1e-1, T_traj=5000, Ttr=1000)
 
     for p in ps
@@ -20,17 +19,24 @@ end
 
 
 function precompute_trajectories(ds, nr_ics, ps::Vector{Vector{Float64}}, p_idx::Vector{Int64}; Δt=1e-1,
-    T_traj=5000, Ttr=1000, rand_ic=dim -> rand(dim) * 0.1, savedir="./", filename="traj_test.dat")
+    T_traj=5000, Ttr=1000, rand_ic=dim -> rand(dim) * 0.1, savedir="./", p_names = ["g","w"] ,filename="traj_test.dat")
 
     for p in ps
         @show p
-        for i in p_idx
-            set_parameter!(ds, i, p[i])
+        for (i,idx) in enumerate(p_idx)
+            set_parameter!(ds, idx, p[i])
         end
 
+        #put strings together
+        par_names = ""
+        for i in 1:length(p_names)
+            par_names *= p_names[i] * "$(p[i])_"
+        end 
+        @show par_names
+        #p_names[1] * "$(p[1])_" * p_names[2] * "$(p[2])_"
         #solve systems to get trajectory and save
         precompute_trajectories(ds, nr_ics; T_traj=T_traj, Ttr=Ttr, savedir=savedir,
-            filename="trajs_g$(p[1])_w$(p[2])" * filename, rand_ic=rand_ic)
+            filename="trajs_" * par_names * filename, rand_ic=rand_ic)
     end
 end
 
