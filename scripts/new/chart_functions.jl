@@ -193,7 +193,7 @@ function get_distrib(τs, bin_edges; mode=:none, scale=:log)
 end
 
 #determine exponential bin edges so that each contains at least m points
-function autohist(y;m=10,nbins=50,b=10) 
+function autohist(y;m=10,nbins=50,b=10,mode=:none) 
     ymin,ymax = extrema(y) #interval to cover
 
     n = nbins #start from here
@@ -208,8 +208,8 @@ function autohist(y;m=10,nbins=50,b=10)
         n = n - 1 
         bins = b .^ range(log(b, ymin), log(b, ymax), length=n)
     end
-
-    return bins,h.weights
+    h = normalize(h, mode=mode)
+    return h.edges[1],h.weights
 end 
 
 function plot_distrib(τs, Δt_chart; binning=:auto, color=:gray10, st=:scatter, mode=:none, ms=2, nbins=50, scale=:log,
@@ -336,7 +336,7 @@ end
 
 
 lognormal(x, μ, σ) = 1 / (x * σ * sqrt(2π)) * exp(-(log10(x) - μ)^2 / (2 * σ^2))
-
+parabolic(L, a, b) = 10^(-a*log10(L)-b*log10.(L)^2)
 
 function perm_entropy(charts)
 
