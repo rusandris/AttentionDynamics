@@ -43,7 +43,7 @@ mkpath(savedir)
 nr_ics = 10
 
 precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=1e-1,
-    T_traj=T, Ttr=Ttr, savedir=savedir, filename="_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
+    T_traj=T, Ttr=Ttr, savedir=savedir, filename="N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
 
 
 #=

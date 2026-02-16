@@ -1,43 +1,55 @@
 using DelimitedFiles
 using Plots, LaTeXStrings
+using StatsBase
 cd(@__DIR__)
-include("../../scripts/new/chart_functions.jl")
 
 #general parameters
 #colors = [:lime, :cyan, :orange, :darkgreen]
-colors = [:lime, :cyan, :gray10]
+colors = [:lime, :cyan, :orange, :gray10]
 markershapes = [:circle, :cross]
 nbins = 30 #[25,10]
 
-#lifetimes path 
-#data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_vertical_test/"
-data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_alpha_curve/"
+#lifetimes path
+data_dir_lt_root = "../../data/lifetimes_precomp_orig/"
+data_dir_lt = data_dir_lt_root * "rp_rc/"
 
-#read params
-files = readdir(data_dir_traj_root)
-files_lifetime = files[findall(f -> occursin(".dat", f), files)] #select binary only
-params = readdlm(data_dir_traj_root * files[1])
+
+#data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_vertical_test/"
+#data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_alpha_curve/"
+
+#traj path
+data_dir_traj_root = "../../data/trajs_precomp_orig/"
+data_dir_traj = data_dir_traj_root * "rp_rc/"
+files_traj = readdir(data_dir_traj)
+
+params = readdlm(data_dir_traj * files_traj[2])
+
+p_values = [params[:, i] for i in 1:size(params)[2]]
+p_names = ["rp", "rc"]
+
+#=
 #params = [0.45 22.5; 0.5 22.5; 0.55 22.5]
 #params = [0.62 15.75; 0.63 15.75; 0.64 15.75]
 ws = params[:,1]
 gs = params[:,2]
 gs_rounded = round.(gs; digits=4)
 ws_rounded = round.(ws; digits=4)
+=#
 
-
-#traj specific parameters (not from filename, hardcoded)
-N = 10
-Δt_traj = 0.1 #sampling of trajectories
-T = 100000
+#traj specific parameters 
+N, k, Δt_traj,T = readdlm(data_dir_traj*"traj_spec_params.txt")
 t = [0.0:Δt_traj:T;]
 data_shape = (Int(T / Δt_traj) + 1, N)
-k = 4
 
 plots = []
 #pls = [plot(), plot(), plot()]
 
 chart_times = [0.1, 0.5 ,1.0] #[1.0,2.0]
 #chart_time = 0.1 #0.1 #1.0 #0.1 #0.5
+
+#read lifetime filenames
+files = readdir(data_dir_lt)
+files_lifetime = files[findall(f -> occursin(".dat", f), files)] #select binary only
 files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times]#select binary only
 
 
@@ -48,7 +60,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
     for (j,f) in enumerate(fileset)
         @show f
         #read lifetimes
-        lifetimes = reinterpret(Int64, read(data_dir_traj_root * f))
+        lifetimes = reinterpret(Int64, read(data_dir_lt * f))
         color = colors[j]
 
         #--------------------------get binning for lifetimes--------------------------
@@ -81,7 +93,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=4,
-            label=L"w = %$(ws_rounded[j]), g = %$(gs_rounded[j])",
+            #label=L"w = %$(ws_rounded[j]), g = %$(gs_rounded[j])",
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
 
@@ -91,7 +103,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=4,
-            label=L"w = %$(ws_rounded[j]), g = %$(gs_rounded[j])",
+            #label=L"w = %$(ws_rounded[j]), g = %$(gs_rounded[j])",
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
 
@@ -101,7 +113,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=4,
-            label=L"w = %$(ws_rounded[j]), g = %$(gs_rounded[j])",
+            #label=L"w = %$(ws_rounded[j]), g = %$(gs_rounded[j])",
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
     end

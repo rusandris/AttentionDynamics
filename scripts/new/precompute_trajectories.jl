@@ -8,29 +8,6 @@ using LinearAlgebra
 using DelimitedFiles
 cd(@__DIR__)
 
-
-function precompute_trajectories(ds, ps, p_idx, Δt=1e-1, T_traj=5000, Ttr=1000)
-
-    #precomputed trajs
-    trajs = []
-    for p in ps
-
-        if p_idx isa Vector
-            for i in p_idx
-                set_parameter!(ds, i, p)
-            end
-        else
-            set_parameter!(ds, p_idx, p)
-        end
-
-        #solve systems to get trajectory
-        @time traj, times = trajectory(ds, T_traj; Ttr=Ttr, Δt=Δt)
-        push!(trajs, traj)
-    end
-    return trajs
-end
-
-
 #setup system 
 
 N = 300
@@ -61,7 +38,6 @@ diffeq = (alg=Tsit5(), dt=1e-3, dtmax=dtmax, adaptive=true, maxiters=1e8)
 #create ds
 
 #u01 = 0.1 .* rand(2N)
-#u01 = BigFloat.(u0;precision=56) #turn to BigFloat (higher precision)
 x0 = rand(N) * 0.001
 u02 = zeros(2N)
 u02[1:2:end] .= x0
@@ -69,9 +45,10 @@ u02[1:2:end] .= x0
 ds = create_original_ds(u02, deepcopy(p_orig); diffeq=diffeq)
 
 #length of precomputed trajs 
-T = 10000 #10000 #100 #5000
+T = 1000 #10000 #100 #5000
 Ttr = 500 #500
 Δt = 1e-1 #5*1e-2
+nr_ics = 10 #number of initial conditions
 
 #----------------------------change r parameter-------------------------
 # try rp = rc scenario
@@ -80,6 +57,7 @@ Ttr = 500 #500
 # try different k 
 # try different Δt
 
+#select parameters
 #rs = [6:0.1:15;]
 #rs = [6.0:1.0:12.0;]
 #rs = [6.0:3.0:16.0;]
@@ -89,33 +67,56 @@ rs = [9.0:1.0:12.0;]
 set_parameters!(ds, p_orig)
 rescaled_params.(rs, rs, K, c, α, N)
 
+p_sets = [[rs[1], rs[1]], [rs[2], rs[2]], [rs[3], rs[3]], [rs[4], rs[4]]]
+
+savedir_root = "../../data/trajs_precomp_orig/"
+mkpath(savedir)
+savedir = savedir * "rp_rc/"
+mkpath(savedir)
+params_curve = writedlm(savedir * "/rvalues_rp_rc.txt",stack(p_sets)') #save changing parameter
 
 #precompute trajectories 
-trajs = precompute_trajectories(ds, rs, [1, 2], Δt, T, Ttr)
+precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=1e-1,
+    T_traj=T, Ttr=Ttr, savedir=savedir_root, p_names=["rp","rc"],
+    filename="N$(N)_K$(K)_c$(c)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
 
-#plot parts of trajectories  
-plots_trajs = []
 
-for (i, traj) in enumerate(trajs)
-    pl_x = plot(Matrix(traj[1:500, 1:2:2N]), legend=false, title=L"r_p=r_c = %$(rs[i])")
-    pl_y = plot(Matrix(traj[1:500, 2:2:16]), legend=false, title=L"r_p=r_c = %$(rs[i])")
 
-    push!(plots_trajs, pl_x, pl_y)
-end
-pl_trajs = plot(plots_trajs..., layout=(length(rs), 2), size=(600, 800), dpi=300)
-#save traj plot 
+#----------------------------change c parameter-------------------------
+#increase c -> increase competition 
 
-savedir = "../../data/trajs_precomp_test8_origpar/rp=rc/"
+#diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
+#diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
+#diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
+
+#range of c
+cs = [1.4:0.3:2.4;]
+
+#other params
+K = 1.0;
+rp = 10;
+rc = 10;
+α = 0.005;
+
+u01 = 0.1 .* rand(2N)
+p = [rp, rc, K, c, α]
+
+ds = create_original_ds(u01, deepcopy(p); diffeq=diffeq)
+
+
+savedir_root = "../../data/trajs_precomp_orig/"
+savedir = savedir_root * "c/"
 mkpath(savedir)
-savefig(pl_trajs, savedir*"trajs_x_y_change_rp_rc.png")
-writedlm(savedir*"rp_rc.txt", rs)
 
-#save trajectories into file 
-for i in 1:length(trajs)    
-    traj = trajs[i]
-    writedlm(savedir*"trajs_rp=rc$(rs[i])_K$(K)_c$(c)_α$(α)_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).txt", Matrix(traj))
-end
+p_sets = [[cs[1]], [cs[2]], [cs[3]], [cs[4]]]
+params_curve = writedlm(savedir * "/cvalues.txt", stack(p_sets)') #save changing parameter
 
+#precompute trajectories 
+precompute_trajectories(ds, nr_ics, p_sets, [4]; Δt=1e-1,
+    T_traj=T, Ttr=Ttr, savedir=savedir, p_names=["c"],
+    filename="N$(N)_rp_$(rp)_rc_$(rc)_K$(K)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
+
+#=
 
 #---------------------------------change rp---------------------------------
 # compare with rp \neq rc (mismatch between production and consumption rate)
@@ -222,51 +223,6 @@ for i in 1:length(trajs)
     write(savedir * "trajs_rp_$(rp)_rc$(rc)_K$(K)_c$(c)_α$(αs[i])_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat", traj)
 end
 
-#----------------------------change c parameter-------------------------
-#increase c -> increase competition 
-
-#diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
-#diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-1, adaptive=true, maxiters=1e8)
-#diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
-
-#range of c
-cs = [1.4:0.2:2.4;]
-
-#other params
-K = 1.0;
-rp = 10;rc=10;
-α = 0.005;
-
-u01 = 0.1 .* rand(2N)
-p = [rp, rc, K, c, α]
-
-ds = create_original_ds(u01, deepcopy(p); diffeq=diffeq)
-
-#precompute trajectories 
-trajs = precompute_trajectories(ds, cs, 4, Δt, T, Ttr)
-
-#plot parts of trajectories  
-plots_trajs = []
-
-for (i, traj) in enumerate(trajs)
-    pl_x = plot(Matrix(traj[1:500, 1:2:2N]), legend=false, title=L"c = %$(cs[i])")
-    pl_y = plot(Matrix(traj[1:500, 2:2:16]), legend=false, title=L"c = %$(cs[i])")
-
-    push!(plots_trajs, pl_x, pl_y)
-end
-pl_trajs = plot(plots_trajs..., layout=(length(cs), 2), size=(600, 800), dpi=300)
-
-savedir = "../../data/trajs_precomp_test_c/c_low/"
-mkpath(savedir)
-savefig(pl_trajs, savedir * "trajs_x_y_change_c.png")
-writedlm(savedir * "cs.txt", cs)
-
-
-#save trajectories into file 
-for i in 1:length(trajs)
-    traj = trajs[i]
-    writedlm(savedir * "trajs_rp_$(rp)_rc$(rc)_K$(K)_c$(cs[i])_α$(α)_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).txt", Matrix(traj))
-end
 
 #------------------try varied delay system---------------------
 αs = rand(1e-6:1e-7:1e-2, 300)
@@ -315,3 +271,4 @@ plot(times_test, Matrix(traj_test[:, 1:2:2N]), legend=false)
 savedir = "../../data/trajs_precomp_test_varied_rate_delay/"
 mkpath(savedir)
 writedlm(savedir * "trajs_rc$(rc)_K$(K)_c$(c)_N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).txt", Matrix(traj))
+=#

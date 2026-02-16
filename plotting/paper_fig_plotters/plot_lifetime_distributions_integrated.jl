@@ -1,7 +1,10 @@
+using Revise
 using DelimitedFiles
 using Plots, LaTeXStrings
+using AttentionDynamics
+using StatsBase
 cd(@__DIR__)
-include("../../scripts/new/chart_functions.jl")
+#include("../../scripts/new/chart_functions.jl")
 
 
 #---------------------------lifetimes from integrated values------------------------------------ 
@@ -13,8 +16,6 @@ data_dir_traj_root = "../../data/trajs_precomp_alpha/"
 data_dir_traj = data_dir_traj_root 
 files = readdir(data_dir_traj)
 files_trajs = files[findall(f -> occursin(".dat",f),files)] #select binary only
-
-#TODO: save only x variables into  binary
 
 
 #read params
@@ -34,8 +35,8 @@ plots_linbin = [plot(), plot()]
 colors = [:gray10, :orange,:darkgreen, :purple4,:lightblue,:darkblue]
 markershapes = [:circle,:cross]
 
-nbins = 30 #[25,10]
-chart_times = [0.2,2.0] #[1.0,2.0]
+nbins = 40 #[25,10]
+chart_times = [0.2,1.0] #[1.0,2.0]
 data_shape = (Int(T/Δt)+1,300)
 k = 10
 lifetimes_all = []
@@ -94,16 +95,35 @@ for (i,f) in enumerate(files_trajs)
             ylabel=L"\log(count)")
     end
 end
-pl_expbin = plot(plots_expbin..., ylims=(-6,1),layout=(1, 2),size=(800,300), plot_title="expbin",
-    legend=:bottomleft, left_margin=6Plots.mm, bottom_margin=6Plots.mm)
 
 #plot parabola 
 x = range(2,500;length=1000)
-y = parabolic.(x,-4/3,16/9)
-plot!(pl_expbin[1],log10.(x) .+ 1.0,log10.(y) .- 1,lw=2,lc=:gray10,ls=:dot)
+y = parabolic.(x,-12,9.5)
+plot!(plots_expbin[1],log10.(x) .+ 1.0,log10.(y) .- 5.5,lw=2,
+    lc=:gray10,ls=:dot,label="",ylims=(-6,0),xlims=(-Inf,3.5))
+
+#plot straight lines 
+x = range(2, 500; length=1000)
+y = linear.(x, -4, 5.5)
+plot!(plots_expbin[1], log10.(x) , log10.(y), lw=2,
+    lc=:gray10, ls=:dot, label="", ylims=(-6, 0), xlims=(-Inf, 3.5))
+
+
+plot!(plots_expbin[2], ylims=(-6, 0), xlims=(-Inf, 3.5))
+
+#plot straight lines 
+x = range(2, 500; length=1000)
+y = linear.(x, -4, 5.5)
+plot!(plots_expbin[2], log10.(x), log10.(y), lw=2,
+    lc=:gray10, ls=:dot, label="", ylims=(-6, 0), xlims=(-Inf, 3.5))
+
+
+pl_expbin = plot(plots_expbin..., layout=(1, 2), size=(800, 300), plot_title="expbin",
+    legend=:topright, left_margin=6Plots.mm, bottom_margin=6Plots.mm)
+
 
 pl_linbin = plot(plots_linbin..., layout=(1, 2), size=(800, 300), plot_title="linbin",
-    legend=:bottomleft, left_margin=6Plots.mm)
+    legend=:topright, left_margin=6Plots.mm)
 
 pl_all = plot(pl_expbin, pl_linbin,layout=(2,1),size=(800,800))
 
