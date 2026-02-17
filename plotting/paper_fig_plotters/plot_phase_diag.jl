@@ -49,14 +49,14 @@ pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws, gs, N;
     xlims=(0.0, 1.0),
     ylims=(gs[1], gs[end]) ./ (N - 1),
     HEATMAP_DEFAULTS...,
-    ylabel=L"\frac{1}{\epsilon(N-1)}", clims=(-0.5, 0.5),
+    ylabel=L"\frac{1}{\epsilon(N-1)}", clims=(-0.7, 0.7),
     right_margin=6Plots.mm,
     left_margin=6Plots.mm,
     tickfontsize=tick_fontsize_large,
     guidefontsize=guide_fontsize_medium,
     xguidefontsize=guide_fontsize_large,
     colorbar_title="",
-    colorbar_ticks=[-0.5, 0.0, 0.5],
+    colorbar_ticks=[-0.7, 0.0, 0.7],
     x_ticks=[0.0, 0.5, 1.0])
 
 
@@ -65,7 +65,7 @@ ms = 5
 color_default = :gray10
 #ws_example = [0.3, 0.48, 0.7, 0.95]
 #ws_example = [0.3, 0.63, 0.8, 0.95]
-w_B2 = 0.5
+w_B2 = 0.48
 ws_example = [0.3, w_B2, 0.7, 0.95]
 g_example = 22.5 #9*1.75
 example_colors = [color_default, color_default, color_default, :gray60]
@@ -86,20 +86,44 @@ for (i, pl) in enumerate(ws_example)
 end
 pl_lyaps_filled
 
-#add two more points to B phase
+#add more points to B phase
 
-#w_B1 = 0.43
-#w_B3 = 0.53
+#w direction
+w_B4 = 0.43
+w_B5 = 0.53
+g_B4 = g_example
 
+plot!([w_B4, w_B5], [g_B4, g_B4] ./ (N-1),
+    ms=ms, st=:scatter, mc=[:lime, :cyan],
+    markerstrokewidth=0.0,
+    label="")
+
+annotate!(pl_lyaps_filled, w_B4, g_B4 / (N - 1) + 0.1, text(L"B_4", :lime, 14))
+annotate!(pl_lyaps_filled, w_B5, g_B4 / (N - 1) + 0.1, text(L"B_5", :cyan, 14))
+
+#g direction
+g_B4 = g_example - 1.5
+g_B5 = g_example + 1.5
+
+plot!([w_B2, w_B2], [g_B4, g_B5] ./ (N - 1),
+    ms=ms, st=:scatter, mc=[:purple, :blue],
+    markerstrokewidth=0.0,
+    label="")
+
+annotate!(pl_lyaps_filled, w_B2, g_B4 / (N - 1) + 0.1, text(L"B_4", :purple, :center, 14))
+annotate!(pl_lyaps_filled, w_B2, g_B5 / (N - 1) + 0.1, text(L"B_5", :blue, :center, 14))
+
+
+#=
 #alpha curve version 
 rc = 1.8;K = 1.0;c0 = 2.5;α0 = 0.1;
 g_alpha(w, rp, rc, K, c) = rp * K * c / rc * (1 / w - 1) #alpha curve
 g_B2 = g_example
 #check if alpha curve passes through B3
-#rp_B2 = rc / (K * c0) * g_B2 / (1 / w_B2 - 1)
+rp_B2 = rc / (K * c0) * g_B2 / (1 / w_B2 - 1)
 
-w_B1 = 0.47
-w_B3 = 0.55
+w_B1 = 0.45
+w_B3 = 0.52
 w_B1_B3 = [w_B1:0.001:w_B3;]
 gs_alpha = g_alpha.(w_B1_B3, rp_B2, rc, K, c0) #alpha curve
 g_B1 = gs_alpha[1]; g_B3 = gs_alpha[end]
@@ -112,6 +136,8 @@ plot!([w_B1, w_B3], [g_B1, g_B3] ./ (N - 1),
 
 annotate!(pl_lyaps_filled, w_B1-0.01, g_B1 / (N - 1), text(L"B_1", :lime, :right, 14))
 annotate!(pl_lyaps_filled, w_B3+0.01, g_B3 / (N - 1), text(L"B_3", :cyan, :left, 14))
+=#
+
 
 #=
 plot!([w_B1,w_B3],[g_example, g_example] ./ (N-1),
@@ -126,7 +152,7 @@ annotate!(pl_lyaps_filled, w_B3-0.02, g_example/(N-1)*1.05, text(L"B_3", :cyan, 
 mkpath("../../data/trajs_precomp_rescaled_vertical")
 writedlm("../../data/trajs_precomp_rescaled_vertical/B_param_pairs.txt", hcat([w_B1, w_B2, w_B3], [g_example, g_example, g_example]))
 
-savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended3_80x80_filled_Ttr_100000_" * "labeled_alpha_curve.png")
+savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended3_80x80_filled_Ttr_100000_" * "labeled_vertical_alpha_curve.png")
 
 
 

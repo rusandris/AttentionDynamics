@@ -13,12 +13,12 @@ cd(@__DIR__)
 #data_dir_traj_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
 #data_dir_traj_root = "../../data/trajs_precomp_rescaled_vertical_test/"
 data_dir_traj_root = "../../data/trajs_precomp_orig/"
-data_dir_traj = data_dir_traj_root * "rp_rc/"
+data_dir_traj = data_dir_traj_root * "c2/" #"rp_rc/"
 
 #save path 
 #savedir = "../../data/lifetimes_precomp_rescaled_vertical_test/"
 savedir_root = "../../data/lifetimes_precomp_orig/"
-savedir = savedir_root * "rp_rc/"
+savedir = savedir_root * "c2/" #"rp_rc/"
 mkpath(savedir)
 
 #traj specific parameters 
@@ -40,11 +40,11 @@ gs_rounded = round.(gs; digits=4)
 ws_rounded = round.(ws; digits=4)
 =#
 p_values = [params[:,i] for i in 1:size(params)[2]]
-p_names = ["rp", "rc"]
+p_names = ["c"] #["rp", "rc"]
 
-
-
-chart_times = [0.1, 0.5 ,1.0]
+chart_times = [0.1, 0.5 ,1.0, 2.0]
+writedlm(savedir*"chart_times.txt",chart_times)
+#chart_times = [2.0]
 
 #---------------------------read trajectories filenames------------------------------------ 
 dir_content = readdir(data_dir_traj)
@@ -60,7 +60,6 @@ for j in 1:length(p_values[1])
     par_names = ""
     for i in 1:length(p_values)
         par_names *= p_names[i] * "$(p_values[i][j])_"
-        @show par_names
     end
 
     #files corresponding to a certain param set
