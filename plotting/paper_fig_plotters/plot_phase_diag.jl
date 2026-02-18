@@ -79,27 +79,28 @@ plot!(ws_example, fill(g_example / (N - 1), 4),
 #add annotations 
 labels = [L"A", L"B_2", L"C", L"D"]
 x_annot_offsets = [0.0, 0.0, 0.0, 0.0]
+annot_sizes = [18, 14, 18, 18]
 for (i, pl) in enumerate(ws_example)
     xpos = ws_example[i] + x_annot_offsets[i]
-    ypos = g_example/(N-1) * 0.95
-    annotate!(pl_lyaps_filled, xpos, ypos, text(labels[i], example_colors[i], :center, 18))
+    ypos = g_example/(N-1) * 0.96
+    annotate!(pl_lyaps_filled, xpos, ypos, text(labels[i], example_colors[i], :center, annot_sizes[i]))
 end
 pl_lyaps_filled
 
 #add more points to B phase
 
 #w direction
-w_B4 = 0.43
-w_B5 = 0.53
+w_B1 = 0.43
+w_B3 = 0.53
 g_B4 = g_example
 
-plot!([w_B4, w_B5], [g_B4, g_B4] ./ (N-1),
+plot!([w_B1, w_B3], [g_B4, g_B4] ./ (N-1),
     ms=ms, st=:scatter, mc=[:lime, :cyan],
     markerstrokewidth=0.0,
     label="")
 
-annotate!(pl_lyaps_filled, w_B4, g_B4 / (N - 1) + 0.1, text(L"B_4", :lime, 14))
-annotate!(pl_lyaps_filled, w_B5, g_B4 / (N - 1) + 0.1, text(L"B_5", :cyan, 14))
+annotate!(pl_lyaps_filled, w_B4, g_B4 / (N - 1) + 0.1, text(L"B_1", :lime, 14))
+annotate!(pl_lyaps_filled, w_B5-0.01, g_B4 / (N - 1) + 0.1, text(L"B_3", :cyan, 14))
 
 #g direction
 g_B4 = g_example - 1.5
@@ -110,9 +111,14 @@ plot!([w_B2, w_B2], [g_B4, g_B5] ./ (N - 1),
     markerstrokewidth=0.0,
     label="")
 
-annotate!(pl_lyaps_filled, w_B2, g_B4 / (N - 1) + 0.1, text(L"B_4", :purple, :center, 14))
-annotate!(pl_lyaps_filled, w_B2, g_B5 / (N - 1) + 0.1, text(L"B_5", :blue, :center, 14))
+plot!([w_B2,w_B2], [g_B4, g_B5] ./ (N - 1), ls=:dot, lc=:gray10,label="")
+annotate!(pl_lyaps_filled, w_B2+0.03, g_B4 / (N - 1) - 0.1, text(L"B_4", :purple, :center, 14))
+annotate!(pl_lyaps_filled, w_B2-0.02, g_B5 / (N - 1) + 0.1, text(L"B_5", :blue, :center, 14))
 
+
+#save param pairs into file 
+savedir_param = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
+writedlm(savedir_param * "param_pairs.txt", [g_example w_B1; g_example w_B2; g_example w_B3; g_B4 w_B2; g_B5 w_B2])
 
 #=
 #alpha curve version 
@@ -152,7 +158,7 @@ annotate!(pl_lyaps_filled, w_B3-0.02, g_example/(N-1)*1.05, text(L"B_3", :cyan, 
 mkpath("../../data/trajs_precomp_rescaled_vertical")
 writedlm("../../data/trajs_precomp_rescaled_vertical/B_param_pairs.txt", hcat([w_B1, w_B2, w_B3], [g_example, g_example, g_example]))
 
-savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended3_80x80_filled_Ttr_100000_" * "labeled_vertical_alpha_curve.png")
+savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended3_80x80_filled_Ttr_100000_" * "labeled_horizontal_vertical_curve.png")
 
 
 

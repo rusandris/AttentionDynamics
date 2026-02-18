@@ -11,26 +11,25 @@ cd(@__DIR__)
 
 #trajectory path
 #data_dir_traj_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
-#data_dir_traj_root = "../../data/trajs_precomp_rescaled_vertical_test/"
-data_dir_traj_root = "../../data/trajs_precomp_orig/"
-data_dir_traj = data_dir_traj_root * "c2/" #"rp_rc/"
+data_dir_traj_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
+#data_dir_traj_root = "../../data/trajs_precomp_orig/"
+data_dir_traj = data_dir_traj_root #* "c2/" #"rp_rc/"
 
 #save path 
 #savedir = "../../data/lifetimes_precomp_rescaled_vertical_test/"
-savedir_root = "../../data/lifetimes_precomp_orig/"
-savedir = savedir_root * "c2/" #"rp_rc/"
+savedir_root = "../../data/lifetimes_horizontal_vertical/"
+savedir = savedir_root #* "c2/" #"rp_rc/"
 mkpath(savedir)
 
 #traj specific parameters 
-N, k, Δt_traj, T = readdlm(data_dir_traj * "traj_spec_params.txt")
+N, Δt_traj, T = readdlm(data_dir_traj * "traj_spec_params.txt")
 N = Int(N)
-k = Int(k)
 t = [0.0:Δt_traj:T;]
 data_shape = (Int(T / Δt_traj) + 1, N)
 
 #read params
 files = readdir(data_dir_traj)
-params = readdlm(data_dir_traj * files[1])
+params = readdlm(data_dir_traj * "param_pairs.txt")
 #=
 #params = [0.45 22.5; 0.5 22.5; 0.55 22.5]
 #params = [0.62 15.75; 0.63 15.75; 0.64 15.75]
@@ -40,8 +39,9 @@ gs_rounded = round.(gs; digits=4)
 ws_rounded = round.(ws; digits=4)
 =#
 p_values = [params[:,i] for i in 1:size(params)[2]]
-p_names = ["c"] #["rp", "rc"]
+p_names = ["g", "w"] #["c"] #["rp", "rc"]
 
+k = 4
 chart_times = [0.1, 0.5 ,1.0, 2.0]
 writedlm(savedir*"chart_times.txt",chart_times)
 #chart_times = [2.0]

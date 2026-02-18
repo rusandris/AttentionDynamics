@@ -35,7 +35,7 @@ function precompute_trajectories(ds, nr_ics, ps::Vector{Vector{Float64}}, p_idx:
         @show par_names
         #p_names[1] * "$(p[1])_" * p_names[2] * "$(p[2])_"
         #solve systems to get trajectory and save
-        precompute_trajectories(ds, nr_ics; T_traj=T_traj, Ttr=Ttr, savedir=savedir,
+        precompute_trajectories(ds, nr_ics; T_traj=T_traj, Ttr=Ttr, Δt=Δt, savedir=savedir,
             filename="trajs_" * par_names * filename, rand_ic=rand_ic)
     end
 end

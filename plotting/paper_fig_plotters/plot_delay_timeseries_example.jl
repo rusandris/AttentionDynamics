@@ -10,9 +10,15 @@ cd(@__DIR__)
 N = 10
 diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-2, adaptive=true, maxiters=1e15)
 u0 = rand(2N)
-g = 15.75
+
+
+w_B2 = 0.48
+ws = [0.3, w_B2, 0.7, 0.95]
+g = 22.5 #15.75
+
 ds = create_ds(u0, [g, 0.5, N]; diffeq=diffeq) #no noise
-ws = [0.5,0.65,0.75,0.92]
+
+#ws = [0.5,0.65,0.75,0.92]
 Ttrs = [0,1000,1000,0]
 T = 200
 #--------------------------------plot time series---------------------------
@@ -98,4 +104,4 @@ end
 pl4 = plot(plots...,layout=(2,2),size=(800,500), dpi = 300)
 
 figs_dir = "../../paper_figs/"
-savefig(pl4,figs_dir*"timeseries_delayed_LV_N$N"*"labeled_threecolors_2x2.png")
+savefig(pl4,figs_dir*"timeseries_delayed_LV_N$(N)_g$(g)"*"labeled_threecolors_2x2.png")

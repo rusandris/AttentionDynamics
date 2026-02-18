@@ -6,28 +6,31 @@ cd(@__DIR__)
 
 #general parameters
 #colors = [:lime, :cyan, :orange, :darkgreen]
-colors = [:lime, :cyan, :orange, :gray40]
+#colors = [:lime, :cyan, :orange, :gray40]
+colors = [:lime, :gray10, :cyan, :purple, :blue]
 markershapes = [:circle, :cross]
 nbins = 30 #[25,10]
 
 #lifetimes path
-data_dir_lt_root = "../../data/lifetimes_precomp_orig/"
-data_dir_lt = data_dir_lt_root * "c2/" #"rp_rc/"
+#data_dir_lt_root = "../../data/lifetimes_precomp_orig/"
+data_dir_lt_root = "../../data/lifetimes_horizontal_vertical/"
+data_dir_lt = data_dir_lt_root #* "c2/" #"rp_rc/"
 
 
 #data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_vertical_test/"
 #data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_alpha_curve/"
 
 #traj path
-data_dir_traj_root = "../../data/trajs_precomp_orig/"
-data_dir_traj = data_dir_traj_root * "c2/" #"rp_rc/"
+#data_dir_traj_root = "../../data/trajs_precomp_orig/"
+data_dir_traj_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
+data_dir_traj = data_dir_traj_root #* "c2/" #"rp_rc/"
 files_traj = readdir(data_dir_traj)
 
-params = readdlm(data_dir_traj * files_traj[1])
+params = readdlm(data_dir_traj * files_traj[3])
 
 p_values = [params[:, i] for i in 1:size(params)[2]]
-p_names = ["c"] #["rp", "rc"]
-p_names_ltx = [L"c"] #[L"r_p", L"r_c"]
+p_names = ["g","w"] #["c"] #["rp", "rc"]
+p_names_ltx = ["g", "w"] #[L"c"] #[L"r_p", L"r_c"]
 
 #=
 #params = [0.45 22.5; 0.5 22.5; 0.55 22.5]
@@ -39,13 +42,14 @@ ws_rounded = round.(ws; digits=4)
 =#
 
 #traj specific parameters 
-N, k, Δt_traj,T = readdlm(data_dir_traj*"traj_spec_params.txt")
+N, Δt_traj,T = readdlm(data_dir_traj*"traj_spec_params.txt")
 t = [0.0:Δt_traj:T;]
 data_shape = (Int(T / Δt_traj) + 1, N)
 
 plots = []
 #read chart times 
 chart_times = readdlm(data_dir_lt * "chart_times.txt")
+k = 4
 
 #read lifetime filenames
 files = readdir(data_dir_lt)
@@ -97,12 +101,10 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
 
-        if j == 1
         #show bin sizes 
-        plot!(pls[1],log10.(bins_discrete), fill(-0.5,length(bins_discrete)),
+        plot!(pls[1],log10.(bins_discrete), fill(-0.5*j,length(bins_discrete)),
             markershape=:vline, st=:scatter,mc=color,ms=5,
             markerstrokewidth = 0.5,label="")
-        end
 
         plot!(pls[2], log10.(bins_exp), log10.(counts_exp),
             markershape=:circle, #st=:scatter,
@@ -114,12 +116,10 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count/\Delta b_i)")
 
-        if j == 1
         #show bin sizes 
-        plot!(pls[2], log10.(bins_exp), fill(-0.5, length(bins_exp)),
+        plot!(pls[2], log10.(bins_exp), fill(-0.5*j, length(bins_exp)),
             markershape=:vline, st=:scatter, mc=color, ms=5,
             markerstrokewidth=0.5, label="")
-        end
 
         plot!(pls[3], log10.(bins_lin), log10.(counts_lin), 
             markershape=:circle, #st=:scatter,
@@ -132,23 +132,23 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             ylabel=L"\log(count/\Delta b_i)")
 
         #show bin sizes 
-        if j == 1
-        plot!(pls[3], log10.(bins_lin), fill(-0.5, length(bins_lin)),
+        plot!(pls[3], log10.(bins_lin), fill(-0.5*j, length(bins_lin)),
             markershape=:vline, st=:scatter, mc=color, ms=5,
             markerstrokewidth=0.5, label="")
-        end
     end
         push!(plots,pls)
 end
 
 plots_reorder = [plots[i][j] for j in 1:3 for i in 1:4]
-pl_all = plot(plots_reorder..., layout=(3, 4), size=(1200, 800),xlims=(0.0,3.2),ylims=(-2.0,5.5),
-    plot_title=L"N=%$N,k=%$k", legend=:topright,legendfontsize=5,dpi=300)
+xlimits = (0.0, 2.2); ylimits = (-2.0, 6.0);
+pl_all = plot(plots_reorder..., layout=(3, 4), size=(1200, 800),xlims=xlimits,ylims=ylimits,
+    plot_title=L"N=%$N,k=%$k", left_margin=5Plots.mm,legend=:topright,legendfontsize=5,dpi=300)
 
-savedir = "../../paper_figs/lifetime_distributions/orig_new/"
+savedir = "../../paper_figs/lifetime_distributions_rescaled_horizontal_vertical/"
 mkpath(savedir)
-param_string = files[2][20:end-16]
-savefig(pl_all, savedir * "lifetime_distributions_k$(k)_integrated_" * param_string * "_log_log_discrete_exp_linbin_alpha_curve_10ic.png")
+#param_string = files[2][20:end-16]
+param_string = files[2][25:end-16]
+savefig(pl_all, savedir * "lifetime_distributions_k$(k)_integrated_" * param_string * "_log_log_discrete_exp_linbin_horizontal_vertical_10ic.png")
 
 
 #=

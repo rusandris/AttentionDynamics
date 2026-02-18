@@ -14,7 +14,7 @@ cd(@__DIR__)
 #length of precomputed trajs 
 T = 100000 #10000 #100 #5000
 Ttr = 1000 #500
-Δt = 1e-1 #5*1e-2
+Δt_traj = 1e-1 #5*1e-2
 
 #-----------------------------------setup system--------------------------------------
 
@@ -28,21 +28,21 @@ u0 = rand(2N) * 0.1
 ds = create_ds(u0, [g, w, N]; diffeq=diffeq2) #no noise
 
 #savedir_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
-savedir_root = "../../data/trajs_precomp_rescaled_vertical_test/"
+savedir_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
 mkpath(savedir_root)
 #read params of alpha curve 
-params_curve = readdlm(savedir_root*"/B_param_pairs.txt")
+params_curve = readdlm(savedir_root*"/param_pairs.txt")
 
-p_sets = [ params_curve[p,[2,1]] for p in 1:3]
-p_sets = [[9 * 1.75, 0.62], [9 * 1.75, 0.63], [9 * 1.75, 0.64]]
+p_sets = [ params_curve[p,:] for p in 1:5]
+#p_sets = [[9 * 1.75, 0.62], [9 * 1.75, 0.63], [9 * 1.75, 0.64]]
 
 #precompute trajectories
 savedir = savedir_root
 mkpath(savedir)
 
 nr_ics = 10
-
-precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=1e-1,
+writedlm(savedir*"traj_spec_params.txt", [N Δt_traj T])
+precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,
     T_traj=T, Ttr=Ttr, savedir=savedir, filename="N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
 
 
