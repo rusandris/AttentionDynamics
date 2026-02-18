@@ -70,14 +70,13 @@ rescaled_params.(rs, rs, K, c, α, N)
 p_sets = [[rs[1], rs[1]], [rs[2], rs[2]], [rs[3], rs[3]], [rs[4], rs[4]]]
 
 savedir_root = "../../data/trajs_precomp_orig/"
-mkpath(savedir)
-savedir = savedir * "rp_rc/"
+savedir = savedir_root * "rp_rc2/"
 mkpath(savedir)
 params_curve = writedlm(savedir * "/rvalues_rp_rc.txt",stack(p_sets)') #save changing parameter
 
 #precompute trajectories 
 precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=1e-1,
-    T_traj=T, Ttr=Ttr, savedir=savedir_root, p_names=["rp","rc"],
+    T_traj=T, Ttr=Ttr, savedir=savedir, p_names=["rp","rc"],
     filename="N$(N)_K$(K)_c$(c)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
 
 

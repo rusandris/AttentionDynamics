@@ -6,8 +6,8 @@ using LinearAlgebra
 using DynamicalSystemsBase
 using DelimitedFiles
 cd(@__DIR__)
-include("../defaults.jl")
-include("../plot_functions/timeseries_phase_portrait.jl")
+include("defaults.jl")
+include("../../plot_functions/timeseries_phase_portrait.jl")
 
 #include("bif_floq_od_method_parameters.jl")
 #run necessary mkpaths
@@ -17,7 +17,7 @@ mkpath(figs_dir)
 
 #----------define local parameters------------
 N=2 #small system
-Ttr_N2 = 0
+Ttr_N2 = 200
 Δt = 1e-3
 
 
@@ -41,14 +41,14 @@ wc1 = (N-1)/g
 wc2 = (N-1)/N
 
 #generate random initial conditions
-u0s = [rand(2N) for i in 1:3]
+u0s = [rand(2N) for i in 1:1]
 #u0 = generate_initial_condition(N)
 
 p = [g,w_values[1],N]
 @show wc1,wc2,p
 #create system
 ds = create_ds(u0s[1],p;diffeq=diffeq)
-colors = [logocolors.blue, logocolors.green, :gray50]
+colors = [:gray40, logocolors.blue, logocolors.green]
 plots = []
 
 #plot for two w values 
@@ -73,7 +73,7 @@ for i in 1:length(w_values)
 
 	#calc trajectories for all init cond
     for (j,u0) in enumerate(u0s)
-        traj,t = trajectory(ds,Ttrs[i],u0;Ttr=0,Δt = 1e-3)
+        traj,t = trajectory(ds,Ttrs[i],u0;Ttr=Ttr_N2,Δt = 1e-3)
     
         #plot phase portrait projection x1, x2
         plot!(pp,traj[:,1],traj[:,3];DEFAULTS...,
