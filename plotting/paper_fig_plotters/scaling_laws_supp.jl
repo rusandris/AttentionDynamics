@@ -2,7 +2,7 @@ using Plots,LaTeXStrings
 using DelimitedFiles
 
 include("defaults.jl")
-include("plot_functions/linreg.jl")
+include("../plot_functions/linreg.jl")
 
 scaling_data = readdlm("data/scalingdata_N2_g5.0.txt")
 

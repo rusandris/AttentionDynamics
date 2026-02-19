@@ -18,7 +18,7 @@ p = [g,w,N]
 wc1 = (N-1)/g
 wc2 = (N-1)/N
 T_short = 12
-T_long = 100
+T_long = 160
 Ts = [T_short, T_long]
 Ttr = 500
 Δt = 1e-3
@@ -73,22 +73,25 @@ for (i,w) in enumerate(ws)
     #plot timeseries 
     labels = [L"x_1" L"x_2" L"x_3"]
     x_vars = Matrix(traj[:][:,1:2:2N]) 
-    pl_ts = plot(t, x_vars, ylims=ylims[2],lw=lw,
-        xformatter=:auto,ylabel=L"x(t)",labels=labels,
+    pl_ts = plot(t, x_vars, ylims=ylims[1],lw=lw,
+        xformatter=:auto, ylabel=L"x(t)", xlabel=L"t",
+        labels=labels,
         title=title, left_margin=5Plots.mm)
+
+    i == 2 && hline!(pl_ts, [x_sw_val], lc=:gray10, lw=2, ls=:dash, label="")
 
     #plot the distance to fixed points along the trajectory
     fp_labels = [L"u_1^{*(1)}" L"u_1^{*(2)}" L"u_1^{*(3)}"]
-    pl_d = plot(t, stack(dists_fps), ylims=ylims[3],
+    pl_d = plot(t, stack(dists_fps), ylims=ylims[2],
         xlabel=L"t",ylabel=L"d \left( \mathbf{u}(t),\mathbf{u}^* \right)",
         labels=fp_labels, lw=lw,title=title)
 
     #plot trajectory projection
     
     #plot trajectory projection
-    pl_proj = plot(traj[:, 1], traj[:, 3], ylims=ylims[1],
+    pl_proj = plot(traj[:, 1], traj[:, 3], ylims=ylims[3],
     xlims=xlimits_proj[i], ylabel=L"x_2", xlabel=L"x_1",
-    xformatter=:auto, labels=labels, lw=2, la=1.0,label="",
+    xformatter=:auto, labels=labels, lw=2, la=1.0,legend=false,
     aspect_ratio=1, lc=:gray40, title=title, size=(600, 600))
     
 
@@ -104,8 +107,9 @@ for (i,w) in enumerate(ws)
     push!(plots, pl_ts, pl_d, pl_proj)
 
 end
-hline!(plots[4], [x_sw_val], lc=:gray10, lw=2 ,ls=:dash,label="")
-pl = plot(plots..., layout=(2, 3), size=(1200, 600), tickfontsize=10,guidefontsize = 18, legendfontsize=15, dpi=300)
+#hline!(plots[4], [x_sw_val], lc=:gray10, lw=2 ,ls=:dash,label="")
+pl = plot(plots..., layout=(2, 3), size=(1200, 600), legend_columns=-1,
+tickfontsize=10,guidefontsize = 18, bottom_margin=5Plots.mm, legendfontsize=15, dpi=300)
 
 figs_dir = "../../paper_figs/"
 savefig(pl, figs_dir * "distance_to_fixedpoints_N2_g5.png")

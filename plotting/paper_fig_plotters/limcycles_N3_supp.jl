@@ -36,7 +36,7 @@ ws = [wc1 + Δw1, wc2 - Δw2]
 #loop over w values
 plots = []
 xlimits = [(Ttr,12),(0,120)]
-ylimits = [[(0, 3), (0, 3), (0,5)],[(0, 6), (0, 8) ,(0,10)]]
+ylimits = [[(0, 3), (0, 4), (0,6)],[(0, 6), (0, 8) ,(0,12)]]
 
 xlimits_proj = [(0,3),(0,6)]
 ylimits_proj = [(0,3), (0,6)]
@@ -86,6 +86,8 @@ for (i,w) in enumerate(ws)
         title=title, left_margin=5Plots.mm,
         tickfontsize=10)
 
+    i == 2 && hline!(pl_ts, [x_sw_val], lc=:gray10, lw=2, ls=:dash, label="")
+
     #plot the distance to fixed points along the trajectory
     fp_labels = [L"u_1^{*(1)}" L"u_1^{*(2)}" L"u_1^{*(3)}"]
     pl_d = plot(t, stack(dists_fps), ylims=ylims[3],
@@ -105,8 +107,8 @@ for (i,w) in enumerate(ws)
     push!(plots, pl_ts, pl_d, pl_3d)
 
 end
-hline!(plots[4], [x_sw_val], lc=:gray10, lw=2 ,ls=:dash,label="")
-pl = plot(plots..., layout=(2, 3), size=(1200, 600), guidefontsize=18, legendfontsize=15, dpi=300)
+pl = plot(plots..., layout=(2, 3), size=(1200, 600), legend_columns=-1,
+guidefontsize=18, legendfontsize=15, dpi=300)
 
 figs_dir = "../../paper_figs/"
 savefig(pl, figs_dir * "distance_to_fixedpoints_N3_g5.png")
