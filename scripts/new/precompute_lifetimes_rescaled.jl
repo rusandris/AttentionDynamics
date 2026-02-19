@@ -11,14 +11,15 @@ cd(@__DIR__)
 
 #trajectory path
 #data_dir_traj_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
-data_dir_traj_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
+#data_dir_traj_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
+data_dir_traj_root = "../../data/trajs_precomp_rescaled/"
 #data_dir_traj_root = "../../data/trajs_precomp_orig/"
-data_dir_traj = data_dir_traj_root #* "c2/" #"rp_rc/"
+data_dir_traj = data_dir_traj_root * "c/" #* "c2/" #"rp_rc/"
 
 #save path 
 #savedir = "../../data/lifetimes_precomp_rescaled_vertical_test/"
-savedir_root = "../../data/lifetimes_horizontal_vertical/"
-savedir = savedir_root #* "c2/" #"rp_rc/"
+savedir_root = "../../data/lifetimes_precomp_rescaled/"
+savedir = savedir_root * "c/" #* "c2/" #"rp_rc/"
 mkpath(savedir)
 
 #traj specific parameters 
@@ -27,18 +28,21 @@ N = Int(N)
 t = [0.0:Δt_traj:T;]
 data_shape = (Int(T / Δt_traj) + 1, N)
 
-#read params
-files = readdir(data_dir_traj)
-params = readdlm(data_dir_traj * "param_pairs.txt")
-#=
-#params = [0.45 22.5; 0.5 22.5; 0.55 22.5]
-#params = [0.62 15.75; 0.63 15.75; 0.64 15.75]
-ws = params[:,1]
-gs = params[:,2]
-gs_rounded = round.(gs; digits=4)
-ws_rounded = round.(ws; digits=4)
-=#
-p_values = [params[:,i] for i in 1:size(params)[2]]
+
+#---------------------read parameter values------------------
+param_dir_root = "../../data/parameters/"
+param_dir = param_dir_root * "c/"
+params_orig = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
+params_rescaled = readdlm(param_dir * "params_w_g.txt")
+params_changed = readdlm(param_dir * "params_c.txt")
+
+N_orig = params_orig[end]
+
+ws = params_rescaled[:, 1]
+gs = params_rescaled[:, 2] ./ (N_orig - 1) * ((N - 1))
+
+p_values = [gs[1:2],ws[1:2]] 
+#[params_rescaled[:,i] for i in 1:size(params_rescaled)[2]][[2,1]]
 p_names = ["g", "w"] #["c"] #["rp", "rc"]
 
 k = 4
@@ -51,7 +55,7 @@ dir_content = readdir(data_dir_traj)
 files = dir_content[findall(f -> occursin(".txt", f) || occursin(".dat", f), dir_content)]
 
 files_trajs = files[findall(f -> occursin(".dat", f), files)] #select binary only
-nr_ics = Int(length(files_trajs) / length(p_values[1]))
+nr_ics = 10 #Int(length(files_trajs) / length(p_values[1]))
 
 file_sets = []
 
@@ -106,3 +110,20 @@ for (idx, chart_time) in enumerate(chart_times)
     end
 
 end
+
+#=
+
+
+#read params
+files = readdir(data_dir_traj)
+params = readdlm(data_dir_traj * "param_pairs.txt")
+#=
+#params = [0.45 22.5; 0.5 22.5; 0.55 22.5]
+#params = [0.62 15.75; 0.63 15.75; 0.64 15.75]
+ws = params[:,1]
+gs = params[:,2]
+gs_rounded = round.(gs; digits=4)
+ws_rounded = round.(ws; digits=4)
+=#
+
+=#

@@ -7,14 +7,15 @@ cd(@__DIR__)
 #general parameters
 #colors = [:lime, :cyan, :orange, :darkgreen]
 #colors = [:lime, :cyan, :orange, :gray40]
-colors = [:lime, :gray10, :cyan, :purple, :blue]
+#colors = [:lime, :gray10, :cyan, :purple, :blue]
+colors = [:lime, :cyan]
 markershapes = [:circle, :cross]
-nbins = 30 #[25,10]
+nbins = 50 #[25,10]
 
 #lifetimes path
 #data_dir_lt_root = "../../data/lifetimes_precomp_orig/"
-data_dir_lt_root = "../../data/lifetimes_horizontal_vertical/"
-data_dir_lt = data_dir_lt_root #* "c2/" #"rp_rc/"
+data_dir_lt_root = "../../data/lifetimes_precomp_rescaled/"
+data_dir_lt = data_dir_lt_root * "c/" #"rp_rc/"
 
 
 #data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_vertical_test/"
@@ -22,13 +23,21 @@ data_dir_lt = data_dir_lt_root #* "c2/" #"rp_rc/"
 
 #traj path
 #data_dir_traj_root = "../../data/trajs_precomp_orig/"
-data_dir_traj_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
-data_dir_traj = data_dir_traj_root #* "c2/" #"rp_rc/"
+data_dir_traj_root = "../../data/trajs_precomp_rescaled/"
+data_dir_traj = data_dir_traj_root * "c/" #"rp_rc/"
 files_traj = readdir(data_dir_traj)
 
-params = readdlm(data_dir_traj * files_traj[3])
 
-p_values = [params[:, i] for i in 1:size(params)[2]]
+#---------------------read parameter values------------------
+param_dir_root = "../../data/parameters/"
+param_dir = param_dir_root * "c/"
+params_orig = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
+params_rescaled = readdlm(param_dir * "params_w_g.txt")
+params_changed = readdlm(param_dir * "params_c.txt")
+
+
+#p_values = [params[:, i] for i in 1:size(params)[2]]
+p_values = [gs[1:2],ws[1:2]]
 p_names = ["g","w"] #["c"] #["rp", "rc"]
 p_names_ltx = ["g", "w"] #[L"c"] #[L"r_p", L"r_c"]
 
@@ -43,6 +52,7 @@ ws_rounded = round.(ws; digits=4)
 
 #traj specific parameters 
 N, Δt_traj,T = readdlm(data_dir_traj*"traj_spec_params.txt")
+N = Int(N)
 t = [0.0:Δt_traj:T;]
 data_shape = (Int(T / Δt_traj) + 1, N)
 
@@ -97,7 +107,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=4,
-            label= p_names_ltx[1] * L" = %$(p_values[1][j])," ,#* p_names_ltx[2] * L" = %$(p_values[2][j])",
+            label= p_names_ltx[1] * L" = %$(p_values[1][j])" * p_names_ltx[2] * L" = %$(p_values[2][j])",
             xlabel=L"\log(\tau)",
             ylabel=L"\log(count)")
 
@@ -140,7 +150,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 end
 
 plots_reorder = [plots[i][j] for j in 1:3 for i in 1:4]
-xlimits = (0.0, 2.2); ylimits = (-2.0, 6.0);
+xlimits = (0.0, 2.2); ylimits = (-2.0, 7.0);
 pl_all = plot(plots_reorder..., layout=(3, 4), size=(1200, 800),xlims=xlimits,ylims=ylimits,
     plot_title=L"N=%$N,k=%$k", left_margin=5Plots.mm,legend=:topright,legendfontsize=5,dpi=300)
 

@@ -45,10 +45,10 @@ u02[1:2:end] .= x0
 ds = create_original_ds(u02, deepcopy(p_orig); diffeq=diffeq)
 
 #length of precomputed trajs 
-T = 5000 #10000 #100 #5000
+T = 100 #10000 #100 #5000
 Ttr = 500 #500
-Δt = 1e-1 #5*1e-2
-nr_ics = 10 #number of initial conditions
+Δt = 1e-2 #5*1e-2
+nr_ics = 1 #number of initial conditions
 
 #----------------------------change r parameter-------------------------
 # try rp = rc scenario
@@ -70,12 +70,12 @@ rescaled_params.(rs, rs, K, c, α, N)
 p_sets = [[rs[1], rs[1]], [rs[2], rs[2]], [rs[3], rs[3]], [rs[4], rs[4]]]
 
 savedir_root = "../../data/trajs_precomp_orig/"
-savedir = savedir_root * "rp_rc2/"
+savedir = savedir_root * "rp_rc_reso_test/"
 mkpath(savedir)
 params_curve = writedlm(savedir * "/rvalues_rp_rc.txt",stack(p_sets)') #save changing parameter
 
 #precompute trajectories 
-precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=1e-1,
+precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt,
     T_traj=T, Ttr=Ttr, savedir=savedir, p_names=["rp","rc"],
     filename="N$(N)_K$(K)_c$(c)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
 

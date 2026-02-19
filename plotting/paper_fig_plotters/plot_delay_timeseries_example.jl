@@ -11,16 +11,29 @@ N = 10
 diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-2, adaptive=true, maxiters=1e15)
 u0 = rand(2N)
 
+#---------------------read parameter values------------------
+param_dir_root = "../../data/parameters/"
+param_dir = param_dir_root * "c/"
+params_orig = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
+params_rescaled = readdlm(param_dir * "params_w_g.txt")
+params_changed = readdlm(param_dir * "params_c.txt")
+N_orig = params_orig[end]
 
+#=
 w_B2 = 0.48
 ws = [0.3, w_B2, 0.7, 0.95]
 g = 22.5 #15.75
+=#
+ws = params_rescaled[:, 1]
+gs = params_rescaled[:, 2] ./ (N_orig - 1) * ((N - 1))
+g = gs[1]
 
 ds = create_ds(u0, [g, 0.5, N]; diffeq=diffeq) #no noise
 
 #ws = [0.5,0.65,0.75,0.92]
 Ttrs = [0,1000,1000,0]
 T = 200
+
 #--------------------------------plot time series---------------------------
 #check WTA 
 set_parameter!(ds,2,ws[end])

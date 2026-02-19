@@ -2,7 +2,7 @@ using Plots, LaTeXStrings
 using AttentionDynamics
 using DelimitedFiles
 cd(@__DIR__)
-include("../../plotting/defaults.jl")
+include("defaults.jl")
 include("../../plotting/plot_functions/lyapunov.jl")
 
 #-------------------------plot phase diagram---------------------
@@ -10,8 +10,10 @@ include("../../plotting/plot_functions/lyapunov.jl")
 #--------------read lyaps--------------------
 figs_dir = "../../paper_figs/"
 #data_dir = "../../data/phasediag_data_N10_extended_d0_1.0e-9_ut1e-6/"
-data_dir = "../../data/phasediag_data_N10_extended3_80x80/"
-lyap_vals = reshape(readdlm(data_dir*"lyap_values_Ttr10000.txt"),(80,80))
+#data_dir = "../../data/phasediag_data_N10_extended3_80x80/"
+data_dir = "../../../../../Dropbox/att_dyn/data_phasediag/phasediag_data_N10_extended4_80x80/"
+#lyap_vals = reshape(readdlm(data_dir*"lyap_values_Ttr10000.txt"),(80,80))
+lyap_vals = reshape(readdlm(data_dir * "lyap_values_Ttr5000.txt"), (80, 80))
 params = readdlm(data_dir*"phasediag_params.txt")
 ws = params[:,1]
 gs = params[:,2]
@@ -21,7 +23,7 @@ pl_lyaps = plot_phase_diagram(lyap_vals,ws,gs,N;
     xlims=(0.0, 1.0),
     ylims=(gs[1],gs[end])./(N-1),
     HEATMAP_DEFAULTS...,
-    ylabel=L"\frac{1}{\epsilon(N-1)}",clims=(-0.5,0.5),
+    ylabel=L"\frac{1}{\epsilon(N-1)}",clims=(-0.8,0.8),
     right_margin=6Plots.mm,
     left_margin=6Plots.mm,
     tickfontsize=tick_fontsize_large,
@@ -31,6 +33,7 @@ pl_lyaps = plot_phase_diagram(lyap_vals,ws,gs,N;
     colorbar_ticks = [-0.5,0.0,0.5],
     x_ticks = [0.0, 0.5, 1.0])
 
+#=
 #fill in with analytical eigenvalues
 λa = -1
 λ_b(g,w,N) = g*(1-1/(N-1)*1/(1/w-1)) 
@@ -58,16 +61,25 @@ pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws, gs, N;
     colorbar_title="",
     colorbar_ticks=[-0.7, 0.0, 0.7],
     x_ticks=[0.0, 0.5, 1.0])
+=#
+#---------------------read parameter values------------------
+param_dir_root = "../../data/parameters/"
+param_dir = param_dir_root*"c/"
+params_orig = readdlm(param_dir*"params_rp_rc_K_α_N.txt")
+params_rescaled = readdlm(param_dir * "params_w_g.txt")
+params_changed = readdlm(param_dir * "params_c.txt")
+#------------------------plot param values------------------
+ws_example = params_rescaled[:, 1]
+gs_example = params_rescaled[:,2]
+N_orig = params_orig[end]
+cs = params_changed
+plot!(pl_lyaps, ws_example', gs_example' ./ (N_orig-1),
+    ms=ms, st=:scatter, mc=[:lime :cyan :orange],
+    markerstrokewidth=0.0,
+    label=[L"c=%$(cs[1])" L"c=%$(cs[2])" L"c=%$(cs[3])"])
 
-
-#------------------------plot example param values------------------
 ms = 5
 color_default = :gray10
-#ws_example = [0.3, 0.48, 0.7, 0.95]
-#ws_example = [0.3, 0.63, 0.8, 0.95]
-w_B2 = 0.48
-ws_example = [0.3, w_B2, 0.7, 0.95]
-g_example = 22.5 #9*1.75
 example_colors = [color_default, color_default, color_default, :gray60]
 
 hline!([g_example / (N - 1)], ls=:dot, la=0.5, lw=2, lc=:gray10, label="")
@@ -120,6 +132,16 @@ annotate!(pl_lyaps_filled, w_B2-0.02, g_B5 / (N - 1) + 0.1, text(L"B_5", :blue, 
 savedir_param = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
 writedlm(savedir_param * "param_pairs.txt", [g_example w_B1; g_example w_B2; g_example w_B3; g_B4 w_B2; g_B5 w_B2])
 
+#=
+#example parameters 
+
+#ws_example = [0.3, 0.48, 0.7, 0.95]
+#ws_example = [0.3, 0.63, 0.8, 0.95]
+w_B2 = 0.48
+ws_example = [0.3, w_B2, 0.7, 0.95]
+g_example = 22.5 #9*1.75
+
+=#
 #=
 #alpha curve version 
 rc = 1.8;K = 1.0;c0 = 2.5;α0 = 0.1;
