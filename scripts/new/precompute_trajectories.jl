@@ -41,12 +41,13 @@ u0 = zeros(2N)
 u0[1:2:end] .= x0
 
 ds = create_original_ds(u0, deepcopy(p_orig); diffeq=diffeq)
-
+#=
 #length of precomputed trajs 
-T = 5000 #10000 #100 #5000
+T = 1000 #10000 #100 #5000
 Ttr = 500 #500
 Δt_traj = 1e-2 #5*1e-2
-nr_ics = 1 #number of initial conditions
+nr_ics = 10 #number of initial conditions
+=#
 
 #=
 #----------------------------change r parameter-------------------------
@@ -103,18 +104,14 @@ p = [rp, rc, K, c0, α]
 
 ds = create_original_ds(u0, deepcopy(p); diffeq=diffeq)
 
-savedir_traj_root = "../../data/trajs_precomp_orig/"
-savedir_traj = savedir_traj_root * "c_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
-mkpath(savedir_traj)
-
 p_sets = [[params_changed[i]] for i in 1:length(params_changed)]
 params_curve = writedlm(savedir_traj * "cvalues.txt", params_changed) #save changing parameter
 writedlm(savedir_traj * "traj_spec_params.txt", [N Δt_traj T]) #save traj specific params
 
-nr_ics = 10
+
 #precompute trajectories 
 precompute_trajectories(ds, nr_ics, p_sets, [4]; Δt=Δt_traj,
-    T_traj=T, Ttr=Ttr, savedir=savedir_traj, p_names=["c"],
+    T_traj=T, Ttr=Ttr, savedir=savedir_traj, p_names=["c"], ic_counter=10,
     filename="N$(N)_rp_$(rp)_rc_$(rc)_K$(K)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
 
 #=

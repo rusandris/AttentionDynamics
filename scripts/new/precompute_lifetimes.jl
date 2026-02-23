@@ -14,17 +14,13 @@ N = Int(N)
 t = [0.0:Δt_traj:T;]
 data_shape = (Int(T / Δt_traj) + 1, N)
 T_plot = 50
-k = 5
 
 #trajectory path
-#data_dir_traj_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
-#data_dir_traj_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
 #data_dir_traj_root = "../../data/trajs_precomp_rescaled/"
 #data_dir_traj_root = "../../data/trajs_precomp_orig/"
 #data_dir_traj = data_dir_traj_root * "c2_high_reso/" #* "c2/" #"rp_rc/"
 
 #save path 
-#savedir = "../../data/lifetimes_precomp_rescaled_vertical_test/"
 #savedir_root = "../../data/lifetimes_precomp_rescaled/"
 #savedir_root = "../../data/lifetimes_precomp_orig/"
 savedir_lt = savedir_lt_root * "c_k$(k)_Δt$(Δt_traj)_T$(T)/" #* "c2/" #"rp_rc/"
@@ -46,7 +42,6 @@ p_values =  [[params_changed...]] #[gs[1:3],ws[1:3]]
 #p_values = [params_rescaled[1], params_rescaled[2]]
 p_names = ["c"] #["g", "w"] #["rp", "rc"]
 
-chart_times = [0.1, 0.5 ,1.0, 2.0]
 writedlm(savedir_lt*"chart_times.txt",chart_times)
 #chart_times = [2.0]
 
@@ -55,7 +50,6 @@ dir_content = readdir(data_dir_traj)
 files = dir_content[findall(f -> occursin(".txt", f) || occursin(".dat", f), dir_content)]
 
 files_trajs = files[findall(f -> occursin(".dat", f), files)] #select binary only
-nr_ics = 50 #Int(length(files_trajs) / length(p_values[1]))
 
 file_sets = []
 

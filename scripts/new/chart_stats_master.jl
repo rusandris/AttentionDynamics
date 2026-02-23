@@ -18,16 +18,28 @@ params_orig = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
 params_rescaled = readdlm(param_dir * "params_w_g.txt")
 params_changed = readdlm(param_dir * "params_c.txt")
 
-#precompute trajectories
+#--------------------------------precompute trajectories-------------------------------------
 savedir_traj_root = "../../data/trajs_precomp_orig/"
+savedir_traj = savedir_traj_root * "c_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
+mkpath(savedir_traj)
+#settings of precomputed trajs
+T = 1000 #10000 #100 #5000
+Ttr = 500 #500
+Δt_traj = 1e-2 #5*1e-2
+nr_ics = 20 #number of initial conditions
+
 include("precompute_trajectories.jl")
 
-#precompute lifetimes
+#-------------------------------precompute lifetimes------------------------------------------
 data_dir_traj = savedir_traj
 savedir_lt_root = "../../data/lifetimes_precomp_orig/"
-include("precompute_lifetimes_rescaled.jl")
 
-#plot and save distributions 
+#lifetime settings 
+k = 3
+chart_times = [0.1, 0.5, 1.0] #2.0]
+include("precompute_lifetimes.jl")
+
+#---------------------------plot and save distributions---------------------------------------
 savedir_pl_root = "../../paper_figs/lifetime_distributions/"
 data_dir_lt = savedir_lt
-include("../../plotting/paper_fig_plotters/plot_lifetime_distributions_integrated_rescaled.jl")
+include("../../plotting/paper_fig_plotters/plot_lifetime_distributions.jl")

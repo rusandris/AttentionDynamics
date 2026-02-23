@@ -15,26 +15,8 @@ nbins = 50 #[25,10]
 #lifetimes path
 #data_dir_lt_root = "../../data/lifetimes_precomp_orig/"
 #data_dir_lt_root = "../../data/lifetimes_precomp_rescaled/"
-#data_dir_lt = data_dir_lt_root * "c2_high_reso/" #"c_distance_to_wc2_test/" #"rp_rc/"
 
-
-#data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_vertical_test/"
-#data_dir_traj_root = "../../data/lifetimes_precomp_rescaled_alpha_curve/"
-
-#traj path
-#data_dir_traj_root = "../../data/trajs_precomp_orig/"
-#data_dir_traj_root = "../../data/trajs_precomp_rescaled/"
-#data_dir_traj = data_dir_traj_root * "c2_high_reso/" #"c_distance_to_wc2_test/" #"rp_rc/"
 files_traj = readdir(data_dir_traj)
-
-#=
-#---------------------read parameter values------------------
-param_dir_root = "../../data/parameters/"
-param_dir = param_dir_root * "c/"
-params_orig = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
-params_rescaled = readdlm(param_dir * "params_w_g.txt")
-params_changed = readdlm(param_dir * "params_c.txt")
-=#
 
 
 #p_values = [params[:, i] for i in 1:size(params)[2]]
@@ -42,14 +24,6 @@ p_values = [[params_changed...]] #[gs[1:3],ws[1:3]]
 p_names = ["c"] #["g","w"] #["rp", "rc"]
 p_names_ltx = [L"c"] #["g", "w"] #[L"r_p", L"r_c"]
 
-#=
-#params = [0.45 22.5; 0.5 22.5; 0.55 22.5]
-#params = [0.62 15.75; 0.63 15.75; 0.64 15.75]
-ws = params[:,1]
-gs = params[:,2]
-gs_rounded = round.(gs; digits=4)
-ws_rounded = round.(ws; digits=4)
-=#
 
 #traj specific parameters 
 N, Δt_traj,T = readdlm(data_dir_traj*"traj_spec_params.txt")
@@ -163,7 +137,7 @@ end
 
 plots_reorder = [plots[i][j] for j in 1:3 for i in 1:3]
 xlimits = (0.0, 3.2); ylimits = (-2.0, 7.0);
-pl_all = plot(plots_reorder..., layout=(3, 4), size=(1200, 800),xlims=xlimits,ylims=ylimits,
+pl_all = plot(plots_reorder..., layout=(3, 3), size=(1200, 800),xlims=xlimits,ylims=ylimits,
     plot_title=L"N=%$N,k=%$k", left_margin=5Plots.mm,legend=:topright,legendfontsize=5,dpi=300)
 
 #savedir_pl = "../../paper_figs/lifetime_distributions_rescaled_horizontal_vertical/"
@@ -174,46 +148,4 @@ savedir_pl = savedir_pl_root * "c_k$(k)_Δt$(Δt_traj)_T$(T)/"
 mkpath(savedir_pl)
 savefig(pl_all, savedir_pl * "lifetime_distributions_integrated_" * param_string * "_log_log_discrete_exp_linbin_change_c_ic$(nr_ics).png")
 
-
-#=
-bin_edges = minimum(lifetimes):1:maximum(lifetimes)
-h = fit(Histogram,Float64.(lifetimes),bin_edges)
-
-hist_lin = plot(h.edges[1][1:end-1],h.weights,mc=:gray10,ms=6,xlims=(0,25),
-           ylabel="count",xlabel=L"\tau",guidefontsize=18,st=:scatter,
-           label=L"w=%$(ws_rounded[1]),g=%$(gs_rounded[1])",legendfontsize=12,legend=:topleft)
-
-plot!(h2.edges[1][1:end-1],h2.weights,mc=:orange,ms=6,xlims=(0,25),
-           ylabel="count",xlabel=L"\tau",guidefontsize=18,st=:scatter,
-           label=L"w=%$(ws_rounded[2]),g=%$(gs_rounded[2])",
-           markerstrokecolor=:orange,ylims=(0,8*1e5))
-
-hist_log = plot(log10.(h.edges[1][1:end-1]),log10.(h.weights),mc=:gray10,ms=6,
-        ylabel="log(count)",xlabel=L"\log(\tau)",guidefontsize=18,st=:scatter,
-        label=L"w=%$(ws_rounded[1]),g=%$(gs_rounded[1])",legendfontsize=12,legend=:topright)
-
-plot!(log10.(h2.edges[1][1:end-1]),log10.(h2.weights),mc=:orange,ms=6,
-    ylabel="log(count)",xlabel=L"\log(\tau)",guidefontsize=18,st=:scatter,
-    label=L"w=%$(ws_rounded[2]),g=%$(gs_rounded[2])",legendfontsize=12,
-    legend=:topright,markerstrokecolor=:orange)
-
-pl = plot(hist_lin, hist_log, layout=(1, 2), size=(1200, 400), dpi=300, bottom_margin=6Plots.mm, left_margin=6Plots.mm)=#
-
-#=
-
-colors = [:purple, :red, :orange]
-
-for (i,f) in enumerate(files_integ[[6,10,2]])
-    chart_time = chart_times[i]
-    lifetimes_c_integ = vec(readdlm(data_dir_lt * "/integrated/" * f))
-    color = colors[i]
-    plot_distrib!(pl, lifetimes_c_integ, chart_time * Δt;
-        color=color, nbins=nbins, mode=:none,
-        scale=:log, binning=:exp,st=:path,
-        title=L"k=20", ms=4,
-        label_par=L"c = %$(cs[2]), Δt=%$(chart_time*Δt)",
-        xlabel=L"log(\tau \cdot \Delta t)")
-end
-plot!(pl,legend=:outertopright)
-=#
 
