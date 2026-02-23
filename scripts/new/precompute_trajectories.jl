@@ -36,20 +36,19 @@ diffeq = (alg=Tsit5(), dt=1e-3, dtmax=dtmax, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
 
 #create ds
+x0 = rand(N) * 0.01
+u0 = zeros(2N)
+u0[1:2:end] .= x0
 
-#u01 = 0.1 .* rand(2N)
-x0 = rand(N) * 0.001
-u02 = zeros(2N)
-u02[1:2:end] .= x0
-
-ds = create_original_ds(u02, deepcopy(p_orig); diffeq=diffeq)
+ds = create_original_ds(u0, deepcopy(p_orig); diffeq=diffeq)
 
 #length of precomputed trajs 
-T = 100 #10000 #100 #5000
+T = 5000 #10000 #100 #5000
 Ttr = 500 #500
-Δt = 1e-2 #5*1e-2
+Δt_traj = 1e-2 #5*1e-2
 nr_ics = 1 #number of initial conditions
 
+#=
 #----------------------------change r parameter-------------------------
 # try rp = rc scenario
 # compare with rp \neq rc (mismatch between production and consumption rate)
@@ -69,17 +68,18 @@ rescaled_params.(rs, rs, K, c, α, N)
 
 p_sets = [[rs[1], rs[1]], [rs[2], rs[2]], [rs[3], rs[3]], [rs[4], rs[4]]]
 
-savedir_root = "../../data/trajs_precomp_orig/"
-savedir = savedir_root * "rp_rc_reso_test/"
-mkpath(savedir)
-params_curve = writedlm(savedir * "/rvalues_rp_rc.txt",stack(p_sets)') #save changing parameter
+#savedir_traj_root = "../../data/trajs_precomp_orig/"
+savedir_traj = savedir_traj_root * "rp_rc_Δt($Δt)_T$(T)_Ttr($Ttr)/"
+mkpath(savedir_traj)
+params_curve = writedlm(savedir_traj * "rvalues_rp_rc.txt",stack(p_sets)') #save changing parameter
+writedlm(savedir_traj * "traj_spec_params.txt", [N Δt_traj T]) #save traj specific params
 
 #precompute trajectories 
-precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt,
-    T_traj=T, Ttr=Ttr, savedir=savedir, p_names=["rp","rc"],
+precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,
+    T_traj=T, Ttr=Ttr, savedir=savedir_traj, p_names=["rp","rc"],
     filename="N$(N)_K$(K)_c$(c)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
 
-
+=#
 
 #----------------------------change c parameter-------------------------
 #increase c -> increase competition 
@@ -90,7 +90,7 @@ precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt,
 
 #range of c
 #cs = [1.4:0.3:2.4;]
-cs = [1.4:0.8:3.5;]
+#cs = [1.4:0.8:3.5;]
 
 #other params
 K = 1.0;
@@ -99,23 +99,23 @@ rc = 10;
 α = 0.005;
 c0 = 2.4
 
-u01 = 0.1 .* rand(2N)
 p = [rp, rc, K, c0, α]
 
-ds = create_original_ds(u01, deepcopy(p); diffeq=diffeq)
+ds = create_original_ds(u0, deepcopy(p); diffeq=diffeq)
 
+savedir_traj_root = "../../data/trajs_precomp_orig/"
+savedir_traj = savedir_traj_root * "c_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
+mkpath(savedir_traj)
 
-savedir_root = "../../data/trajs_precomp_orig/"
-savedir = savedir_root * "c2/"
-mkpath(savedir)
+p_sets = [[params_changed[i]] for i in 1:length(params_changed)]
+params_curve = writedlm(savedir_traj * "cvalues.txt", params_changed) #save changing parameter
+writedlm(savedir_traj * "traj_spec_params.txt", [N Δt_traj T]) #save traj specific params
 
-p_sets = [[cs[1]], [cs[2]], [cs[3]]]
-params_curve = writedlm(savedir * "/cvalues.txt", stack(p_sets)') #save changing parameter
-
+nr_ics = 10
 #precompute trajectories 
-precompute_trajectories(ds, nr_ics, p_sets, [4]; Δt=1e-2,
-    T_traj=T, Ttr=Ttr, savedir=savedir, p_names=["c"],
-    filename="N$(N)_rp_$(rp)_rc_$(rc)_K$(K)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt).dat")
+precompute_trajectories(ds, nr_ics, p_sets, [4]; Δt=Δt_traj,
+    T_traj=T, Ttr=Ttr, savedir=savedir_traj, p_names=["c"],
+    filename="N$(N)_rp_$(rp)_rc_$(rc)_K$(K)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
 
 #=
 

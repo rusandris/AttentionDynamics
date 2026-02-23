@@ -8,30 +8,31 @@ cd(@__DIR__)
 
 #---------------params-----------------------
 
-
-#trajectory path
-#data_dir_traj_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
-#data_dir_traj_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
-data_dir_traj_root = "../../data/trajs_precomp_rescaled/"
-#data_dir_traj_root = "../../data/trajs_precomp_orig/"
-data_dir_traj = data_dir_traj_root * "c/" #* "c2/" #"rp_rc/"
-
-#save path 
-#savedir = "../../data/lifetimes_precomp_rescaled_vertical_test/"
-savedir_root = "../../data/lifetimes_precomp_rescaled/"
-savedir = savedir_root * "c/" #* "c2/" #"rp_rc/"
-mkpath(savedir)
-
 #traj specific parameters 
 N, Δt_traj, T = readdlm(data_dir_traj * "traj_spec_params.txt")
 N = Int(N)
 t = [0.0:Δt_traj:T;]
 data_shape = (Int(T / Δt_traj) + 1, N)
+T_plot = 50
+k = 5
 
+#trajectory path
+#data_dir_traj_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
+#data_dir_traj_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
+#data_dir_traj_root = "../../data/trajs_precomp_rescaled/"
+#data_dir_traj_root = "../../data/trajs_precomp_orig/"
+#data_dir_traj = data_dir_traj_root * "c2_high_reso/" #* "c2/" #"rp_rc/"
+
+#save path 
+#savedir = "../../data/lifetimes_precomp_rescaled_vertical_test/"
+#savedir_root = "../../data/lifetimes_precomp_rescaled/"
+#savedir_root = "../../data/lifetimes_precomp_orig/"
+savedir_lt = savedir_lt_root * "c_k$(k)_Δt$(Δt_traj)_T$(T)/" #* "c2/" #"rp_rc/"
+mkpath(savedir_lt)
 
 #---------------------read parameter values------------------
 param_dir_root = "../../data/parameters/"
-param_dir = param_dir_root * "c/"
+param_dir = param_dir_root * "c/" #"c/"
 params_orig = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
 params_rescaled = readdlm(param_dir * "params_w_g.txt")
 params_changed = readdlm(param_dir * "params_c.txt")
@@ -41,13 +42,12 @@ N_orig = params_orig[end]
 ws = params_rescaled[:, 1]
 gs = params_rescaled[:, 2] ./ (N_orig - 1) * ((N - 1))
 
-p_values = [gs[1:2],ws[1:2]] 
-#[params_rescaled[:,i] for i in 1:size(params_rescaled)[2]][[2,1]]
-p_names = ["g", "w"] #["c"] #["rp", "rc"]
+p_values =  [[params_changed...]] #[gs[1:3],ws[1:3]]
+#p_values = [params_rescaled[1], params_rescaled[2]]
+p_names = ["c"] #["g", "w"] #["rp", "rc"]
 
-k = 4
 chart_times = [0.1, 0.5 ,1.0, 2.0]
-writedlm(savedir*"chart_times.txt",chart_times)
+writedlm(savedir_lt*"chart_times.txt",chart_times)
 #chart_times = [2.0]
 
 #---------------------------read trajectories filenames------------------------------------ 
@@ -55,7 +55,7 @@ dir_content = readdir(data_dir_traj)
 files = dir_content[findall(f -> occursin(".txt", f) || occursin(".dat", f), dir_content)]
 
 files_trajs = files[findall(f -> occursin(".dat", f), files)] #select binary only
-nr_ics = 10 #Int(length(files_trajs) / length(p_values[1]))
+nr_ics = 50 #Int(length(files_trajs) / length(p_values[1]))
 
 file_sets = []
 
@@ -65,6 +65,7 @@ for j in 1:length(p_values[1])
     for i in 1:length(p_values)
         par_names *= p_names[i] * "$(p_values[i][j])_"
     end
+    @show par_names
 
     #files corresponding to a certain param set
     file_set = files_trajs[findall(f -> occursin(par_names, f), files_trajs)] 
@@ -93,7 +94,8 @@ for (idx, chart_time) in enumerate(chart_times)
 
             #save traj pl
             mkpath(data_dir_traj*"figs/")
-            savefig(plot(traj[1:500,:],legend=false,title=fname,size=(1200,300)),data_dir_traj*"figs/"*fname*".png")
+            n = Int(T_plot/Δt_traj)
+            savefig(plot(t[1:n],traj[1:n,:],legend=false,title=fname,size=(1200,300)),data_dir_traj*"figs/"*fname*".png")
             
             #integrate activity segment to segment
             int_act, time_segments = integrate_activity(traj, t, Int(chart_time / Δt_traj))
@@ -106,7 +108,7 @@ for (idx, chart_time) in enumerate(chart_times)
         #save lifetimes (integers) into binary format
         base_name, = splitext(fileset[1])
         lifetimes_fname = "lifetimes_k$(k)" * base_name[6:end-3] * "charting_$chart_time" *".dat"
-        write(savedir * lifetimes_fname, lifetimes_all)
+        write(savedir_lt * lifetimes_fname, lifetimes_all)
     end
 
 end

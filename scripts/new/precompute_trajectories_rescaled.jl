@@ -12,9 +12,9 @@ cd(@__DIR__)
 #-----------------------------------time params---------------------------------------
 
 #length of precomputed trajs 
-T = 100000 #10000 #100 #5000
-Ttr = 1000 #500
-Δt_traj = 1e-1 #5*1e-2
+T = 10000 #100000 #10000 #100 #5000
+Ttr = 5000 #500
+Δt_traj = 1e-2 #5*1e-2
 
 #-----------------------------------setup system--------------------------------------
 
@@ -30,7 +30,7 @@ ds = create_ds(u0, [g, w, N]; diffeq=diffeq2) #no noise
 #savedir_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
 #savedir_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
 savedir_root = "../../data/trajs_precomp_rescaled/"
-savedir = savedir_root*"c/"
+savedir = savedir_root*"c_high_reso/"
 mkpath(savedir)
 
 #---------------------read parameter values------------------
@@ -40,17 +40,58 @@ params_orig = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
 params_rescaled = readdlm(param_dir * "params_w_g.txt")
 params_changed = readdlm(param_dir * "params_c.txt")
 
-N_orig = params_orig[end]
+#equal distance to coexistence curve
+#on g/(N-1) graph
+#between big and small systems 
 
+N_orig = params_orig[end]
 ws = params_rescaled[:, 1]
 gs = params_rescaled[:, 2] ./ (N_orig - 1) * ((N - 1))
 
-p_sets = [[gs[i], ws[i]] for i in 1:2]
+p_sets = [[gs[i], ws[i]] for i in 1:3]
 #precompute trajectories
-nr_ics = 10
+nr_ics = 50
 writedlm(savedir*"traj_spec_params.txt", [N Δt_traj T])
 precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,
     T_traj=T, Ttr=Ttr, savedir=savedir, filename="N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
+
+
+#equal distance to WTA divider
+#on g/(N-1) graph
+#between big and small systems 
+
+ws = params_rescaled[:, 1]
+gs = params_rescaled[:, 2] 
+g_300 = gs[1]
+#g_N = g_300 / (N_orig-1) * (N-1)
+
+N_orig = params_orig[end]
+wc2_N300 = (N_orig - 1) / N_orig
+wc2_N = (N - 1) / N
+wc1_N300 = (N_orig - 1) / g_300
+Δw_N300 = wc2_N300 - wc1_N300
+
+g_N = (N-1) / (wc2_N - Δw_N300)
+wc1_N = (N - 1) / g_N
+Δw_N10 = wc2_N - wc1_N
+w_N = wc1_N .+ (ws .- wc1_N300)
+
+
+savedir_params_root = "../../data/parameters/"
+savedir_params = savedir_params_root * "c_distance_to_wc2_test/"
+mkdir(savedir_params)
+#writedlm(savedir * "params_rp_rc_K_α_N.txt", [rp, rc, K, α, N])
+writedlm(savedir_params * "params_w_g.txt", [g_N w_N[1]])
+
+p_sets = [[g_N,w_N[1]]]
+#precompute trajectories
+nr_ics = 10
+savedir = savedir_root * "c_distance_to_wc2_test/"
+mkpath(savedir)
+writedlm(savedir*"traj_spec_params.txt", [N Δt_traj T])
+precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,
+    T_traj=T, Ttr=Ttr, savedir=savedir, filename="N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
+
 
 
 #=

@@ -281,7 +281,7 @@ end
 #calculate a measure of inequality at each charting time 
 #average distance (difference in absolute value) between the first and last position 
 
-function chart_stats(traj, k, Δt_chart)
+function chart_stats(traj, k, Δt_chart;threshold=1e-3)
 
     T,d = size(traj) 
 
@@ -289,6 +289,7 @@ function chart_stats(traj, k, Δt_chart)
     xs = traj[1:Δt_chart:T, 1:d]
 
     x_ineqs = Float64[]
+    nr_inside_thresh = Int64[]
     x_topk_vals = Vector{Float64}[]
     x_topk_idxs = Vector{Int64}[]
     for t in 1:size(xs)[1]
@@ -296,7 +297,10 @@ function chart_stats(traj, k, Δt_chart)
         xt = xs[t, :]
         chart = reverse(sortperm(xt)[end-k+1:end])
         x_topk = sort(xt; rev=true)[1:k]
-        #@show x_topk .== reverse(xt[chart])
+
+        #count how many inside threshold
+        x_topk_ratios = x_topk ./ x_topk[1]
+        inside_thresh = count(x -> x > threshold,x_topk_ratios)
 
         #take relative differences 
         x_ineq = (x_topk[1] - x_topk[end]) / x_topk[end]
@@ -304,9 +308,10 @@ function chart_stats(traj, k, Δt_chart)
         push!(x_ineqs, x_ineq)
         push!(x_topk_vals,x_topk)
         push!(x_topk_idxs, chart)
+        push!(nr_inside_thresh, inside_thresh)
     end
     #take mean and push to vec
-    return x_topk_idxs,x_topk_vals, extrema(x_ineqs),mean(x_ineqs)
+    return x_topk_idxs, x_topk_vals, nr_inside_thresh, extrema(x_ineqs), mean(x_ineqs)
 end
 
 function consecutive_occurrences(charts)
