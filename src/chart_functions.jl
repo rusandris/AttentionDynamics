@@ -379,3 +379,17 @@ function integrate_activity(traj, ts::Vector{Float64}; method=TrapezoidalRule())
     end
     return L_ints
 end
+
+#TODO: define charts and lifetimes differently?
+#does chart-based lifetime in this system have the same meaning as in real systems?
+#the values of the timeseries can be scaled arbitrarily -> 
+#so the threshold level at which activity is considered negligible is also arbitrary 
+#defining lifetime through a static charting scheme can introduce artifacts (see long tail in distribution)
+#1.carry on with static charting but with a carefully selected smaller chart (k)
+#which makes sure that are items on the chart are active (for each parameter)
+#this will result in shorter lifetimes, that only correspond to the active part of the dynamics
+#2.dynamic charting, which also takes into account a threshold, so k can vary from chart to chart
+#3.instead of taking top k largest values (which could contain both active and passive variables)
+#take lifetime as the time spent as active (value is above of relative threshold)
+#that way there is no limit to the number of active variables at a given time 
+#and doesn't take into consideration turnovers (since there is no chart and order doesn't matter)

@@ -19,7 +19,8 @@ end
 
 
 function precompute_trajectories(ds, nr_ics, ps::Vector{Vector{Float64}}, p_idx::Vector{Int64}; Δt=1e-1,
-    T_traj=5000, Ttr=1000, rand_ic=dim -> rand(dim) * 0.1, savedir="./", p_names = ["g","w"] ,filename="traj_test.dat")
+    T_traj=5000, Ttr=1000, rand_ic=dim -> rand(dim) * 0.1, savedir="./", p_names = ["g","w"],
+    filename="traj_test.dat", ic_counter=0)
 
     for p in ps
         @show p
@@ -36,11 +37,11 @@ function precompute_trajectories(ds, nr_ics, ps::Vector{Vector{Float64}}, p_idx:
         #p_names[1] * "$(p[1])_" * p_names[2] * "$(p[2])_"
         #solve systems to get trajectory and save
         precompute_trajectories(ds, nr_ics; T_traj=T_traj, Ttr=Ttr, Δt=Δt, savedir=savedir,
-            filename="trajs_" * par_names * filename, rand_ic=rand_ic)
+            filename="trajs_" * par_names * filename, rand_ic=rand_ic, ic_counter=ic_counter)
     end
 end
 
-function precompute_trajectories(ds, nr_ics; savedir="./", filename="traj_test.dat", T_traj=T_traj, Ttr=Ttr, Δt=1e-1, rand_ic=dim -> rand(dim) * 0.1)
+function precompute_trajectories(ds, nr_ics; savedir="./", filename="traj_test.dat", T_traj=T_traj, ic_counter=0 , Ttr=Ttr, Δt=1e-1, rand_ic=dim -> rand(dim) * 0.1)
 
     dim = dimension(ds)
     u0s = [rand_ic(dim) for i in 1:nr_ics]
@@ -48,7 +49,7 @@ function precompute_trajectories(ds, nr_ics; savedir="./", filename="traj_test.d
         @info "Initial condition $(i)..."
         traj, times = trajectory(ds, T_traj, u0; Ttr=Ttr, Δt=Δt)
         fname, ext = splitext(filename)
-        save_trajectory(traj, fname * "_ic$(i)" * "$(ext)", savedir)
+        save_trajectory(traj, fname * "_ic$(i+ic_counter)" * "$(ext)", savedir)
     end
 
 end
