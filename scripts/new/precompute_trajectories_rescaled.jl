@@ -13,7 +13,7 @@ cd(@__DIR__)
 
 #length of precomputed trajs 
 T = 10000 #100000 #10000 #100 #5000
-Ttr = 5000 #500
+Ttr = 10000 #500
 Δt_traj = 1e-2 #5*1e-2
 
 #-----------------------------------setup system--------------------------------------
@@ -30,7 +30,7 @@ ds = create_ds(u0, [g, w, N]; diffeq=diffeq2) #no noise
 #savedir_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
 #savedir_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
 savedir_root = "../../data/trajs_precomp_rescaled/"
-savedir = savedir_root*"c_high_reso/"
+savedir = savedir_root*"wg_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
 mkpath(savedir)
 
 #---------------------read parameter values------------------
@@ -50,11 +50,12 @@ gs = params_rescaled[:, 2] ./ (N_orig - 1) * ((N - 1))
 
 p_sets = [[gs[i], ws[i]] for i in 1:3]
 #precompute trajectories
-nr_ics = 50
+nr_ics = 5
 writedlm(savedir*"traj_spec_params.txt", [N Δt_traj T])
-precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,
+precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,ic_counter=5,
     T_traj=T, Ttr=Ttr, savedir=savedir, filename="N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
 
+#=
 
 #equal distance to WTA divider
 #on g/(N-1) graph
@@ -92,7 +93,7 @@ writedlm(savedir*"traj_spec_params.txt", [N Δt_traj T])
 precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,
     T_traj=T, Ttr=Ttr, savedir=savedir, filename="N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
 
-
+=#
 
 #=
 
