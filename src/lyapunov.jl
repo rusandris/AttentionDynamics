@@ -315,20 +315,23 @@ function calc_lyap_row!(Λ,pds,gvalues,witer,gindex;pidx=2, T, Ttr, Δt,fp_setti
 
 	#reinit!(pds)
 	for (windex,w) in enumerate(witer)
-			
+		
+		#=
 		#skip second fixed point parameter interval
-		(w <= 1.0 && w > wc2) && println("wtf")
 		(w <= 1.0 && w > wc2) && continue
+		=#
 
 		set_parameter!(pds,pidx,w)
         @show current_parameters(pds)
 		reinit!(pds)
 		@show w
+		
+		#parallel debug
 		#@show current_state(pds)[1]
 		#@show Threads.threadid(),gindex,gvalues[gindex],w
 
 		#use lower transients for stable fixed point dynamics
-		if w < wc1
+		if w < wc1 || w > wc2
 			lyap = lyapunov(pds, T_fp; Ttr=Ttr_fp, Δt=Δt_fp, d0=d0, d0_upper=ut, d0_lower=lt)
 		else
 			lyap = lyapunov(pds, T; Ttr=Ttr, Δt=Δt, d0=d0, d0_upper=ut, d0_lower=lt)
