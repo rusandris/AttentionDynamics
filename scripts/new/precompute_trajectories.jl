@@ -111,7 +111,7 @@ writedlm(savedir_traj * "traj_spec_params.txt", [N Δt_traj T]) #save traj speci
 
 #precompute trajectories 
 precompute_trajectories(ds, nr_ics, p_sets, [4]; Δt=Δt_traj,
-    T_traj=T, Ttr=Ttr, savedir=savedir_traj, p_names=["c"], ic_counter=10,
+    T_traj=T, Ttr=Ttr, savedir=savedir_traj, p_names=["c"], ic_counter=30,
     filename="N$(N)_rp_$(rp)_rc_$(rc)_K$(K)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
 
 #=

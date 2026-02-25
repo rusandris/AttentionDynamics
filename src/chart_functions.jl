@@ -393,3 +393,37 @@ end
 #take lifetime as the time spent as active (value is above of relative threshold)
 #that way there is no limit to the number of active variables at a given time 
 #and doesn't take into consideration turnovers (since there is no chart and order doesn't matter)
+
+function activity_periods(trajs,threshold) 
+    tl,n = size(traj)
+    l_aps = Int64[]
+
+    for i in 1:n
+        x = trajs[:,i]
+        active_periods = x .> threshold
+        ls = active_period_lengths(active_periods)
+        push!(l_aps, ls...)
+    end
+    return l_aps
+end
+
+function active_period_lengths(a)
+    active = false 
+    L = length(a)
+    l = 0
+    i = 1
+    a_prev = 0
+    lengths = Int64[]
+    while i < L
+        a[i] == 1 && (l += 1)     
+
+        if a_prev == 1 && a[i] == 0
+            push!(lengths,l)
+            l = 0
+        end    
+        a_prev = a[i]
+        i += 1
+    end
+    l != 0 && push!(lengths,l) 
+    return lengths
+end

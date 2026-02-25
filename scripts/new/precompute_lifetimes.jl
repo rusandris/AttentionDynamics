@@ -23,8 +23,7 @@ T_plot = 50
 #save path 
 #savedir_root = "../../data/lifetimes_precomp_rescaled/"
 #savedir_root = "../../data/lifetimes_precomp_orig/"
-savedir_lt = savedir_lt_root * "c_k$(k)_Δt$(Δt_traj)_T$(T)/" #* "c2/" #"rp_rc/"
-mkpath(savedir_lt)
+
 
 #---------------------read parameter values------------------
 param_dir_root = "../../data/parameters/"
