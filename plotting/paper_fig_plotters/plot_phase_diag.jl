@@ -5,6 +5,11 @@ cd(@__DIR__)
 include("defaults.jl")
 include("../../plotting/plot_functions/lyapunov.jl")
 
+#plot settings 
+annot_size = 20
+
+
+
 #-------------------------plot phase diagram---------------------
 
 #--------------read lyaps--------------------
@@ -13,7 +18,7 @@ figs_dir = "../../paper_figs/"
 #data_dir = "../../data/phasediag_data_N10_extended3_80x80/"
 data_dir = "../../../../../Dropbox/att_dyn/data_phasediag/phasediag_data_N10_extended5_80x80/"
 #lyap_vals = reshape(readdlm(data_dir*"lyap_values_Ttr10000.txt"),(80,80))
-lyap_vals = reshape(readdlm(data_dir * "lyap_values_Ttr1000.txt"), (80, 80))
+lyap_vals = reshape(readdlm(data_dir * "lyap_values_Ttr10000.txt"), (80, 80))
 params = readdlm(data_dir*"phasediag_params.txt")
 ws_phasediag = params[:,1]
 gs_phasediag = params[:, 2]
@@ -64,33 +69,40 @@ pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws_phasediag, gs_phasedia
 
 
 #---------------------read parameter values------------------
-param_dir_root = "../../data/parameters/"
-param_dir = param_dir_root*"c/"
-params_orig = readdlm(param_dir*"params_rp_rc_K_α_N.txt")
-params_rescaled = readdlm(param_dir * "params_w_g.txt")
-params_changed = readdlm(param_dir * "params_c.txt")
 
-N_orig = params_orig[end]
-cs = params_changed
+#horizontal direction on phasediagram 
+param_dir_root = "../../data/parameters/"
+param_dir = param_dir_root * "c/"
+params_orig_horizontal = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
+params_rescaled_horizontal = readdlm(param_dir * "params_w_g.txt")
+params_changed_horizontal = readdlm(param_dir * "params_c.txt")
+cs = params_changed_horizontal
+
+#alpha (rp=rc) direction on phasediagram
+param_dir = param_dir_root * "alpha_rp=rc/"
+params_orig_curve = readdlm(param_dir * "params_K_c_N.txt")
+params_rescaled_curve = readdlm(param_dir * "params_w_g.txt")
+#params_changed_curve = readdlm(param_dir * "params_c.txt")
+
 
 #------------------------plot param values for lifetimes---------------------
 ms = 5
-ws_lts = params_rescaled[1:2, 1]
-gs_lts = params_rescaled[1:2,2]
-g_lts = gs_lts[1] / (N_orig-1)
+ws_horizontal = params_rescaled_horizontal[:, 1]
+gs_horizontal = params_rescaled_horizontal[:, 2]
+g_horizontal = gs_horizontal[1]
 
-hline!([g_lts], ls=:dot, la=0.5, lw=2, lc=:gray10, label="") #horizontal line
+hline!([g_horizontal], ls=:dot, la=0.5, lw=2, lc=:gray10, label="") #horizontal line
 
-plot!(ws_lts', gs_lts' ./ (N_orig-1),
-    ms=ms, st=:scatter, mc=[:lime :cyan :orange],
+plot!([ws_horizontal...,0.264]', [gs_horizontal...,g_horizontal]',
+    ms=ms, st=:scatter, mc=[:lime :gray10 :cyan :orange],
     markerstrokewidth=0.0,
-    label=[L"c=%$(cs[1])" L"c=%$(cs[2])" L"c=%$(cs[3])"])
+    label=[L"c=%$(cs[1])" L"c=%$(cs[2])" L"c=%$(cs[3])" L"c=2.4"])
 
-annotate!(ws_lts[1], g_lts+0.5, text(L"B_1", :lime, :center, 14))
-annotate!(ws_lts[2], g_lts + 0.5, text(L"B_3", :cyan, :center, 14))
+annotate!(ws_horizontal[1]-0.07, g_horizontal + 0.5, text(L"B_1", :lime, :center, annot_size))
+annotate!(ws_horizontal[3]+0.08, g_horizontal + 0.5, text(L"B_3", :cyan, :center, annot_size))
 
 #------------------------plot param values for time series examples-------------------------
-ws_example = [0.1, 0.21, 0.7, 0.95]
+ws_example = [0.1, ws_horizontal[2], 0.7, 0.95]
 g_example = g_lts #9*1.75
 
 color_default = :gray15

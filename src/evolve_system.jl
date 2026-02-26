@@ -20,9 +20,11 @@ end
 
 function precompute_trajectories(ds, nr_ics, ps::Vector{Vector{Float64}}, p_idx::Vector{Int64}; Δt=1e-1,
     T_traj=5000, Ttr=1000, rand_ic=dim -> rand(dim) * 0.1, savedir="./", p_names = ["g","w"],
-    filename="traj_test.dat", ic_counter=0)
+    filename="traj_test.dat", phasediag_ids=[], ic_counter=0)
+    add_ids = isempty(phasediag_ids) ? false : true 
 
-    for p in ps
+    #loop through parameter pairs
+    for (idx,p) in enumerate(ps)
         @show p
         for (i,idx) in enumerate(p_idx)
             set_parameter!(ds, idx, p[i])
@@ -34,10 +36,17 @@ function precompute_trajectories(ds, nr_ics, ps::Vector{Vector{Float64}}, p_idx:
             par_names *= p_names[i] * "$(p[i])_"
         end 
         @show par_names
-        #p_names[1] * "$(p[1])_" * p_names[2] * "$(p[2])_"
+
+        filename_edited = "trajs_" 
+        if add_ids 
+            id = phasediag_ids[idx]
+            filename_edited *= id   
+        end
+        filename_edited *= "_" * par_names * filename
+
         #solve systems to get trajectory and save
         precompute_trajectories(ds, nr_ics; T_traj=T_traj, Ttr=Ttr, Δt=Δt, savedir=savedir,
-            filename="trajs_" * par_names * filename, rand_ic=rand_ic, ic_counter=ic_counter)
+            filename = filename_edited, rand_ic=rand_ic, ic_counter=ic_counter)
     end
 end
 

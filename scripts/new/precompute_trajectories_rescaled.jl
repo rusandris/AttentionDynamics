@@ -29,31 +29,14 @@ ds = create_ds(u0, [g, w, N]; diffeq=diffeq2) #no noise
 
 #savedir_root = "../../data/trajs_precomp_rescaled_alpha_curve/"
 #savedir_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
-savedir_root = "../../data/trajs_precomp_rescaled/"
-savedir = savedir_root*"wg_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
-mkpath(savedir)
 
-#---------------------read parameter values------------------
-param_dir_root = "../../data/parameters/"
-param_dir = param_dir_root * "c/"
-params_orig = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
-params_rescaled = readdlm(param_dir * "params_w_g.txt")
-params_changed = readdlm(param_dir * "params_c.txt")
-
-#equal distance to coexistence curve
-#on g/(N-1) graph
-#between big and small systems 
-
-N_orig = params_orig[end]
-ws = params_rescaled[:, 1]
-gs = params_rescaled[:, 2] ./ (N_orig - 1) * ((N - 1))
-
-p_sets = [[gs[i], ws[i]] for i in 1:3]
 #precompute trajectories
-nr_ics = 5
-writedlm(savedir*"traj_spec_params.txt", [N Δt_traj T])
-precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,ic_counter=5,
-    T_traj=T, Ttr=Ttr, savedir=savedir, filename="N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
+nr_ics = 10
+writedlm(savedir_traj*"traj_spec_params.txt", [N Δt_traj T])
+precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,ic_counter=0,
+    T_traj=T, Ttr=Ttr, savedir=savedir_traj, 
+    filename="N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat",
+    phasediag_ids=phasediag_ids)
 
 #=
 
