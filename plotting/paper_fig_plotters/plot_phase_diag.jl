@@ -8,8 +8,6 @@ include("../../plotting/plot_functions/lyapunov.jl")
 #plot settings 
 annot_size = 20
 
-
-
 #-------------------------plot phase diagram---------------------
 
 #--------------read lyaps--------------------
@@ -72,18 +70,19 @@ pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws_phasediag, gs_phasedia
 
 #horizontal direction on phasediagram 
 param_dir_root = "../../data/parameters/"
-param_dir = param_dir_root * "c/"
+param_dir = param_dir_root * "c_article/" #"c/"
 params_orig_horizontal = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
 params_rescaled_horizontal = readdlm(param_dir * "params_w_g.txt")
 params_changed_horizontal = readdlm(param_dir * "params_c.txt")
 cs = params_changed_horizontal
 
 #alpha (rp=rc) direction on phasediagram
-param_dir = param_dir_root * "alpha_rp=rc/"
+param_dir = param_dir_root * "alpha_rp=rc_article/"
 params_orig_curve = readdlm(param_dir * "params_K_c_N.txt")
 params_rescaled_curve = readdlm(param_dir * "params_w_g.txt")
 #params_changed_curve = readdlm(param_dir * "params_c.txt")
-
+ws_curve = params_rescaled_curve[:, 1]
+gs_curve = params_rescaled_curve[:, 2]
 
 #------------------------plot param values for lifetimes---------------------
 ms = 5
@@ -93,7 +92,7 @@ g_horizontal = gs_horizontal[1]
 
 hline!([g_horizontal], ls=:dot, la=0.5, lw=2, lc=:gray10, label="") #horizontal line
 
-plot!([ws_horizontal...,0.264]', [gs_horizontal...,g_horizontal]',
+plot!(ws_horizontal', gs_horizontal',
     ms=ms, st=:scatter, mc=[:lime :gray10 :cyan :orange],
     markerstrokewidth=0.0,
     label=[L"c=%$(cs[1])" L"c=%$(cs[2])" L"c=%$(cs[3])" L"c=2.4"])
@@ -103,12 +102,11 @@ annotate!(ws_horizontal[3]+0.08, g_horizontal + 0.5, text(L"B_3", :cyan, :center
 
 #------------------------plot param values for time series examples-------------------------
 ws_example = [0.1, ws_horizontal[2], 0.7, 0.95]
-g_example = g_lts #9*1.75
 
 color_default = :gray15
 example_colors = [color_default, color_default, color_default, :gray80]
 
-plot!(ws_example, fill(g_example,4),
+plot!(ws_example, fill(g_horizontal,4),
     ms=ms, st=:scatter, mc=example_colors,
     markerstrokewidth=0.0,
     label="")
@@ -121,12 +119,12 @@ K = 1.0;
 c0 = 2.5;
 α0 = 0.1;
 
-g_B2 = g_example
+g_B2 = g_horizontal
 c = g_B2/K/(1/w_B2 - 1)
 alpha_curve(w_B2, K, c) #check if alpha curve passes through B3
 
-w_B1 = ws_lts[1]
-w_B3 = ws_lts[2]
+w_B4 = ws_curve[1]
+w_B5 = ws_curve[3]
 w_B1_B3 = [w_B1:0.001:w_B3;]
 gs_alpha = alpha_curve.(w_B1_B3, K, c) #alpha curve
 g_B1 = gs_alpha[1]
@@ -151,10 +149,8 @@ for (i, pl) in enumerate(ws_example)
     ypos = g_example * 0.9 + y_annot_offsets[i]
     annotate!(xpos, ypos, text(labels[i], example_colors[i], :center, annot_sizes[i]))
 end
-pl_lyaps
 
-
-savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended5_80x80_filled_Ttr_5000_" * "labeled_horizontal_alpha_curve.png")
+savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended5_80x80_filled_Ttr_5000_" * "labeled_horizontal_alpha_curve_article_params.png")
 
 
 #=

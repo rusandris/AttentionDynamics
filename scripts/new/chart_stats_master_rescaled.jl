@@ -14,13 +14,13 @@ cd(@__DIR__)
 
 #horizontal direction on phasediagram 
 param_dir_root = "../../data/parameters/"
-param_dir = param_dir_root * "c/"
+param_dir = param_dir_root * "c_article/"
 params_orig_horizontal = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
 params_rescaled_horizontal = readdlm(param_dir * "params_w_g.txt")
 params_changed_horizontal = readdlm(param_dir * "params_c.txt")
 
 #alpha (rp=rc) direction on phasediagram
-param_dir = param_dir_root * "alpha_rp=rc/"
+param_dir = param_dir_root * "alpha_rp=rc_article/"
 params_orig_curve = readdlm(param_dir * "params_K_c_N.txt")
 params_rescaled_curve = readdlm(param_dir * "params_w_g.txt")
 #params_changed_curve = readdlm(param_dir * "params_c.txt")
@@ -51,7 +51,7 @@ nr_ics = 30 #number of initial conditions
 #paths
 
 savedir_traj_root = "../../data/trajs_precomp_rescaled/"
-savedir_traj = savedir_traj_root * "wg_horizontal_curve_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
+savedir_traj = savedir_traj_root * "wg_horizontal_and_curve_article_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
 mkpath(savedir_traj)
 
 phasediag_ids = ["B1","B2","B3","B4","B5"]
@@ -65,7 +65,7 @@ chart_times = [0.01, 0.05, 0.1, 0.2] #2.0]
 #path
 data_dir_traj = savedir_traj
 savedir_lt_root = "../../data/lifetimes_precomp_rescaled/"
-savedir_lt = savedir_lt_root * "wg_horizontal_curve_k$(k)_Δt$(Δt_traj)_T$(T)/" #* "c2/" #"rp_rc/"
+savedir_lt = savedir_lt_root * "wg_horizontal_and_curve_article_k$(k)_Δt$(Δt_traj)_T$(T)/" #* "c2/" #"rp_rc/"
 mkpath(savedir_lt)
 
 p_values = [[1,2,3,4,5]]
@@ -92,13 +92,13 @@ for j in 1:length(p_values[1])
     push!(par_labels, par_names)
 end
 
-colors = [:lime, :gray10, :cyan, :orange, :yellow1]
+colors = [:lime, :gray10, :cyan, :yellow1, :orange]
 markershapes = [:circle, :cross]
-nbins = 50 #[25,10]
+nbins = 30 #[25,10]
 
 #set paths
 savedir_pl_root = "../../paper_figs/lifetime_distributions_rescaled/"
-savedir_pl = savedir_pl_root * "wg_horizontal_curve_k$(k)_Δt$(Δt_traj)_T$(T)/"
+savedir_pl = savedir_pl_root * "wg_horizontal_and_curve_article_params_k$(k)_Δt$(Δt_traj)_T$(T)/"
 mkpath(savedir_pl)
 data_dir_lt = savedir_lt
 

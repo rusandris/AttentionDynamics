@@ -10,13 +10,13 @@ K = 1.0;rp = 10;rc = 10;α = 0.005;c0 = 1.4;N=300;
 #w_B2 = 0.21 #predefine example parameter in the chaotic region
 
 #------------------coupling strength-------------------
-cs = [1.4, 1.8, 2.2] #3.0]
+cs = [1.4, 2.4, 5.4] #3.0]
 wg_pairs = rescaled_params.(rp,rc,K,cs,α,N)
 ws_horizontal = [wg_pairs[i][1] for i in 1:length(wg_pairs)]
 gs_horizontal = [wg_pairs[i][2] for i in 1:length(wg_pairs)] ./ (N-1)
 
 savedir_root = "../../data/parameters/"
-savedir = savedir_root * "c/"
+savedir = savedir_root * "c_article/"
 mkpath(savedir)
 
 writedlm(savedir * "params_c.txt", cs)
@@ -31,13 +31,14 @@ writedlm(savedir*"params_w_g.txt", hcat(ws_horizontal,gs_horizontal))
 alpha_curve(w, K, c) = K * c * (1 / w - 1) #g/(N-1) = 1/(ϵ*(N-1)), rp=rc
 
 g_example = wg_pairs[1][2] ./(N-1)
-w_B1, w_B2, w_B3 = ws_horizontal
+_, w_B2, w_B3 = ws_horizontal
+w_B1 = 0.2
 
 K = 1.0;
 #c is set so the curve goes through B2 
 g_B2 = g_example
 c = g_B2 / K / (1 / w_B2 - 1)
-g_B2 == alpha_curve(w_B2, K, c) #check if alpha curve passes through B2
+@show g_B2, alpha_curve(w_B2, K, c) #check if alpha curve passes through B2
 
 
 w_B1_B3 = [w_B1:0.001:w_B3;]
@@ -54,7 +55,7 @@ rs = [r_B1, r_B2]
 
 #save 
 savedir_root = "../../data/parameters/"
-savedir = savedir_root * "alpha_rp=rc/"
+savedir = savedir_root * "alpha_rp=rc_article/"
 mkpath(savedir)
 
 writedlm(savedir * "params_r.txt", rs)

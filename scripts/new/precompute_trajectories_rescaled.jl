@@ -10,15 +10,16 @@ cd(@__DIR__)
 
 
 #-----------------------------------time params---------------------------------------
-
+#=
 #length of precomputed trajs 
 T = 10000 #100000 #10000 #100 #5000
 Ttr = 10000 #500
 Δt_traj = 1e-2 #5*1e-2
+=#
 
 #-----------------------------------setup system--------------------------------------
 
-diffeq2 = (alg=Tsit5(), dt=1e-2, dtmax=1e-1, adaptive=true, maxiters=1e15)
+diffeq2 = (alg=Tsit5(), dt=1e-2, dtmax=1e-2, adaptive=true, maxiters=1e15)
 
 N = 10
 g = 18.0
@@ -31,7 +32,7 @@ ds = create_ds(u0, [g, w, N]; diffeq=diffeq2) #no noise
 #savedir_root = "../../data/trajs_precomp_rescaled_horizontal_vertical/"
 
 #precompute trajectories
-nr_ics = 10
+#nr_ics = 10
 writedlm(savedir_traj*"traj_spec_params.txt", [N Δt_traj T])
 precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,ic_counter=0,
     T_traj=T, Ttr=Ttr, savedir=savedir_traj, 
