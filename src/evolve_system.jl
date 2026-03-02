@@ -35,7 +35,6 @@ function precompute_trajectories(ds, nr_ics, ps::Vector{Vector{Float64}}, p_idx:
         for i in 1:length(p_names)
             par_names *= p_names[i] * "$(p[i])_"
         end 
-        @show par_names
 
         filename_edited = "trajs_" 
         if add_ids 
@@ -54,6 +53,7 @@ function precompute_trajectories(ds, nr_ics; savedir="./", filename="traj_test.d
 
     dim = dimension(ds)
     u0s = [rand_ic(dim) for i in 1:nr_ics]
+    @show current_parameters(ds)
     for (i, u0) in enumerate(u0s)
         @info "Initial condition $(i)..."
         traj, times = trajectory(ds, T_traj, u0; Ttr=Ttr, Δt=Δt)

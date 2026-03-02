@@ -12,23 +12,6 @@ cd(@__DIR__)
 
 N = 300
 
-#original params
-#rp=3.0;rc = 3.0;K = 1.0;α = 5*1e-3;c=1.8
-r_const = 9.0
-rc = r_const 
-rp = r_const #9.0;
-K = 1.0;
-c = 2.4;
-α = 0.005;
-w, g = rescaled_params(rp, rc, K, c, α, N)
-
-p_orig = [rp, rc, K, c, α]
-
-#critical params from the rescaled 
-wc1 = (N - 1) / (rp / α)
-wc2 = (N - 1) / N
-
-
 #------------------------------solver settings----------------------------------
 dtmax = 1e-2 #5*1e-2
 diffeq = (alg=Tsit5(), dt=1e-3, dtmax=dtmax, adaptive=true, maxiters=1e8)
@@ -40,7 +23,26 @@ x0 = rand(N) * 0.01
 u0 = zeros(2N)
 u0[1:2:end] .= x0
 
-ds = create_original_ds(u0, deepcopy(p_orig); diffeq=diffeq)
+p_init = [rs[2], rs[2],K,c,α,N]
+ds = create_original_ds(u0, deepcopy(p_init); diffeq=diffeq)
+
+#write traj specific params
+writedlm(savedir_traj * "traj_spec_params.txt", [N Δt_traj T]) #save traj specific params
+
+#precompute trajectories (rp=rc=r)
+precompute_trajectories(ds, nr_ics, p_sets_r, [1,2]; Δt=Δt_traj,
+    T_traj=T, Ttr=Ttr, savedir=savedir_traj, p_names=["rp","rc"], ic_counter=0,
+    filename="N$(N)_c$(c)_K$(K)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
+
+#precompute trajectories (c)
+set_parameter!(ds,1,rs[2])
+set_parameter!(ds, 2, rs[2])
+precompute_trajectories(ds, nr_ics, p_sets_c, [4]; Δt=Δt_traj,
+    T_traj=T, Ttr=Ttr, savedir=savedir_traj, p_names=["c"], ic_counter=0,
+    filename="_N$(N)_rp$(rs[2])_rp$(rs[2])_K$(K)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
+
+
+
 #=
 #length of precomputed trajs 
 T = 1000 #10000 #100 #5000
@@ -82,6 +84,7 @@ precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,
 
 =#
 
+#=
 #----------------------------change c parameter-------------------------
 #increase c -> increase competition 
 
@@ -104,17 +107,7 @@ p = [rp, rc, K, c0, α]
 
 ds = create_original_ds(u0, deepcopy(p); diffeq=diffeq)
 
-p_sets = [[params_changed[i]] for i in 1:length(params_changed)]
-params_curve = writedlm(savedir_traj * "cvalues.txt", params_changed) #save changing parameter
-writedlm(savedir_traj * "traj_spec_params.txt", [N Δt_traj T]) #save traj specific params
 
-
-#precompute trajectories 
-precompute_trajectories(ds, nr_ics, p_sets, [4]; Δt=Δt_traj,
-    T_traj=T, Ttr=Ttr, savedir=savedir_traj, p_names=["c"], ic_counter=30,
-    filename="N$(N)_rp_$(rp)_rc_$(rc)_K$(K)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
-
-#=
 
 #---------------------------------change rp---------------------------------
 # compare with rp \neq rc (mismatch between production and consumption rate)

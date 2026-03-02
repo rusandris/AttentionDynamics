@@ -6,7 +6,7 @@ cd(@__DIR__)
 #match original and rescaled params 
 #small and big systems 
 
-K = 1.0;rp = 10;rc = 10;α = 0.005;c0 = 1.4;N=300;
+K = 1.0;rp = 10;rc = 10;α = 0.005;c0 = 1.4;N_orig=300;
 #w_B2 = 0.21 #predefine example parameter in the chaotic region
 
 #------------------coupling strength-------------------
@@ -48,10 +48,10 @@ g_B3 = gs_alpha[end]
 
 #solve backwards for r 
 N_small = 10 
-α0 = 0.1
-r_B1 = g_B1 * α0 * (N_small-1)
-r_B2 = g_B2 * α0 * (N_small - 1)
-rs = [r_B1, r_B2]
+α0 = 0.005
+r_B1 = g_B1 * α0 * (N_orig-1)
+r_B2 = g_B2 * α0 * (N_orig - 1)
+rs = [g * α0 * (N_orig - 1) for g in [g_B1,g_B2,g_B3] ]
 
 #save 
 savedir_root = "../../data/parameters/"
@@ -59,7 +59,7 @@ savedir = savedir_root * "alpha_rp=rc_article/"
 mkpath(savedir)
 
 writedlm(savedir * "params_r.txt", rs)
-writedlm(savedir * "params_K_c_N.txt", [K, c, N])
+writedlm(savedir * "params_K_c_alpha_N.txt", [K, c, α0, N])
 writedlm(savedir * "params_w_g.txt", hcat([w_B1, w_B2, w_B3], [g_B1, g_B2, g_B3]))
 
 
