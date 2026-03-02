@@ -26,7 +26,7 @@ cs = vec(params_changed_horizontal)
 param_dir = param_dir_root * "alpha_rp=rc_article/"
 params_orig_curve = readdlm(param_dir * "params_K_c_alpha_N.txt")
 K, c, α, N_orig = params_orig_curve
-#params_rescaled_curve = readdlm(param_dir * "params_w_g.txt")
+params_rescaled_curve = readdlm(param_dir * "params_w_g.txt")
 params_changed_curve = readdlm(param_dir * "params_r.txt")
 rs = vec(params_changed_curve)
 
@@ -51,7 +51,7 @@ T = 1000 #10000 #100 #5000
 Ttr = 500 #500
 Δt_traj = 1e-1 #5*1e-2
 nr_ics = 10 #number of initial conditions
-
+ic_counter = 10
 
 phasediag_ids = ["B1", "B2", "B3", "B4", "B5"]
 
@@ -97,7 +97,7 @@ end
 colors = [:lime, :gray10, :cyan, :yellow1, :orange]
 markershapes = [:circle, :cross]
 nbins = 30 #[25,10]
-
+N = N_orig
 savedir_pl_root = "../../paper_figs/lifetime_distributions/"
 savedir_pl = savedir_pl_root * "horizontal_and_curve_article_params_k$(k)_Δt$(Δt_traj)_T$(T)/"
 mkpath(savedir_pl)
