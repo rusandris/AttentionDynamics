@@ -1,27 +1,25 @@
-function period_scaling(ds,params;T,Ttr,Δt,state,diffeq,ϵ)
-	times = 0:Δt:T
+function period_scaling(ds,params;T,Ttr,Δt,u0=current_state(ds),ϵ)
 	periods = zeros(length(params))
-	new_params = get_parameters(ds)
 	
 	for (i,p) in enumerate(params)
 		@show i,p
-		new_params[2] = p
-		ts = evolve_system(ds,T;Ttr=Ttr,Δt=Δt,state=state,p=new_params,diffeq=diffeq)
-		periods[i] = estimate_period(ts[:,1],:autocorrelation,times;L=length(ts[:,1])÷2,ϵ=ϵ)
+		set_parameter!(ds,2,p)
+        traj,t = trajectory(ds,T,u0;Ttr=Ttr)
+        x1 = traj[:,1]
+		periods[i] = estimate_period(x1,:autocorrelation,t;L=length(x1)÷2,ϵ=ϵ)
 	end
 	return periods
 end
 
-
-function amplitude_scaling(ds,params;T,Ttr,Δt,state,diffeq)
+function amplitude_scaling(ds,params;T,Ttr,Δt,u0=current_state(ds))
 	amplitudes = zeros(length(params))
-	new_params = get_parameters(ds)
 	
 	for (i,p) in enumerate(params)
 		@show i,p
-		new_params[2] = p
-		ts = evolve_system(ds,T;Ttr=Ttr,Δt=Δt,state=state,p=new_params,diffeq=diffeq)
-		amplitudes[i] = (maximum(ts[:,1]) - minimum(ts[:,1]))/2
+        set_parameter!(ds, 2, p)
+        traj, t = trajectory(ds, T, u0; Ttr=Ttr)
+        x1 = traj[:, 1]
+		amplitudes[i] = (maximum(x1) - minimum(x1))/2
 	end
 	return amplitudes
 end
