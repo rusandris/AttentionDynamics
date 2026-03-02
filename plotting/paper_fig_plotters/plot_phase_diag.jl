@@ -85,6 +85,7 @@ ws_curve = params_rescaled_curve[:, 1]
 gs_curve = params_rescaled_curve[:, 2]
 
 #------------------------plot param values for lifetimes---------------------
+
 ms = 5
 ws_horizontal = params_rescaled_horizontal[:, 1]
 gs_horizontal = params_rescaled_horizontal[:, 2]
