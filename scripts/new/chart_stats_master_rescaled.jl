@@ -43,19 +43,19 @@ push!(p_sets, [gs_curve[1], ws_curve[1]], [gs_curve[3], ws_curve[3]])
 
 #--------------------------------precompute trajectories-------------------------------------
 #settings of precomputed trajs
-T = 1000 #10000 #100 #5000
+T = 20000 #10000 #100 #5000
 Ttr = 500 #500
-Δt_traj = 1e-3 #5*1e-2
-nr_ics = 30 #number of initial conditions
+Δt_traj = 1e-2 #5*1e-2
+nr_ics = 1 #number of initial conditions
 
 #paths
 
 savedir_traj_root = "../../data/trajs_precomp_rescaled/"
-savedir_traj = savedir_traj_root * "wg_horizontal_and_curve_article_periodic_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
+savedir_traj = savedir_traj_root * "wg_horizontal_and_curve_article_long_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
 mkpath(savedir_traj)
 
-phasediag_ids = ["B3"]
-#phasediag_ids = ["B1","B2","B3","B4","B5"]
+#phasediag_ids = ["B3"]
+phasediag_ids = ["B1","B2","B3","B4","B5"]
 include("precompute_trajectories_rescaled.jl")
 
 #-------------------------------precompute lifetimes------------------------------------------

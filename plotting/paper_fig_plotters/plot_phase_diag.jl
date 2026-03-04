@@ -84,37 +84,45 @@ params_rescaled_curve = readdlm(param_dir * "params_w_g.txt")
 ws_curve = params_rescaled_curve[:, 1]
 gs_curve = params_rescaled_curve[:, 2]
 
+#------------------------plot param values for time series examples-------------------------
+ws_example = [0.1, ws_horizontal[2], ws_horizontal[3], 0.95]
+
+color_default = :gray15
+example_colors = [:orange  :lime  color_default  :gray80]
+markershapes = [:rect :circle :utriangle :diamond]
+
+hline!([g_horizontal], ls=:dot, la=0.5, lw=2, lc=:gray10, label="") #horizontal line
+
+plot!(ws_example', fill(g_horizontal,4)',
+    ms=ms, st=:scatter, mc=example_colors,
+    markerstrokewidth=0.0, markerstrokecolor=example_colors,
+    markershape=markershapes,label=["" L"c=%$(cs[2])"  L"c=%$(cs[3])" ""])
+
+#add annotations for example time series
+labels = [L"A", L"B_2", L"C", L"D"]
+x_annot_offsets = [0.0, 0.08, 0.0, 0.0]
+y_annot_offsets = [0.0, 0.0, 0.0, 0.0]
+annot_sizes = [18, 18, 18, 18]
+for (i, pl) in enumerate(ws_example)
+    xpos = ws_example[i] + x_annot_offsets[i]
+    ypos = g_horizontal * 0.9 + y_annot_offsets[i]
+    annotate!(xpos, ypos, text(labels[i], example_colors[i], :center, annot_sizes[i]))
+end
 #------------------------plot param values for lifetimes---------------------
 
-ms = 5
+ms = 6
 ws_horizontal = params_rescaled_horizontal[:, 1]
 gs_horizontal = params_rescaled_horizontal[:, 2]
 g_horizontal = gs_horizontal[1]
 
-hline!([g_horizontal], ls=:dot, la=0.5, lw=2, lc=:gray10, label="") #horizontal line
+plot!([ws_horizontal[1]], [gs_horizontal[1]],
+    ms=ms, st=:scatter, mc=:cyan,
+    markerstrokewidth=0.0,markershape=:dtriangle,
+    label=L"c=%$(cs[1])") 
 
-plot!(ws_horizontal', gs_horizontal',
-    ms=ms, st=:scatter, mc=[:lime :gray10 :cyan :orange],
-    markerstrokewidth=0.0,
-    label=[L"c=%$(cs[1])" L"c=%$(cs[2])" L"c=%$(cs[3])" L"c=2.4"])
-
-annotate!(ws_horizontal[1]-0.07, g_horizontal + 0.5, text(L"B_1", :lime, :center, annot_size))
-annotate!(ws_horizontal[3]+0.08, g_horizontal + 0.5, text(L"B_3", :cyan, :center, annot_size))
-
-#------------------------plot param values for time series examples-------------------------
-ws_example = [0.1, ws_horizontal[2], 0.7, 0.95]
-
-color_default = :gray15
-example_colors = [color_default, color_default, color_default, :gray80]
-
-plot!(ws_example, fill(g_horizontal,4),
-    ms=ms, st=:scatter, mc=example_colors,
-    markerstrokewidth=0.0,
-    label="")
-
-#------------------alpha curve version--------------------------
+annotate!(ws_horizontal[1] + 0.05, g_horizontal * 0.9, text(L"B_1", :cyan, :center, annot_size))
+#------------------alpha curve--------------------------
 alpha_curve(w, K, c) = K * c * (1 / w - 1) #g/(N-1) = 1/(ϵ*(N-1)), rp=rc
-w_B2 = ws_example[2]
 rc = 1.8;
 K = 1.0;
 c0 = 2.5;
@@ -124,32 +132,25 @@ g_B2 = g_horizontal
 c = g_B2/K/(1/w_B2 - 1)
 alpha_curve(w_B2, K, c) #check if alpha curve passes through B3
 
+_, w_B2, w_B3 = ws_horizontal
 w_B4 = ws_curve[1]
 w_B5 = ws_curve[3]
-w_B1_B3 = [w_B1:0.001:w_B3;]
-gs_alpha = alpha_curve.(w_B1_B3, K, c) #alpha curve
-g_B1 = gs_alpha[1]
-g_B3 = gs_alpha[end]
+ws_B4_B5 = [w_B4:0.001:w_B5;]
+gs_alpha = alpha_curve.(ws_B4_B5, K, c) #alpha curve
+g_B4 = gs_alpha[1]
+g_B5 = gs_alpha[end]
 
-plot!(w_B1_B3, gs_alpha, ls=:dot, ms=0.1, la=1, lw=2, lc=:gray40, label="")
-plot!([w_B1, w_B3], [g_B1, g_B3],
+#plot rp=rc=r curve
+plot!(ws_B4_B5, gs_alpha, ls=:dot, ms=0.1, la=1, lw=2, lc=:orange, label="")
+plot!([w_B4, w_B5], [g_B1, g_B5],
     ms=ms, st=:scatter, mc=[:yellow1, :orange],
     markerstrokewidth=0.0,
     label="")
 
-annotate!(w_B1, g_B1 + 0.3, text(L"B_4", :yellow1, :center, 14))
-annotate!(w_B3, g_B3 - 0.3, text(L"B_5", :orange, :left, 14))
+annotate!(w_B4 - 0.05, g_B4, text(L"B_4", :yellow1, :center, 14))
+annotate!(w_B5, g_B5 - 0.3, text(L"B_5", :orange, :left, 14))
 
-#add annotations for example time series
-labels = [L"A", L"B_2", L"C", L"D"]
-x_annot_offsets = [0.0, 0.01, 0.0, 0.0]
-y_annot_offsets = [0.0, 0.0, 0.0, 0.0]
-annot_sizes = [18, 18, 18, 18]
-for (i, pl) in enumerate(ws_example)
-    xpos = ws_example[i] + x_annot_offsets[i]
-    ypos = g_example * 0.9 + y_annot_offsets[i]
-    annotate!(xpos, ypos, text(labels[i], example_colors[i], :center, annot_sizes[i]))
-end
+
 
 savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended5_80x80_filled_Ttr_5000_" * "labeled_horizontal_alpha_curve_article_params.png")
 

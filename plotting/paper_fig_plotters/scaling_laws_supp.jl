@@ -26,7 +26,8 @@ amplitudes = scaling_data[:,4]
 ms = 2
 pl1 = plot(Δw_hopf, amplitudes; DEFAULTS..., st=:scatter, ms=ms, 
     xlabel=L"\Delta w", ylabel=L"A(x_1)", legend=true, label="",
-    ylims=(0,1),mc=:gray10)
+    mc=:gray10, tickfontsize=14, xticks = [0.0,0.05,0.1],
+    yticks=[0.0, 0.5, 1.0,1.5],ylims=(0.0,1.5))
     #yscale=:log10,xscale=:log10)
 
 a1,b1 = my_linreg(log10.(Δw_hopf),log10.(amplitudes))
@@ -63,7 +64,7 @@ plot!(log10.(Δw_clinic), log10.((x -> 10^b2 * x^a2).(Δw_clinic));
     mc=:gray10, label="",ticks=(-3:3,[L"10^{%$(i)}" for i in -3:3]),
     tickfontsize=18)
 
-savefig(pl1, "./figs/hopf_amplitude_scaling_N2_g5.png")
-savefig(pl2, "./figs/homoclinic_period_scaling_N2_g5.png")
+savefig(pl1, "../../paper_figs/hopf_amplitude_scaling_N2_g5.png")
+savefig(pl2_log, "../../paper_figs/homoclinic_period_scaling_N2_g5.png")
 
 

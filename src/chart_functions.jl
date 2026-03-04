@@ -234,6 +234,7 @@ end
 =#
 
 #calculate lifetimes by counting consecutive appearances
+#TODO: do not include lifetimes that get cut
 function get_lifetimes(charts; exclude_one=true)
     tlen, k = size(charts)
 

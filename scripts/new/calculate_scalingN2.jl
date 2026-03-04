@@ -26,7 +26,7 @@ ds = create_ds(u0, p; diffeq=diffeq)
 
 #max distance from bifurcation point
 Δw_min = 0.001
-Δw_max = 0.05
+Δw_max = 0.1
 nr_points = 100
 #------------------------homoclinic period scaling------------------------------
 #params_hc = [0.45:0.001:0.498;]
