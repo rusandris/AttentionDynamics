@@ -9,6 +9,7 @@ files = readdir(data_dir_lt)
 files_lifetime = files[findall(f -> occursin(".dat", f), files)]#[[13,14,15,16,1:12...]] #select binary only
 files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times]#select binary only
 
+ms = 2
 plots = [] #gather plots here
 for (i, fileset) in enumerate(files_lifetime_by_time)
     pls = [plot(), plot(), plot()]#init empty 3-plot
@@ -52,11 +53,11 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         #make plots 
         plot!(pls[1], log10.(bins_discrete), log10.(counts_discrete), 
-            markershape=:circle,#st=:scatter,
+            markershape=markershapes[j],#st=:scatter,
             mc=color, markerstrokecolor=color,
             lc=color,
             dpi=300,
-            title=L"\Delta t = %$(chart_time)", ms=4,
+            title=L"\Delta t = %$(chart_time)", ms=ms,
             label= par_labels[j],
             xlabel=L"\log(\tau)",
             ylabel=L"\log(\textnormal{pdf})")
@@ -67,11 +68,11 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         #    markerstrokewidth = 0.5,label="")
 
         plot!(pls[2], log10.(bins_exp[1:end-1]), log10.(counts_exp),
-            markershape=:circle, #st=:scatter,
+            markershape=markershapes[j], #st=:scatter,
             mc=color, markerstrokecolor=color,
             lc=color,
             dpi=300,
-            title=L"\Delta t = %$(chart_time)", ms=4,
+            title=L"\Delta t = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\log(\tau)",
             ylabel=L"\log(\textnormal{pdf})")
@@ -82,11 +83,11 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         #    markerstrokewidth=0.5, label="")
 
         plot!(pls[3], log10.(bins_lin), log10.(counts_lin), 
-            markershape=:circle, #st=:scatter,
+            markershape=markershapes[j], #st=:scatter,
             mc=color, markerstrokecolor=color,
             lc=color,
             dpi=300,
-            title=L"\Delta t = %$(chart_time)", ms=4,
+            title=L"\Delta t = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\log(\tau)",
             ylabel=L"\log(\textnormal{pdf})")
@@ -108,8 +109,8 @@ pl_all = plot(plots_reorder..., layout=(3, n_ct), size=(1200, 800),xlims=xlimits
 #savedir_pl = "../../paper_figs/lifetime_distributions_rescaled_horizontal_vertical/"
 #mkpath(savedir_pl)
 #param_string = files[2][20:end-16]
-param_string = files[2][25:end-16]
+param_string = files[2][56:end-16]
 
-savefig(pl_all, savedir_pl * "lifetime_distributions_integrated_" * param_string * "_log_log_discrete_exp_linbin_change_c_ic50_norm_fixed_pdf.png")
+savefig(pl_all, savedir_pl * "lifetime_distributions_integrated_" * param_string * "_log_log_discrete_exp_linbin.png")
 
 

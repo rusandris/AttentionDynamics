@@ -7,6 +7,7 @@ include("../../plotting/plot_functions/lyapunov.jl")
 
 #plot settings 
 annot_size = 20
+ms = 6
 
 #-------------------------plot phase diagram---------------------
 
@@ -75,64 +76,65 @@ params_orig_horizontal = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
 params_rescaled_horizontal = readdlm(param_dir * "params_w_g.txt")
 params_changed_horizontal = readdlm(param_dir * "params_c.txt")
 cs = params_changed_horizontal
+ws_horizontal = params_rescaled_horizontal[:,1]
+gs_horizontal = params_rescaled_horizontal[:, 2]
+g_horizontal = gs_horizontal[1]
 
 #alpha (rp=rc) direction on phasediagram
 param_dir = param_dir_root * "alpha_rp=rc_article/"
 params_orig_curve = readdlm(param_dir * "params_K_c_N.txt")
 params_rescaled_curve = readdlm(param_dir * "params_w_g.txt")
-#params_changed_curve = readdlm(param_dir * "params_c.txt")
+params_changed_curve = readdlm(param_dir * "params_r.txt")
+rs = params_changed_curve[:,1]
+rs_rounded = round.(rs;digits=3)
 ws_curve = params_rescaled_curve[:, 1]
 gs_curve = params_rescaled_curve[:, 2]
 
+#------------------------plot param values for lifetimes---------------------
+
+plot!([ws_horizontal[1]], [gs_horizontal[1]],
+    ms=ms, st=:scatter, mc=:cyan,
+    markerstrokewidth=0.0,markershape=:dtriangle,
+    label=L"c=%$(cs[1]), r=%$(rs[2])") 
+
+annotate!(ws_horizontal[1] + 0.05, g_horizontal * 0.9, text(L"B_1", :cyan, :center, annot_size))
+
 #------------------------plot param values for time series examples-------------------------
 ws_example = [0.1, ws_horizontal[2], ws_horizontal[3], 0.95]
-
 color_default = :gray15
-example_colors = [:orange  :lime  color_default  :gray80]
+example_colors = [:orange :lime color_default :gray80]
 markershapes = [:rect :circle :utriangle :diamond]
 
 hline!([g_horizontal], ls=:dot, la=0.5, lw=2, lc=:gray10, label="") #horizontal line
 
-plot!(ws_example', fill(g_horizontal,4)',
+plot!(ws_example', fill(g_horizontal, 4)',
     ms=ms, st=:scatter, mc=example_colors,
     markerstrokewidth=0.0, markerstrokecolor=example_colors,
-    markershape=markershapes,label=["" L"c=%$(cs[2])"  L"c=%$(cs[3])" ""])
+    markershape=markershapes, 
+    label=["" L"c=%$(cs[2]),r=%$(rs_rounded[2])" L"c=%$(cs[3]),r=%$(rs_rounded[2])" ""],
+    legend_columns=1,legendfontsize=8)
 
 #add annotations for example time series
 labels = [L"A", L"B_2", L"C", L"D"]
 x_annot_offsets = [0.0, 0.08, 0.0, 0.0]
 y_annot_offsets = [0.0, 0.0, 0.0, 0.0]
-annot_sizes = [18, 18, 18, 18]
 for (i, pl) in enumerate(ws_example)
     xpos = ws_example[i] + x_annot_offsets[i]
     ypos = g_horizontal * 0.9 + y_annot_offsets[i]
-    annotate!(xpos, ypos, text(labels[i], example_colors[i], :center, annot_sizes[i]))
+    annotate!(xpos, ypos, text(labels[i], example_colors[i], :center, annot_size))
 end
-#------------------------plot param values for lifetimes---------------------
 
-ms = 6
-ws_horizontal = params_rescaled_horizontal[:, 1]
-gs_horizontal = params_rescaled_horizontal[:, 2]
-g_horizontal = gs_horizontal[1]
-
-plot!([ws_horizontal[1]], [gs_horizontal[1]],
-    ms=ms, st=:scatter, mc=:cyan,
-    markerstrokewidth=0.0,markershape=:dtriangle,
-    label=L"c=%$(cs[1])") 
-
-annotate!(ws_horizontal[1] + 0.05, g_horizontal * 0.9, text(L"B_1", :cyan, :center, annot_size))
 #------------------alpha curve--------------------------
 alpha_curve(w, K, c) = K * c * (1 / w - 1) #g/(N-1) = 1/(ϵ*(N-1)), rp=rc
 rc = 1.8;
 K = 1.0;
-c0 = 2.5;
 α0 = 0.1;
 
+_, w_B2, w_B3 = ws_horizontal
 g_B2 = g_horizontal
-c = g_B2/K/(1/w_B2 - 1)
+c = g_B2 / K / (1 / w_B2 - 1)
 alpha_curve(w_B2, K, c) #check if alpha curve passes through B3
 
-_, w_B2, w_B3 = ws_horizontal
 w_B4 = ws_curve[1]
 w_B5 = ws_curve[3]
 ws_B4_B5 = [w_B4:0.001:w_B5;]
@@ -141,14 +143,16 @@ g_B4 = gs_alpha[1]
 g_B5 = gs_alpha[end]
 
 #plot rp=rc=r curve
-plot!(ws_B4_B5, gs_alpha, ls=:dot, ms=0.1, la=1, lw=2, lc=:orange, label="")
-plot!([w_B4, w_B5], [g_B1, g_B5],
-    ms=ms, st=:scatter, mc=[:yellow1, :orange],
-    markerstrokewidth=0.0,
-    label="")
+plot!(ws_B4_B5, gs_alpha, ls=:dot, la=1,
+    lw=2, lc=:lightblue, label="")
 
-annotate!(w_B4 - 0.05, g_B4, text(L"B_4", :yellow1, :center, 14))
-annotate!(w_B5, g_B5 - 0.3, text(L"B_5", :orange, :left, 14))
+plot!([w_B4 w_B5], [g_B4 g_B5],
+    ms=ms + 4, st=:scatter, mc=[:blue :darkgreen],
+    markerstrokewidth=0.0, markershape=[:ltriangle :rtriangle],
+    label=[L"c=%$(cs[2]),r=%$(rs_rounded[1])" L"c=%$(cs[2]), r=%$(rs_rounded[3])"])
+
+annotate!(w_B4 + 0.08, g_B4 - 0.5, text(L"B_3", :blue, :center, annot_size))
+annotate!(w_B5, g_B5 + 0.5, text(L"B_4", :darkgreen, :left, annot_size))
 
 
 

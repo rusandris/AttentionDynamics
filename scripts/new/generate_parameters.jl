@@ -11,9 +11,9 @@ K = 1.0;rp = 10;rc = 10;α = 0.005;c0 = 1.4;N_orig=300;
 
 #------------------coupling strength-------------------
 cs = [1.4, 2.4, 5.4] #3.0]
-wg_pairs = rescaled_params.(rp,rc,K,cs,α,N)
+wg_pairs = rescaled_params.(rp,rc,K,cs,α,N_orig)
 ws_horizontal = [wg_pairs[i][1] for i in 1:length(wg_pairs)]
-gs_horizontal = [wg_pairs[i][2] for i in 1:length(wg_pairs)] ./ (N-1)
+gs_horizontal = [wg_pairs[i][2] for i in 1:length(wg_pairs)] ./ (N_orig-1)
 
 savedir_root = "../../data/parameters/"
 savedir = savedir_root * "c_article/"

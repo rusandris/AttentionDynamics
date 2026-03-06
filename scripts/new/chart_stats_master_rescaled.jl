@@ -43,7 +43,7 @@ push!(p_sets, [gs_curve[1], ws_curve[1]], [gs_curve[3], ws_curve[3]])
 
 #--------------------------------precompute trajectories-------------------------------------
 #settings of precomputed trajs
-T = 20000 #10000 #100 #5000
+T = 1000 #20000 #10000 #100 #5000
 Ttr = 500 #500
 Δt_traj = 1e-2 #5*1e-2
 nr_ics = 1 #number of initial conditions
@@ -51,7 +51,7 @@ nr_ics = 1 #number of initial conditions
 #paths
 
 savedir_traj_root = "../../data/trajs_precomp_rescaled/"
-savedir_traj = savedir_traj_root * "wg_horizontal_and_curve_article_long_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
+savedir_traj = savedir_traj_root * "wg_horizontal_and_curve_article_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
 mkpath(savedir_traj)
 
 #phasediag_ids = ["B3"]
@@ -66,10 +66,10 @@ chart_times = [0.01, 0.05, 0.1, 0.2] #2.0]
 #path
 data_dir_traj = savedir_traj
 savedir_lt_root = "../../data/lifetimes_precomp_rescaled/"
-savedir_lt = savedir_lt_root * "wg_horizontal_and_curve_article_periodic_k$(k)_Δt$(Δt_traj)_T$(T)/" #* "c2/" #"rp_rc/"
+savedir_lt = savedir_lt_root * "wg_horizontal_and_curve_article_k$(k)_Δt$(Δt_traj)_T$(T)/" #* "c2/" #"rp_rc/"
 mkpath(savedir_lt)
 
-p_values = [[3]]#[[1,2,3,4,5]]
+p_values = [[1, 2, 3, 4, 5]] #[[3]]#
 p_names = ["B"]#["g", "w"] #["c"] #["rp", "rc"]
 
 writedlm(savedir_lt * "chart_times.txt", chart_times)
@@ -78,6 +78,7 @@ writedlm(savedir_lt * "chart_times.txt", chart_times)
 include("precompute_lifetimes.jl")
 
 #---------------------------plot and save distributions---------------------------------------
+#=
 #par labels 
 p_names_ltx = [L"B"] #["g", "w"] #[L"r_p", L"r_c"]
 
@@ -92,14 +93,17 @@ for j in 1:length(p_values[1])
     @show par_names
     push!(par_labels, par_names)
 end
+=#
+par_labels = [L"B1", L"B2", L"C", L"B3", L"B4"]
 
-colors = [:lime, :gray10, :cyan, :yellow1, :orange]
-markershapes = [:circle, :cross]
+colors = [:cyan :lime :gray10 :blue :darkgreen]
+markershapes = [:rect :circle :utriangle :ltriangle :rtriangle]
+
 nbins = 30 #[25,10]
 
 #set paths
 savedir_pl_root = "../../paper_figs/lifetime_distributions_rescaled/"
-savedir_pl = savedir_pl_root * "wg_horizontal_and_curve_article_periodic_only_params_k$(k)_Δt$(Δt_traj)_T$(T)/"
+savedir_pl = savedir_pl_root * "wg_horizontal_and_curve_article_params_k$(k)_Δt$(Δt_traj)_T$(T)/"
 mkpath(savedir_pl)
 data_dir_lt = savedir_lt
 

@@ -244,16 +244,23 @@ function get_lifetimes(charts; exclude_one=true)
     #non-optim approach: loop through every var
     for v in vars
         lifetime = 0
-        prev_occ = false
+        record_lifetime = false
+        prev_occ = v in charts[1, :] && (prev_occ = true)
         #loop through the charts, every timepoint
-        for t in 1:tlen
+        for t in 2:tlen
 
-            #increase lifetime in case of occurrence
+            #does not include truncated lifetimes (beginning and end of time series)
             occ = v in charts[t, :]
-            occ && (lifetime += 1)
-
+            if prev_occ == false && occ == true
+                record_lifetime = true 
+            end
+            #increase lifetime in case of occurrence
+            if occ && record_lifetime 
+                lifetime += 1
+            end
+            
             #save when occurrence streak is over 
-            if occ == false && prev_occ == true
+            if occ == false && prev_occ == true && record_lifetime == true
 
                 if exclude_one == true
                     lifetime > 1 && (push!(lifetimes, lifetime))
@@ -261,18 +268,20 @@ function get_lifetimes(charts; exclude_one=true)
                     push!(lifetimes, lifetime)
                 end
                 lifetime = 0
+
             end
             prev_occ = occ
 
         end
 
-        #if end of time series ended a streak
+        #=
+        #include truncated lifetime at the end if end of time series ended a streak
         if exclude_one == true
             lifetime > 1 && (push!(lifetimes, lifetime))
         else 
             lifetime != 0 && (push!(lifetimes, lifetime))
         end
-        
+        =#
     end
 
     return lifetimes
@@ -395,12 +404,12 @@ end
 #that way there is no limit to the number of active variables at a given time 
 #and doesn't take into consideration turnovers (since there is no chart and order doesn't matter)
 
-function activity_periods(trajs,threshold) 
+function activity_periods(traj,threshold) 
     tl,n = size(traj)
     l_aps = Int64[]
 
     for i in 1:n
-        x = trajs[:,i]
+        x = traj[:,i]
         active_periods = x .> threshold
         ls = active_period_lengths(active_periods)
         push!(l_aps, ls...)
