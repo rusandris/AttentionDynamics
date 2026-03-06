@@ -34,12 +34,12 @@ ds = create_ds(u0,p;diffeq=diffeq)
 ws = [wc1 + Δw1, wc2 - Δw2]
 
 #loop over w values
-plots = []
+plots_limc = []
 xlimits = [(Ttr,12),(0,120)]
 ylimits = [[(0, 2), (0, 3), (0,2)],[(0, 5), (0, 8) ,(-0.2,5)]]
 
-xlimits_proj = [(0,2),(-0.2,6)]
-ylimits_proj = [(0,2), (-0.2,6)]
+xlimits_proj = [(0.5,1.6),(-0.2,5)]
+ylimits_proj = [(0.5,1.6), (-0.2,5)]
 lw = 3
 titles = [L"w = w_c + %$Δw1", L"w = w_d - %$Δw2"]
 
@@ -81,18 +81,20 @@ for (i,w) in enumerate(ws)
     i == 2 && hline!(pl_ts, [x_sw_val], lc=:gray10, lw=2, ls=:dash, label="")
 
     #plot the distance to fixed points along the trajectory
-    fp_labels = [L"u_1^{*(1)}" L"u_1^{*(2)}" L"u_1^{*(3)}"]
+    fp_labels = [L"d_1(t)" L"d_2(t)"]
     pl_d = plot(t, stack(dists_fps), ylims=ylims[2],
-        xlabel=L"t",ylabel=L"d \left( \mathbf{u}(t),\mathbf{u}^* \right)",
+        xlabel=L"t",ylabel=L"d_i(t)",
         labels=fp_labels, lw=lw,title=title)
 
     #plot trajectory projection
     
     #plot trajectory projection
-    pl_proj = plot(traj[:, 1], traj[:, 3], ylims=ylims[3],
-    xlims=xlimits_proj[i], ylabel=L"x_2", xlabel=L"x_1",
-    xformatter=:auto, labels=labels, lw=2, la=1.0,legend=false,
-    aspect_ratio=1, lc=:gray40, title=title, size=(600, 600))
+    pl_proj = plot(traj[:, 1], traj[:, 3], 
+        xlims=xlimits_proj[i], ylims=ylimits_proj[i], 
+        ylabel=L"x_2", xlabel=L"x_1",
+        xformatter=:auto, labels=labels, lw=4, la=1.0,legend=false,
+        lc=:gray40, title=title, size=(600, 600),
+        left_margin=-5Plots.mm, aspect_ratio=1) #
     
 
     #=
@@ -104,15 +106,15 @@ for (i,w) in enumerate(ws)
         tickfontsize=1)
     =#
 
-    push!(plots, pl_ts, pl_d, pl_proj)
+    push!(plots_limc, pl_ts, pl_d, pl_proj)
 
 end
 #hline!(plots[4], [x_sw_val], lc=:gray10, lw=2 ,ls=:dash,label="")
-pl = plot(plots..., layout=(2, 3), size=(1200, 600), legend_columns=-1,
+pl_limc = plot(plots_limc..., layout=(2, 3), size=(1200, 600), legend_columns=-1,
 tickfontsize=10,guidefontsize = 18, bottom_margin=5Plots.mm, legendfontsize=15, dpi=300)
 
 figs_dir = "../../paper_figs/"
-savefig(pl, figs_dir * "distance_to_fixedpoints_N2_g5.png")
+savefig(pl_limc, figs_dir * "distance_to_fixedpoints_N2_g5.png")
 
 #plot!(pl_ts,pl_d,layout=(2,1),size=(400,600),
 #    guidefontsize=18,legendfontsize=15,tickfontsize=10)

@@ -36,7 +36,7 @@ a1,b1 = my_linreg(log10.(Δw_hopf),log10.(amplitudes))
 #plot!(Δw1,(x -> 10^b1*x^a1).(Δw1);ls=:dash,lc=:red)
 #plot!(yaxis=:log,xaxis=:log)
 
-pl1 = plot!(Δw_hopf,(x -> 10^b1*sqrt(x)).(Δw_hopf);
+pl_hopf = plot!(Δw_hopf,(x -> 10^b1*sqrt(x)).(Δw_hopf);
     ls=:dash,lc=:red,label="",
     legendfontsize=DEFAULTS.xguidefontsize)
     #label=L"0.6 \cdot \Delta w^{1/2}")
@@ -55,7 +55,7 @@ plot!(Δw_clinic,(x -> 10^b2*x^a2).(Δw_clinic);ls=:dash,lc=:red,
     #label=L"0.035 \cdot \Delta w^{-0.84}")
 #pl2 = plot!(yaxis=:log,xaxis=:log,xticks=[10^(-2.5),10^(-2),10^(-1.5)])
 
-pl2_log = plot(log10.(reverse(Δw_clinic)), log10.(reverse(periods)); DEFAULTS..., st=:scatter,
+pl_clinic = plot(log10.(reverse(Δw_clinic)), log10.(reverse(periods)); DEFAULTS..., st=:scatter,
     ms=ms, xlabel=L"\log(\Delta w)", ylabel=L"\log(T)",
     legend=true, label="", mc=:gray10,ylims=(0,Inf))
 
@@ -64,7 +64,7 @@ plot!(log10.(Δw_clinic), log10.((x -> 10^b2 * x^a2).(Δw_clinic));
     mc=:gray10, label="",ticks=(-3:3,[L"10^{%$(i)}" for i in -3:3]),
     tickfontsize=18)
 
-savefig(pl1, "../../paper_figs/hopf_amplitude_scaling_N2_g5.png")
-savefig(pl2_log, "../../paper_figs/homoclinic_period_scaling_N2_g5.png")
+savefig(pl_hopf, "../../paper_figs/hopf_amplitude_scaling_N2_g5.png")
+savefig(pl_clinic, "../../paper_figs/homoclinic_period_scaling_N2_g5.png")
 
 
