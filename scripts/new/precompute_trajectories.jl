@@ -34,15 +34,15 @@ set_parameter!(ds, 1, rs[2])
 set_parameter!(ds, 2, rs[2])
 precompute_trajectories(ds, nr_ics, p_sets_c, [4]; Δt=Δt_traj,
     T_traj=T, Ttr=Ttr, savedir=savedir_traj, p_names=["c"],
-    ic_counter=ic_counter, phasediag_ids=phasediag_ids,
+    ic_counter=ic_counter, phasediag_ids=phasediag_ids[1:3],
     filename="_N$(N)_rp$(rs[2])_rp$(rs[2])_K$(K)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
 
 
-
+set_parameter!(ds, 4, cs[2])
 #precompute trajectories (rp=rc=r)
-precompute_trajectories(ds, nr_ics, p_sets_r, [1,2]; Δt=Δt_traj,
+precompute_trajectories(ds, nr_ics, p_sets_r[[1,3]], [1,2]; Δt=Δt_traj,
     T_traj=T, Ttr=Ttr, savedir=savedir_traj, p_names=["rp", "rc"], 
-    ic_counter=ic_counter,phasediag_ids=phasediag_ids,
+    ic_counter=ic_counter,phasediag_ids=phasediag_ids[4:5],
     filename="N$(N)_c$(c)_K$(K)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
 
 

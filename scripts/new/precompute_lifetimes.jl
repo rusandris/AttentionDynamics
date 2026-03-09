@@ -21,8 +21,9 @@ files = dir_content[findall(f -> occursin(".txt", f) || occursin(".dat", f), dir
 
 files_trajs = files[findall(f -> occursin(".dat", f), files)] #select binary only
 
+#search for param names
+#=
 file_sets = []
-
 for j in 1:length(p_values[1])
     #put strings together
     par_names = ""
@@ -36,6 +37,10 @@ for j in 1:length(p_values[1])
     push!(file_sets,file_set)
 
 end
+=#
+#files corresponding to a certain param set
+par_names = ["B1","B2","C","B3","B4"]
+file_sets = [files_trajs[findall(f -> occursin(par_names[i], f), files_trajs)] for i in 1:5] 
 
 #loop over chart times
 for (idx, chart_time) in enumerate(chart_times) 

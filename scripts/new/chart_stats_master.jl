@@ -53,7 +53,7 @@ Ttr = 500 #500
 nr_ics = 20 #number of initial conditions
 ic_counter = 0
 
-phasediag_ids = ["B1", "B2", "B3", "B4", "B5"]
+phasediag_ids = ["B1", "B2", "C", "B3", "B4"]
 
 #paths
 savedir_traj_root = "../../data/trajs_precomp_orig/"
@@ -64,7 +64,7 @@ include("precompute_trajectories.jl")
 
 #-------------------------------precompute lifetimes------------------------------------------
 #lifetime settings 
-k = 10
+k = 20
 chart_times = [0.1, 0.5, 1.0] #2.0]
 
 #path
@@ -79,6 +79,7 @@ p_names = ["B"]#["g", "w"] #["c"] #["rp", "rc"]
 include("precompute_lifetimes.jl")
 
 #---------------------------plot and save distributions---------------------------------------
+#=
 #par labels 
 p_names_ltx = [L"B"] #["g", "w"] #[L"r_p", L"r_c"]
 
@@ -93,9 +94,12 @@ for j in 1:length(p_values[1])
     @show par_names
     push!(par_labels, par_names)
 end
+=#
+par_labels = [L"B1", L"B2", L"C", L"B3", L"B4"]
 
-colors = [:lime, :gray10, :cyan, :yellow1, :orange]
-markershapes = [:circle, :cross]
+colors = [:cyan :lime :gray10 :blue :darkgreen]
+markershapes = [:rect :circle :utriangle :ltriangle :rtriangle]
+
 nbins = 30 #[25,10]
 N = N_orig
 savedir_pl_root = "../../paper_figs/lifetime_distributions/"
