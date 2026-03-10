@@ -64,7 +64,7 @@ include("precompute_trajectories.jl")
 
 #-------------------------------precompute lifetimes------------------------------------------
 #lifetime settings 
-k = 20
+k = 10
 chart_times = [0.1, 0.5, 1.0] #2.0]
 
 #path
@@ -79,6 +79,12 @@ p_names = ["B"]#["g", "w"] #["c"] #["rp", "rc"]
 include("precompute_lifetimes.jl")
 
 #---------------------------plot and save distributions---------------------------------------
+#lifetime paths 
+#data_dir_lt = savedir_lt
+data_dir_lt_root = "../../../../../Dropbox/att_dyn/data/data_lifetimes/"
+dirs_lifetimes = readdir(data_dir_lt_root)
+data_dir_lt = data_dir_lt_root * dirs_lifetimes[1] * "/"
+
 #=
 #par labels 
 p_names_ltx = [L"B"] #["g", "w"] #[L"r_p", L"r_c"]
@@ -103,7 +109,7 @@ markershapes = [:rect :circle :utriangle :ltriangle :rtriangle]
 nbins = 30 #[25,10]
 N = N_orig
 savedir_pl_root = "../../paper_figs/lifetime_distributions/"
-savedir_pl = savedir_pl_root * "horizontal_and_curve_article_params_k$(k)_Δt$(Δt_traj)_T$(T)/"
+savedir_pl = savedir_pl_root * splitpath(data_dir_lt)[end] * "/"
+#"horizontal_and_curve_article_params_k$(k)_Δt$(Δt_traj)_T$(T)/"
 mkpath(savedir_pl)
-data_dir_lt = savedir_lt
 include("../../plotting/paper_fig_plotters/plot_lifetime_distributions.jl")

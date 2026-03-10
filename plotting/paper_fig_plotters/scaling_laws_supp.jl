@@ -22,12 +22,19 @@ amplitudes = scaling_data[:,4]
 Δw_hopf = hopf_params .- wc1
 Δw_clinic = wc2 .- hc_params
 
+Δw1 = 0.01
+Δw2 = 0.005
+Δws = [Δw1, Δw2]
+ws = [wc1 + Δw1, wc2 - Δw2]
+ws_rounded = round.(ws, digits=3)
+titles = [L"w_c = %$(wc1), w = %$(ws_rounded[1])",
+    L"w_d = %$(wc2), w = %$(ws_rounded[2])"]
 #-----------------------------hopf---------------------------------
 ms = 2
 pl1 = plot(Δw_hopf, amplitudes; DEFAULTS..., st=:scatter, ms=ms, 
     xlabel=L"\Delta w", ylabel=L"A(x_1)", legend=true, label="",
     mc=:gray10, tickfontsize=14, xticks = [0.0,0.05,0.1],
-    yticks=[0.0, 0.5, 1.0,1.5],ylims=(0.0,1.5))
+    yticks=[0.0, 0.5, 1.0, 1.5], ylims=(0.0, 1.5), title=titles[1])
     #yscale=:log10,xscale=:log10)
 
 a1,b1 = my_linreg(log10.(Δw_hopf),log10.(amplitudes))
@@ -57,12 +64,12 @@ plot!(Δw_clinic,(x -> 10^b2*x^a2).(Δw_clinic);ls=:dash,lc=:red,
 
 pl_clinic = plot(log10.(reverse(Δw_clinic)), log10.(reverse(periods)); DEFAULTS..., st=:scatter,
     ms=ms, xlabel=L"\log(\Delta w)", ylabel=L"\log(T)",
-    legend=true, label="", mc=:gray10,ylims=(0,Inf))
+    legend=true, label="", mc=:gray10, ylims=(0, Inf), title=titles[2])
 
 plot!(log10.(Δw_clinic), log10.((x -> 10^b2 * x^a2).(Δw_clinic)); 
     ls=:dash, lc=:red,legendfontsize=DEFAULTS.xguidefontsize, 
-    mc=:gray10, label="",ticks=(-3:3,[L"10^{%$(i)}" for i in -3:3]),
-    tickfontsize=18)
+    mc=:gray10, label="",yticks=(0:2,[L"10^{%$(i)}" for i in 0:2]),
+    xticks=(-3:-1, [L"10^{%$(i)}" for i in -3:-1]), tickfontsize=18)
 
 savefig(pl_hopf, "../../paper_figs/hopf_amplitude_scaling_N2_g5.png")
 savefig(pl_clinic, "../../paper_figs/homoclinic_period_scaling_N2_g5.png")
