@@ -10,9 +10,16 @@ files_lifetime = files[findall(f -> occursin(".dat", f), files)]#[[13,14,15,16,1
 files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times]#select binary only
 
 ms = 2
-plots = [] #gather plots here
+plots_loglog = [] #gather plots here
+plots_linlin = [] #gather plots here
+plots_loglin = [] #gather plots here
+
 for (i, fileset) in enumerate(files_lifetime_by_time)
-    pls = [plot(), plot(), plot()]#init empty 3-plot
+
+    pls_loglog = [plot(), plot(), plot()]#init empty 3-plot
+    pls_linlin = [plot(), plot(), plot()]#init empty 3-plot
+    pls_loglin = [plot(), plot(), plot()]#init empty 3-plot
+
     chart_time = chart_times[i]
     @show chart_time
     for (j,f) in enumerate(fileset)
@@ -51,8 +58,11 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         #@show sum(diff(bins_exp) .* counts_exp)
         #@show sum(diff(h_lin.edges[1]) .* counts_lin)
 
-        #make plots 
-        plot!(pls[1], log10.(bins_discrete), log10.(counts_discrete), 
+        #make plots
+
+        #------------------------loglog-------------------------- 
+
+        plot!(pls_loglog[1], log10.(bins_discrete), log10.(counts_discrete), 
             markershape=markershapes[j],#st=:scatter,
             mc=color, markerstrokecolor=color,
             lc=color,
@@ -67,7 +77,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         #    markershape=:vline, st=:scatter,mc=color,ms=5,
         #    markerstrokewidth = 0.5,label="")
 
-        plot!(pls[2], log10.(bins_exp[1:end-1]), log10.(counts_exp),
+        plot!(pls_loglog[2], log10.(bins_exp[1:end-1]), log10.(counts_exp),
             markershape=markershapes[j], #st=:scatter,
             mc=color, markerstrokecolor=color,
             lc=color,
@@ -82,7 +92,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         #    markershape=:vline, st=:scatter, mc=color, ms=5,
         #    markerstrokewidth=0.5, label="")
 
-        plot!(pls[3], log10.(bins_lin), log10.(counts_lin), 
+        plot!(pls_loglog[3], log10.(bins_lin), log10.(counts_lin), 
             markershape=markershapes[j], #st=:scatter,
             mc=color, markerstrokecolor=color,
             lc=color,
@@ -96,21 +106,106 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         #plot!(pls[3], log10.(bins_lin), fill(-11-j, length(bins_lin)),
         #    markershape=:vline, st=:scatter, mc=color, ms=5,
         #    markerstrokewidth=0.5, label="")
+
+        #--------------------lin-lin version---------------------
+
+        plot!(pls_linlin[1], bins_discrete, counts_discrete,
+            markershape=markershapes[j],#st=:scatter,
+            mc=color, markerstrokecolor=color,
+            lc=color,
+            dpi=300,
+            title=L"\Delta t = %$(chart_time)", ms=ms,
+            label=par_labels[j],
+            xlabel=L"\tau",
+            ylabel=L"\textnormal{pdf}")
+
+        plot!(pls_linlin[2], bins_exp[1:end-1], counts_exp,
+            markershape=markershapes[j], #st=:scatter,
+            mc=color, markerstrokecolor=color,
+            lc=color,
+            dpi=300,
+            title=L"\Delta t = %$(chart_time)", ms=ms,
+            label=par_labels[j],
+            xlabel=L"\tau",
+            ylabel=L"\textnormal{pdf}")
+
+        plot!(pls_linlin[3], bins_lin, counts_lin,
+            markershape=markershapes[j], #st=:scatter,
+            mc=color, markerstrokecolor=color,
+            lc=color,
+            dpi=300,
+            title=L"\Delta t = %$(chart_time)", ms=ms,
+            label=par_labels[j],
+            xlabel=L"\tau",
+            ylabel=L"\textnormal{pdf}")
+
+        #--------------------log-lin version---------------------
+
+        plot!(pls_loglin[1], bins_discrete, log10.(counts_discrete),
+            markershape=markershapes[j],#st=:scatter,
+            mc=color, markerstrokecolor=color,
+            lc=color,
+            dpi=300,
+            title=L"\Delta t = %$(chart_time)", ms=ms,
+            label=par_labels[j],
+            xlabel=L"\tau",
+            ylabel=L"\log(\textnormal{pdf})")
+
+        plot!(pls_loglin[2], bins_exp[1:end-1], log10.(counts_exp),
+            markershape=markershapes[j], #st=:scatter,
+            mc=color, markerstrokecolor=color,
+            lc=color,
+            dpi=300,
+            title=L"\Delta t = %$(chart_time)", ms=ms,
+            label=par_labels[j],
+            xlabel=L"\tau",
+            ylabel=L"\log(\textnormal{pdf})")
+
+        plot!(pls_loglin[3], bins_lin, log10.(counts_lin),
+            markershape=markershapes[j], #st=:scatter,
+            mc=color, markerstrokecolor=color,
+            lc=color,
+            dpi=300,
+            title=L"\Delta t = %$(chart_time)", ms=ms,
+            label=par_labels[j],
+            xlabel=L"\tau",
+            ylabel=L"\log(\textnormal{pdf})")
+
     end
-    push!(plots,pls)
+    push!(plots_loglog,pls_loglog)
+    push!(plots_linlin, pls_linlin)
+    push!(plots_loglin, pls_loglin)
+
 end
 
 n_ct = length(chart_times)
-plots_reorder = [plots[i][j] for j in 1:3 for i in 1:n_ct]
+
+#---------------------------loglog-------------------------
+plots_reorder_loglog = [plots[i][j] for j in 1:3 for i in 1:n_ct]
 xlimits = (0.0, 3.2); ylimits = (-12.0, 0.0);
-pl_all = plot(plots_reorder..., layout=(3, n_ct), size=(1200, 800),xlims=xlimits,#ylims=ylimits,
+pl_loglog_all = plot(plots_reorder..., layout=(3, n_ct), size=(1200, 800),xlims=xlimits,#ylims=ylimits,
     plot_title=L"N=%$N,k=%$k", left_margin=5Plots.mm,legend=:topright,legendfontsize=8,dpi=300)
+
+#---------------------------linlin-------------------------
+plots_reorder_linlin = [plots_linlin[i][j] for j in 1:3 for i in 1:n_ct]
+xlimits = (0.0, 3.2);ylimits = (-12.0, 0.0);
+pl_linlin_all = plot(plots_reorder_lin..., layout=(3, n_ct), size=(1200, 800),xlims=(0,100),
+    plot_title=L"N=%$N,k=%$k", left_margin=5Plots.mm, legend=:topright, legendfontsize=8, dpi=300)
+
+#---------------------------loglin-------------------------
+plots_reorder_loglin = [plots_loglin[i][j] for j in 1:3 for i in 1:n_ct]
+xlimits = (0.0, 3.2);
+ylimits = (-12.0, 0.0);
+pl_loglin_all = plot(plots_reorder_loglin..., layout=(3, n_ct), size=(1200, 800), xlims=(0, 800),
+    plot_title=L"N=%$N,k=%$k", left_margin=5Plots.mm, legend=:topright, legendfontsize=8, dpi=300)
+
 
 #savedir_pl = "../../paper_figs/lifetime_distributions_rescaled_horizontal_vertical/"
 #mkpath(savedir_pl)
 #param_string = files[2][20:end-16]
 param_string = files[2][56:end-16]
 
-savefig(pl_all, savedir_pl * "lifetime_distributions_integrated_" * param_string * "_log_log_discrete_exp_linbin.png")
-
+savefig(pl_loglog_all, savedir_pl * "lifetime_distributions_integrated_" * param_string * "_log_log_discrete_exp_linbin.png")
+savefig(pl_linlin_all, savedir_pl * "lifetime_distributions_integrated_" * param_string * "_lin_lin_discrete_exp_linbin.png")
+savefig(pl_loglin_all, savedir_pl * "lifetime_distributions_integrated_" * param_string * "_log_lin_discrete_exp_linbin.png")
 
