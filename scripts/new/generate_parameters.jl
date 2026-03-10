@@ -20,7 +20,7 @@ savedir = savedir_root * "c_article/"
 mkpath(savedir)
 
 writedlm(savedir * "params_c.txt", cs)
-writedlm(savedir*"params_rp_rc_K_α_N.txt", [rp, rc, K, α, N])
+writedlm(savedir*"params_rp_rc_K_α_N.txt", [rp, rc, K, α, N_orig])
 writedlm(savedir*"params_w_g.txt", hcat(ws_horizontal,gs_horizontal))
 
 
@@ -30,7 +30,7 @@ writedlm(savedir*"params_w_g.txt", hcat(ws_horizontal,gs_horizontal))
 
 alpha_curve(w, K, c) = K * c * (1 / w - 1) #g/(N-1) = 1/(ϵ*(N-1)), rp=rc
 
-g_example = wg_pairs[1][2] ./(N-1)
+g_example = wg_pairs[1][2] ./(N_orig-1)
 _, w_B2, w_B3 = ws_horizontal
 w_B1 = 0.2
 
@@ -59,7 +59,7 @@ savedir = savedir_root * "alpha_rp=rc_article/"
 mkpath(savedir)
 
 writedlm(savedir * "params_r.txt", rs)
-writedlm(savedir * "params_K_c_alpha_N.txt", [K, c, α0, N])
+writedlm(savedir * "params_K_c_alpha_N.txt", [K, c, α0, N_orig])
 writedlm(savedir * "params_w_g.txt", hcat([w_B1, w_B2, w_B3], [g_B1, g_B2, g_B3]))
 
 
