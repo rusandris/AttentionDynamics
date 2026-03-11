@@ -54,8 +54,9 @@ xticks_ts = [[Ttr, Ttr + 10], [Ttr:50:Ttr+T_long;]]
 #make single combined projection plot
 #pl_proj = plot()
 
-lws_projs = [4,1]
+lw_proj = 3
 colors_projs = [:gray10, :gray40]
+ticks_projs = [[0,1,2],[0,1,2,3]] 
 
 for (i,w) in enumerate(ws) 
 
@@ -105,10 +106,10 @@ for (i,w) in enumerate(ws)
     pl_proj = plot(traj[:, 1], traj[:, 3],
         xlims=xlimits_proj[i], ylims=ylimits_proj[i], 
         ylabel=L"x_2", xlabel=L"x_1",
-        xformatter=:auto, labels=labels, lw=lws_projs[1], la=1.0,
+        xformatter=:auto, labels=labels, lw=lw_proj, la=1.0,
         legend=true, size=(600, 600), lc=colors_projs[1],
         left_margin=-5Plots.mm, aspect_ratio=1,label=L"w=%$(w)",
-        title=titles[i]) #
+        title=titles[i],ticks=ticks_projs[i]) #
     
     #plot fixed points 
     
