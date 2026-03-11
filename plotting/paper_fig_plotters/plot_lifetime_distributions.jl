@@ -181,15 +181,15 @@ end
 n_ct = length(chart_times)
 
 #---------------------------loglog-------------------------
-plots_reorder_loglog = [plots[i][j] for j in 1:3 for i in 1:n_ct]
+plots_reorder_loglog = [plots_loglog[i][j] for j in 1:3 for i in 1:n_ct]
 xlimits = (0.0, 3.2); ylimits = (-12.0, 0.0);
-pl_loglog_all = plot(plots_reorder..., layout=(3, n_ct), size=(1200, 800),xlims=xlimits,#ylims=ylimits,
+pl_loglog_all = plot(plots_reorder_loglog..., layout=(3, n_ct), size=(1200, 800),xlims=xlimits,#ylims=ylimits,
     plot_title=L"N=%$N,k=%$k", left_margin=5Plots.mm,legend=:topright,legendfontsize=8,dpi=300)
 
 #---------------------------linlin-------------------------
 plots_reorder_linlin = [plots_linlin[i][j] for j in 1:3 for i in 1:n_ct]
 xlimits = (0.0, 3.2);ylimits = (-12.0, 0.0);
-pl_linlin_all = plot(plots_reorder_lin..., layout=(3, n_ct), size=(1200, 800),xlims=(0,100),
+pl_linlin_all = plot(plots_reorder_linlin..., layout=(3, n_ct), size=(1200, 800),xlims=(0,180),
     plot_title=L"N=%$N,k=%$k", left_margin=5Plots.mm, legend=:topright, legendfontsize=8, dpi=300)
 
 #---------------------------loglin-------------------------

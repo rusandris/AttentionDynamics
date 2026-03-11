@@ -347,11 +347,6 @@ lognormal(x, μ, σ) = 1 / (x * σ * sqrt(2π)) * exp(-(log10(x) - μ)^2 / (2 * 
 parabolic(L, a, b) = 10^(-a*log10(L)-b*log10.(L)^2)
 linear(L, a, b) = 10^(a * log10(L) + b )
 
-function perm_entropy(charts)
-
-
-end
-
 function get_lifetimes_integ(Is, k)
 
     charts = stack([sortperm(Is[i]) for i in 1:length(Is)])'[:, end-k+1:end]
@@ -389,6 +384,28 @@ function integrate_activity(traj, ts::Vector{Float64}; method=TrapezoidalRule())
     end
     return L_ints
 end
+
+function probability_first_entry(charts;rank1_idx = 1)
+    
+    count_first_entry = 0
+    count_all = 0
+    first_entry = false
+    rank1_prev = charts[1][rank1_idx]
+
+    for i in 2:length(charts)
+        rank1 = charts[i][rank1_idx]
+
+        if !(rank1 in charts[i-1])        
+            count_first_entry += 1
+        elseif rank1 != rank1_prev
+            count_all += 1 
+        end
+         
+    end
+    @show count_first_entry, count_all
+    p_one = count_first_entry / count_all
+end
+
 
 #TODO: define charts and lifetimes differently?
 #does chart-based lifetime in this system have the same meaning as in real systems?

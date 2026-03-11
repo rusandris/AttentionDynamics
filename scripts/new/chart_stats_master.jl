@@ -64,7 +64,7 @@ include("precompute_trajectories.jl")
 
 #-------------------------------precompute lifetimes------------------------------------------
 #lifetime settings 
-k = 10
+k = 5
 chart_times = [0.1, 0.5, 1.0] #2.0]
 
 #path
@@ -83,7 +83,7 @@ include("precompute_lifetimes.jl")
 #data_dir_lt = savedir_lt
 data_dir_lt_root = "../../../../../Dropbox/att_dyn/data/data_lifetimes/"
 dirs_lifetimes = readdir(data_dir_lt_root)
-data_dir_lt = data_dir_lt_root * dirs_lifetimes[1] * "/"
+data_dir_lt = data_dir_lt_root * dirs_lifetimes[3] * "/"
 
 #=
 #par labels 
