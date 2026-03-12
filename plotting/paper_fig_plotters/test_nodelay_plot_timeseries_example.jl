@@ -58,7 +58,14 @@ plot!(eigen_vals_numJN, st=:scatter, mc=:gray10, ms=1, ylabel="eigenvalues", lab
 hline!([0], ls=:dash, lc=:gray10)
 
 
-#----------------------------symmetric no delay LV------------------------------
+#----------------------------plots for symmetric no delay LV------------------------------
+
+#titles = [L"A", L"D"]
+
+guidefontsize = 24
+legendfontsize = 12
+tickfontsize = 14
+titlefontsize = 16
 
 #WTA
 
@@ -75,9 +82,11 @@ idxs = sortperm(u0)[end-2:end]
 colors = collect(Colors.JULIA_LOGO_COLORS)[[1,2,4]]
 
 pl_1 = plot(xlabel=L"t",
-    guidefontsize=18, legendfontsize=9,
-    tickfontsize=10, xlims=(0, 50), 
-    ylims=(0.0, 6.0), dpi=300)
+    guidefontsize=guidefontsize, legendfontsize=legendfontsize,
+    tickfontsize=tickfontsize, titlefontsize=titlefontsize,
+    yticks=[0.0, 2.5, 5], xticks=[0.0, 25, 50],
+    title=L"w_2 - w_1 = 0.45",
+    xlims=(0, 50), ylims=(0.0, 5.0), dpi=300)
     #title=L"N = %$N" * L", w_1 = %$w1" * L", w_2 = %$(ws[2])")
 
 #plot top 3 with colors 
@@ -90,10 +99,8 @@ for i in 1:N
 end
 plot!(t, Matrix(traj1[:, idxs_others]), lw=1, la=1, label="", lc=:gray50)
 
-hline!([x_1], ls=:dash, lc=:gray10, lw=2, label="")
+hline!([x_1], ls=:dash, lc=:gray10, lw=2, label=L"x^{*}_N")
 #L"x^*_N = \frac{1}{w_1 + (N-1)w_2}"
-
-
 
 #coexistence
 ws = [0.3,0.8]
@@ -105,18 +112,20 @@ x_N = x_fp(current_parameters(ds_symLV), N)
 trajN, t = trajectory(ds_symLV, 100, rand(10); Ttr=0, Δt=1e-2)
 
 pl_N = plot(ylabel=L"x_i", xlabel=L"t",
-    guidefontsize=18, legendfontsize=9, 
-    tickfontsize=10,xlims=(0,50),
-    ylims=(0.0, 1.0), dpi=300)
+  guidefontsize=guidefontsize, legendfontsize=legendfontsize,
+    tickfontsize=tickfontsize, titlefontsize=titlefontsize,
+    yticks=[0.0, 0.5, 1.0], xticks=[0.0, 25, 50],
+    title=L"w_2 - w_1 = -0.45",
+    xlims=(0,50),ylims=(0.0, 1.0), dpi=300)
     #title=L"N = %$N"*L", w_1 = %$w1"*L", w_2 = %$(ws[1])")
-
-#plot top 3 with colors 
-plot!(t, Matrix(trajN[:, idxs]), lw=4, label="", lc=colors')
 
 #plot other with gray
 plot!(t, Matrix(trajN[:, idxs_others]), lw=1, label="", lc=:gray50)
 
-hline!([x_N], ls=:dash, lc=:gray10,lw=2, label="")
+#plot top 3 with colors 
+plot!(t, Matrix(trajN[:, idxs]), lw=4, label="", lc=colors')
+
+hline!([x_N], ls=:dash, lc=:gray10,lw=2, label=L"x^{*}_1")
 #L"x^*_N = \frac{1}{w_1 + (N-1)w_2}")
 
 #save figs 
@@ -125,12 +134,13 @@ pl = plot(pl_N,pl_1,size=(600,300), dpi = 300,
 
 figs_dir = "../../paper_figs/"
 
-savefig(pl_N, figs_dir * "timeseries_symmetric_LV_N$N" * "_coexistence.png")
-savefig(pl_1, figs_dir * "timeseries_symmetric_LV_N$N" * "_WTA.png")
+#savefig(pl_N, figs_dir * "timeseries_symmetric_LV_N$N" * "_coexistence.png")
+#savefig(pl_1, figs_dir * "timeseries_symmetric_LV_N$N" * "_WTA.png")
 
 savefig(pl,figs_dir*"timeseries_symmetric_LV_N$N"*".png")
 
 
+#=
 #-------------------------------------phase diagram---------------------------------
 #try w1 and w2 phase diagram 
 w_range = [0.0:1e-2:1.0;]
@@ -155,3 +165,4 @@ annotate!(w1, w2+0.1, text("A", :gray10, :center, 20))
 annotate!(w2, w1+0.1, text("B", :gray10, :center, 20))
 
 savefig(phase_diag, figs_dir * "phase_diag_symmetric_LV_N$N" * ".png")
+=#

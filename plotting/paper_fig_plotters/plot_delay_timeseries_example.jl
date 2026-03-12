@@ -4,62 +4,103 @@ using AttentionDynamics
 using DynamicalSystems
 using LinearAlgebra
 using OrdinaryDiffEq
+using DelimitedFiles
 cd(@__DIR__)
 
 #system def 
 N = 10
-diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-2, adaptive=true, maxiters=1e15)
+diffeq = (alg=Tsit5(), dt=1e-2, dtmax=1e-3, adaptive=true, maxiters=1e15)
 u0 = rand(2N)
 
 #---------------------read parameter values------------------
-param_dir_root = "../../data/parameters/"
-param_dir = param_dir_root * "c/"
-params_orig = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
-params_rescaled = readdlm(param_dir * "params_w_g.txt")
-params_changed = readdlm(param_dir * "params_c.txt")
-N_orig = params_orig[end]
 
-#=
-w_B2 = 0.48
-ws = [0.3, w_B2, 0.7, 0.95]
-g = 22.5 #15.75
-=#
-ws = params_rescaled[:, 1]
-gs = params_rescaled[:, 2] ./ (N_orig - 1) * ((N - 1))
-g = gs[1]
+#horizontal direction on phasediagram 
+param_dir_root = "../../data/parameters/"
+param_dir = param_dir_root * "c_article/"
+params_orig_horizontal = readdlm(param_dir * "params_rp_rc_K_α_N.txt")
+params_rescaled_horizontal = readdlm(param_dir * "params_w_g.txt")
+params_changed_horizontal = readdlm(param_dir * "params_c.txt")
+params_changed_horizontal = vec(params_changed_horizontal)
+cs = vec(params_changed_horizontal)
+
+
+#alpha (rp=rc) direction on phasediagram
+param_dir = param_dir_root * "alpha_rp=rc_article/"
+params_orig_curve = readdlm(param_dir * "params_K_c_alpha_N.txt")
+K, c, α, N_orig = params_orig_curve
+params_rescaled_curve = readdlm(param_dir * "params_w_g.txt")
+params_changed_curve = readdlm(param_dir * "params_r.txt")
+rs = vec(params_changed_curve)
+
+#equal distance to coexistence curve
+#on g/(N-1) graph
+#between big and small systems 
+
+N_orig = params_orig_horizontal[end]
+N_small = 10
+ws_horizontal = params_rescaled_horizontal[:, 1]
+gs_horizontal = params_rescaled_horizontal[:, 2] * (N_small - 1)
+ws_curve = params_rescaled_curve[:, 1]
+gs_curve = params_rescaled_curve[:, 2] * (N_small - 1)
+
+#------------------parameters for example timeseries-----------------
+g = gs_horizontal[1]
+ws_example = [0.1, ws_horizontal[2], ws_horizontal[3], 0.95]
+
+#-------------------define system-------------------
 
 ds = create_ds(u0, [g, 0.5, N]; diffeq=diffeq) #no noise
 
 #ws = [0.5,0.65,0.75,0.92]
-Ttrs = [0,1000,1000,0]
+Ttrs = [0,100,100,0]
 T = 200
 
 #--------------------------------plot time series---------------------------
 #check WTA 
-set_parameter!(ds,2,ws[end])
-traj_WTA, t = trajectory(ds, T, u0; Ttr=Ttrs[end], Δt=1e-2)
-x_idx_WTA, = findall(x->x>1.0,traj_WTA[end])
+set_parameter!(ds,2,ws_example[end])
+traj_WTA, t = trajectory(ds, 0.0, u0; Ttr=200, Δt=1e-2)
+x_idx_WTA = findfirst(x->x>1.0,traj_WTA[end])
 
 plots = []
 colors = collect(Colors.JULIA_LOGO_COLORS)[[1, 2, 4]]  #use three colors
-x_idxs = [1, 3, x_idx_WTA]
+titles = [L"A",L"B_2",L"C",L"D"]
 
+guidefontsize = 24
+legendfontsize = 12
+tickfontsize = 14
+titlefontsize = 24
 
-for (i,w) in enumerate(ws)
+if x_idx_WTA != 1 && x_idx_WTA != 19
+    x_idxs = [x_idx_WTA-2, x_idx_WTA+2, x_idx_WTA] #plot with colors
+elseif x_idx_WTA == 1
+    x_idxs = [x_idx_WTA + 2, x_idx_WTA + 4, x_idx_WTA]
+elseif  x_idx_WTA == 19
+    x_idxs = [x_idx_WTA - 2, x_idx_WTA - 4, x_idx_WTA]
+end
+
+#plot with gray
+x_idxs_others = []
+for i in 1:2:2N
+    i ∈ x_idxs && continue
+    push!(x_idxs_others, i)
+end
+
+#loop through the parameters
+for (i,w) in enumerate(ws_example)
     set_parameter!(ds, 2, w)
     Ttr = Ttrs[i]
     traj, t = trajectory(ds, T, u0; Ttr=Ttr, Δt=1e-2)
 
-    pl = plot( xlabel=L"t",
-        guidefontsize=18, legendfontsize=9, 
-        tickfontsize=10,xlims=(Ttr,Ttr+50))
+    pl = plot( xlabel=L"t",title=titles[i],
+        guidefontsize=guidefontsize, legendfontsize=legendfontsize,
+        tickfontsize=tickfontsize, titlefontsize=titlefontsize, legend=false, xlims=(Ttr, Ttr + 50))
         #title=L"N = %$N"*L", 1/\epsilon = %$(g), w = %$w")
 
     #plot some with gray
-    plot!(t, Matrix(traj[:,7:2:20]), lw=1, lc=:gray10, la=0.3, label="")
+    plot!(t, Matrix(traj[:,x_idxs_others]), lw=1, lc=:gray10, la=0.3, label="")
 
     #plot 3 with colors 
-    plot!(t, Matrix(traj[:, x_idxs]), lw=3, lc=colors', label="")
+    plot!(t, Matrix(traj[:, x_idxs]), lw=2, lc=colors', label="")
 
     if i == 1
         x_fp = 1.0
@@ -72,24 +113,20 @@ for (i,w) in enumerate(ws)
 end
 
 
-x_plots_limits = [(Ttrs[1],Ttrs[1]+50),
-                (Ttrs[2],Ttrs[2]+20),
-                (Ttrs[3],Ttrs[3]+40),
+x_plots_limits = [(Ttrs[1],Ttrs[1]+40),
+                (Ttrs[2],Ttrs[2]+10),
+                (Ttrs[3],Ttrs[3]+20),
                 (Ttrs[4],Ttrs[4]+20)]
                 
                 
-y_plots_limits = [(0,4),(0,12),(0,40),(0,100)]
+y_plots_limits = [(0,4),(0,30),(0,60),(0,100)]
 
 #adjust time lims and ticks 
-xticks = [[0,25,50],
-    [1000, 1010, 1020],
-    [1000, 1020, 1040],
-    [0, 10 ,20]
-    ]
+xticks = [[xlims[1], xlims[1]+(xlims[end] - xlims[1]) / 2, xlims[end]] for xlims in x_plots_limits]
 
-yticks = [[0,1,2,3,4],
-    [0, 4, 8, 12],
-    [0,10,20,30],
+yticks = [[0,1,2,3],
+    [0:10:20;],
+    [0:20:50;],
     [0, 40 ,80]
     ]
 
@@ -114,7 +151,11 @@ for (i,pl) in enumerate(plots)
     annotate!(pl,xpos,ypos, text(labels[i], :gray10, :center, 18))
 end
 =#
-pl4 = plot(plots...,layout=(2,2),size=(800,500), dpi = 300)
+
+#add panel level annotations 
+#annotate!(plots[1], -5, y_plots_limits[1][end], text("(d)", :gray10, :right, 18))
+
+pl4 = plot(plots...,layout=(2,2),size=(600,500), dpi = 300)
 
 figs_dir = "../../paper_figs/"
-savefig(pl4,figs_dir*"timeseries_delayed_LV_N$(N)_g$(g)"*"labeled_threecolors_2x2.png")
+savefig(pl4,figs_dir*"timeseries_delayed_LV_N$(N)_"*"labeled_threecolors_2x2.png")
