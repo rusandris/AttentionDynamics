@@ -63,11 +63,16 @@ y_axis_setting =:auto
 
 ylims = (-5,5)
 ylims2 = (-3, 3)
+yticks = [ylims[1], 0, ylims[end]]
+yticks2 = [ylims2[1], 0, ylims2[end]]
+xticks = [0.0,0.5,1.0]
+
 xlims = (0,1)
 tickfontsize = 10
 guidefontsize = 20
 legendfontsize = 10
 lw = 3
+hlinew = 2
 samp = 1 #point sampling
 plot_labels = ["a)", "b)"]
 
@@ -116,7 +121,7 @@ for (gi,g) in enumerate(gs)
         xformatter=x_axis_setting,yformatter=y_axis_setting,
         legendcolumns=-1,legendfontsize=legendfontsize,
         guidefontsize=guidefontsize,tickfontsize=tickfontsize,
-        title = L"M = 0")
+        yticks=yticks, xticks=xticks, title=L"M = 0")
 
     bool_mask = S_a .< 0
     linestyle_mask = similar(bool_mask,Symbol)
@@ -127,11 +132,16 @@ for (gi,g) in enumerate(gs)
     end
     #println(linestyle_mask)
     plot!(ws[1:samp:end,1:end],S_a[1:samp:end,1:end],
-        ls=linestyle_mask[1:samp:end, 1:end], lw=lw, lc=colors,
-        label = labels)
+        ls=linestyle_mask[1:samp:end, 1:end], lw=lw, 
+        lc=colors,label = labels)
     #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
     #    markerstrokewidth=0.0,label = labels_num)
-    hline!([0.0],lc=:gray50,ls=:dash,label="")
+    hline!([0.0],lc=:gray30,ls=:dash,label="",lw=hlinew)
+
+    #add stability annotation 
+    annotate!(0.5, 4.5, text("unstable", :gray10, :center, 12))
+
+    annotate!(-0.35, 6.2, text(plot_labels[gi] * " " * L" 1/\epsilon = %$(gs[gi])", :gray10, :left, 16))
 
     #-------------------------------M = 1---------------------------------
 
@@ -173,7 +183,7 @@ for (gi,g) in enumerate(gs)
         xformatter=x_axis_setting, yformatter=y_axis_setting,
         legendcolumns=-1, legendfontsize=legendfontsize, legend=:bottomleft,
         guidefontsize=guidefontsize, tickfontsize=tickfontsize,
-        title=L"M = 1")
+        yticks=yticks2,xticks=xticks,title=L"M = 1")
 
     bool_mask = S_a .< 0
     linestyle_mask = similar(bool_mask,Symbol)
@@ -184,8 +194,14 @@ for (gi,g) in enumerate(gs)
     plot!(ws[1:samp:end],S_a[1:samp:end,1:end],ls=linestyle_mask[1:samp:end,1:end], lw=lw, lc=colors, label = labels)
     #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
     #    markerstrokewidth=0.0,label = labels_num)
-    hline!([0.0],lc=:gray50,ls=:dash,label="")
+    hline!([0.0],lc=:gray30,ls=:dash,label="",lw=hlinew)
 
+    #add stability annotation 
+    annotate!(0.3, 2.5 , text("unstable", :gray10, :center, 12))
+    annotate!(0.85, 2.5 , text("stable", :gray10, :center, 12))
+
+    #add critical value annotation 
+    annotate!(critical_w_values[gi][2], -3.6, text(L"w_{\mathrm{d}}", :red, :center, 16))
 
     #-------------------------------1 < M < N ---------------------------------
 
@@ -236,12 +252,15 @@ for (gi,g) in enumerate(gs)
         xformatter=x_axis_setting,yformatter=y_axis_setting,
         legendcolumns=-1, legendfontsize=legendfontsize, legend=:bottomleft,
         guidefontsize=guidefontsize,tickfontsize=tickfontsize,
-        title = L"M = 2")
+        yticks=yticks2,xticks=xticks,title = L"M = 2")
 
     plot!(ws[1:samp:end],S_a[1:samp:end,1:end],ls=linestyle_mask[1:samp:end,1:end], lw=lw, lc=colors, label = labels)
     #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
     #    markerstrokewidth=0.0,label = labels_num)
-    hline!([0.0],lc=:gray50,ls=:dash,label="")
+    hline!([0.0],lc=:gray30,ls=:dash,label="",lw=hlinew)
+
+    #add stability annotation 
+    annotate!(0.5, 2.5, text("unstable", :gray10, :center, 12))
 
     #-------------------------------M = N ---------------------------------
 
@@ -286,12 +305,24 @@ for (gi,g) in enumerate(gs)
         xformatter=x_axis_setting,yformatter=y_axis_setting,
         legendcolumns=-1,legendfontsize=legendfontsize,
         guidefontsize=guidefontsize,tickfontsize=tickfontsize,
-        title = L"M = N = %$N")
+        yticks=yticks2,xticks=xticks,legend=:bottomleft,title = L"M = N = %$N")
 
     plot!(ws[1:samp:end],S_a[1:samp:end,1:end],ls=linestyle_mask[1:samp:end,1:end], lw=lw, lc=colors, label = labels)
     #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
     #    markerstrokewidth=0.0,label = labels_num)
-    hline!([0.0],lc=:gray50,ls=:dash,label="")
+    hline!([0.0],lc=:gray30,ls=:dash,label="",lw=hlinew)
+
+    #add stability annotation 
+    annotate!(0.3, 2.5, text("stable", :gray10, :center, 12))
+    if gi == 1
+        annotate!(0.73, 2.5, text("unstable", :gray10, :center, 12))
+    elseif gi == 2
+        annotate!(0.88, 2.5, text("unstable", :gray10, :center, 12))
+    end
+
+    #add critical value annotation 
+    annotate!(critical_w_values[gi][1], -3.6, text(L"w_{\mathrm{c}}", :gray10, :center, 16))
+    annotate!(critical_w_values[gi][2], -3.6, text(L"w_{\mathrm{d}}", :red, :center, 16))
 
     #pl_g1 = plot(pl0,pl1,pl2,pl3,layout=(1,4),size=(1200,300))
     push!(plots,[pl0,pl1,pl2,pl3])
@@ -321,8 +352,7 @@ for i in 1:length(plots)
         
         #set y-axis attributes
         if j == 1
-            plot!(pls[j],yformatter=:auto,ylabel=L"Re(\lambda)",
-                yticks = [ylims[1]:2:ylims[end];])
+            plot!(pls[j],yformatter=:auto,ylabel=L"Re(\lambda)")
         end
 
         #set x-axis attributes
@@ -338,30 +368,26 @@ for i in 1:length(plots)
             height = ylims[end] - ylims[1]
             plot!(rectangle(width,height,ws_crit[2],ylims[1]), 
                 opacity=.2,color=:gray50,label="")
-
-            annotate!(1.3, 3.8, text(plot_labels[i] * "  " * L" g = %$(gs[i])", :gray10, :right, 15))
-
         end
             
         #draw shading for M=N cases
 
         if j == 4
-            if i == 1
-                width = ws_crit[1] - ws[1]
-                height = ylims[end] - ylims[1]
-                plot!(rectangle(width,height,0,ylims[1]), 
-                    opacity=.2,color=:gray50,label="")
-            elseif i == 2
-                width = ws[end]-ws_crit[2]
-                height = ylims[end] - ylims[1]
-                plot!(rectangle(width,height,ws_crit[2],ylims[1]), 
-                    opacity=.2,color=:gray50,label="")
-            end
+            width = ws_crit[i] - ws[1]
+            height = ylims[end] - ylims[1]
+            plot!(rectangle(width,height,0,ylims[1]), 
+                opacity=.2,color=:gray50,label="")
+        end
+
+
+        #add bottom margins to second row figs 
+        if i == 1
+            plot!(pls[j], bottom_margin=8Plots.mm)
         end
 
         #add bottom margins to second row figs 
         if i == 2
-            plot!(pls[j],bottom_margin=5Plots.mm, top_margin=3Plots.mm)
+            plot!(pls[j],bottom_margin=5Plots.mm)
         end
 
         #add left margins to first column figs 
@@ -373,7 +399,7 @@ for i in 1:length(plots)
 end
 
 pl_final = plot(plots[1]...,plots[2]...,layout = (2,4),
-    size=(1200,400),dpi=400)
+    size=(1200, 500), dpi=400)
     #left_margin=-1Plots.mm,dpi=300,
     #right_margin=1Plots.mm,bottom_margin=-1Plots.mm)
 

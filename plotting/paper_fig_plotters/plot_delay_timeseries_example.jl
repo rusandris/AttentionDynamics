@@ -64,6 +64,8 @@ x_idx_WTA = findfirst(x->x>1.0,traj_WTA[end])
 plots = []
 colors = collect(Colors.JULIA_LOGO_COLORS)[[1, 2, 4]]  #use three colors
 titles = [L"A",L"B_2",L"C",L"D"]
+title_colors = [:orange :lime :gray15 :gray80]
+
 
 guidefontsize = 24
 legendfontsize = 12
@@ -93,7 +95,8 @@ for (i,w) in enumerate(ws_example)
 
     pl = plot( xlabel=L"t",title=titles[i],
         guidefontsize=guidefontsize, legendfontsize=legendfontsize,
-        tickfontsize=tickfontsize, titlefontsize=titlefontsize, legend=false, xlims=(Ttr, Ttr + 50))
+        tickfontsize=tickfontsize, titlefontsize=titlefontsize, 
+        titlefontcolor=title_colors[i],legend=false, xlims=(Ttr, Ttr + 50))
         #title=L"N = %$N"*L", 1/\epsilon = %$(g), w = %$w")
 
     #plot some with gray
@@ -136,8 +139,8 @@ for i in 1:length(plots)
 end
 
 #adjust plots
-plot!(plots[1], ylabel=L"x_i",left_margin=5Plots.mm)
-plot!(plots[3], ylabel=L"x_i", left_margin=5Plots.mm)
+plot!(plots[1], ylabel=L"x_i",left_margin=1Plots.mm)
+plot!(plots[3], ylabel=L"x_i", left_margin=1Plots.mm)
 plot!(plots[1],xlabel="")
 plot!(plots[2],xlabel="",right_margin=5Plots.mm)
 
@@ -155,7 +158,7 @@ end
 #add panel level annotations 
 #annotate!(plots[1], -5, y_plots_limits[1][end], text("(d)", :gray10, :right, 18))
 
-pl4 = plot(plots...,layout=(2,2),size=(600,500), dpi = 300)
+pl4 = plot(plots...,layout=(2,2),size=(500,400), dpi = 300)
 
 figs_dir = "../../paper_figs/"
 savefig(pl4,figs_dir*"timeseries_delayed_LV_N$(N)_"*"labeled_threecolors_2x2.png")
