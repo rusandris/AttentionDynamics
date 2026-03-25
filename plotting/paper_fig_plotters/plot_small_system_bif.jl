@@ -79,6 +79,7 @@ contres_bifp = readdlm(cont_dir*contres_bifp_file)
 
 
 #--------------------plot bifdiagram------------------
+lc_color = collect(Colors.JULIA_LOGO_COLORS)[[3]]  #use logo colors
 
 #-------------------plot fixed point results----------------------
 #use analytical results for fixed points
@@ -115,10 +116,8 @@ plot!(ws, xs_fp2, lc=:gray10,
     legend=false,xlims=xlims_bif,ylims=ylims_bif,
     ls=linestyle_fp2,lw=linewidth_fp2)
 
-annotate!(pl_bif,0.15, 3.8, text(L"\textnormal{coexistence}", :gray10, :center, 15))
-annotate!(pl_bif,0.55, 3.8, text(L"\textnormal{dominance}", :gray10, :center, 15))
-
-
+annotate!(pl_bif,0.15, 4.15, text(L"\textnormal{coexistence}", :gray10, :center, 15))
+annotate!(pl_bif,0.55, 4.15, text(L"\textnormal{dominance}", :gray10, :center, 15))
 
 #--------------------------plot critical values------------------------
 
@@ -127,13 +126,13 @@ plot!(rectangle(0.1, 4, 0.1, 0), opacity=0.2, c=:gray10)
 plot!(rectangle(0.1, 4, 0.5, 0), opacity=0.2, c=:gray10)
 
 
-vline!(pl_bif, [wc1], ls=:dash, lw=3, lc=:gray10)
-vline!(pl_bif, [wc2], ls=:dash, lw=3, lc=:red)
+vline!(pl_bif, [wc1], ls=:dash, lw=3, lc=:gray15)
+vline!(pl_bif, [wc2], ls=:dot, lw=3, lc=:gray15)
 
 #w_c^{(1)} = \epsilon (N-1)
 #w_c^{(2)} = \frac{N-1}{N}
-annotate!(wc1, 0.1, text(L"w_{\mathrm{c}}", :gray10, :center, 22))
-annotate!(wc2, 0.1, text(L"w_{\mathrm{d}}", :red, :center, 22))
+annotate!(wc1, 0.0, text(L"w_{\mathrm{c}}", :gray10, :center, 22))
+annotate!(wc2, 0.0, text(L"w_{\mathrm{d}}", :gray10, :center, 22))
 
 #-------------------------plot bif points--------------------------
 scatter!([wc1],[1.0],ms=9,mc=:gray10) #coexistence
@@ -164,7 +163,7 @@ linestyle = [stb ? :solid : :dot for stb in stability]
 linewidth = [stb ? 4 : 2 for stb in stability]
 #sol_sampling = [stb ? 1 : 20 for stb in stability]
 
-plot!(pl_bif,params[1:plot_srate:end], maxs[1:plot_srate:end],lc=:gray10,legend=false,
+plot!(pl_bif,params[1:plot_srate:end], maxs[1:plot_srate:end],lc=lc_color,legend=false,
 ls=linestyle[1:plot_srate:end],lw=linewidth[1:plot_srate:end])
 
 #annotate!(pl_bif,0.35, 2.5, text(L"\textnormal{stable limit cycle}", :gray10, :center, 15))
@@ -202,8 +201,8 @@ end
 annotate!(0.22, 1.15, text(L"H", :gray10, :center, 18))
 annotate!(0.48, 2.2, text(L"HC", :gray10, :center, 18))
 
-annotate!(0.15,0.8, text(L"\mathbf{u}^{*}_{\mathrm{c}}", :gray10, :center, 22))
-annotate!(0.55,1.8, text(L"\mathbf{u}^{*}_{\mathrm{d}}", :gray10, :center, 22))
+annotate!(0.15,0.7, text(L"\mathbf{u}^{*}_{\mathrm{c}}", :gray10, :center, 20))
+annotate!(0.55,1.9, text(L"\mathbf{u}^{*}_{\mathrm{d}}", :gray10, :center, 20))
 
 #--------------------------plot inset----------------------------
 colors = collect(Colors.JULIA_LOGO_COLORS)[[2, 4]]  #use logo colors
@@ -211,29 +210,59 @@ colors = collect(Colors.JULIA_LOGO_COLORS)[[2, 4]]  #use logo colors
 #--------------------coexistence---------------------
 set_parameter!(ds,2,0.15)
 traj1,t = trajectory(ds,10;Ttr=0)
-plot!(inset = (1, bbox(0.05,0.15,0.25,0.25)), subplot = 2)
+plot!(inset = (1, bbox(0.06,0.1,0.3,0.2)), subplot = 2)
 plot!(pl_bif[2],t,traj1[:,1],lw=3,
     label=L"x_1",lc=colors[1],
-    legend_columns=-1,legend=:bottom,
-    legendfontsize=legend_fontsize-5)
-plot!(pl_bif[2], t, traj1[:, 2], lw=3, label=L"x_2", lc=colors[2])
-annotate!(pl_bif[2],10, 0.15, text(L"t", :gray10, :center, 12))
+    yticks=[0,2,4],ylims=(0.0,4), xlims=(-0.5,10),
+    xticks=[0,5,10],tickfontsize=tick_fontsize_small,
+    legend=false)
+    #legend_columns=-1, legend=:topright,
+    #legendfontsize=legend_fontsize-7)
+plot!(pl_bif[2], t, traj1[:, 3], lw=3, label="", lc=colors[2])
+annotate!(pl_bif[2],-2, 2.0, text(L"x_i", :gray10, :center, 14))
+annotate!(pl_bif[2], 5, -1.6, text(L"t", :gray10, :center, 14))
+plot!(pl_bif[1], [0.15, 0.18], [1.1, 2.8], arrow=true, lcolor=:gray10, linewidth=2, label="")
+
+
+hline!(pl_bif[2], [1.0], lw=2, lc=:gray10, ls=:dash, xlabel="", label="")
+
+
+#--------------------WLC---------------------
+set_parameter!(ds, 2, 0.35)
+traj0, t = trajectory(ds, 40; Ttr=100)
+plot!(inset=(1, bbox(0.35, 0.5, 0.3, 0.2)), subplot=3)
+plot!(pl_bif[3], t, traj0[:, 1], lw=3,
+    label=L"x_1", lc=colors[1],
+    yticks=[0, 2, 4], ylims=(0, 4),
+    xticks=[100, 120, 140], tickfontsize=tick_fontsize_small,
+    legend=false)
+#legend_columns=-1, legend=:topright,
+#legendfontsize=legend_fontsize-7)
+plot!(pl_bif[3], t, traj0[:, 3], lw=3, label="", lc=colors[2])
+annotate!(pl_bif[3], 92, 2.0, text(L"x_i", :gray10, :center, 14))
+annotate!(pl_bif[3], 120, -1.6, text(L"t", :gray10, :center, 14))
+plot!(pl_bif[1],[0.35, 0.35], [3, 2.5], arrow=true, color=lc_color, linewidth=2, label="")
+
 hline!(pl_bif[2], [1.0], lw=2, lc=:gray10, ls=:dash, xlabel="", label="")
 
 
 #--------------------dominance---------------------
 set_parameter!(ds,2,0.55)
 traj2,t = trajectory(ds,10;Ttr=0)
-plot!(inset = (1, bbox(0.74,0.15,0.25,0.25)), subplot = 3)
-plot!(pl_bif[3],t,traj2[:,1],lw=3,
-    legend=(0.45, 0.28), label=L"x_1", lc=colors[1],
-    legend_columns=-1,legendfontsize=legend_fontsize-5)
-plot!(pl_bif[3], t, traj2[:, 3], lw=3, label=L"x_2", lc=colors[2])
-annotate!(pl_bif[3],10, 0.3, text(L"t", :gray10, :center, 12))
-hline!(pl_bif[3], [1 / (1 - 0.55)], lw=2, lc=:gray10, ls=:dash, label="") #xlabel=L"t")
+plot!(inset = (1, bbox(0.70,0.1,0.3,0.2)), subplot = 4)
+plot!(pl_bif[4],t,traj2[:,1],lw=3,
+    label="", lc=colors[1],
+    yticks=[0,2,4], xlims=(-0.5, 10), ylims=(0, 4),
+    xticks=[0, 5, 10], tickfontsize=tick_fontsize_small,
+    legend=false)
+    #legend=(0.45, 0.28),legend_columns=-1,legendfontsize=legend_fontsize-7)
+plot!(pl_bif[4], t, traj2[:, 3], lw=3, label=L"x_2", lc=colors[2])
+annotate!(pl_bif[4], -2, 2.0, text(L"x_i", :gray10, :center, 14))
+annotate!(pl_bif[4], 5, -1.6, text(L"t", :gray10, :center, 14))
+hline!(pl_bif[4], [1 / (1 - 0.55)], lw=2, lc=:gray10, ls=:dash, label="") #xlabel=L"t")
+plot!(pl_bif[1], [0.55, 0.55], [2.5, 2.8], arrow=true, color=:gray10, linewidth=2, label="")
 
-
-pl_bif
+plot!(pl_bif,plot_title=L"N=2",size=(700,400))
 savefig(pl_bif,figs_dir*"system_small_N2_bifdiag_complicated.pdf")
 
 

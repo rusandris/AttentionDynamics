@@ -15,7 +15,7 @@ ms = 6
 figs_dir = "../../paper_figs/"
 #data_dir = "../../data/phasediag_data_N10_extended_d0_1.0e-9_ut1e-6/"
 #data_dir = "../../data/phasediag_data_N10_extended3_80x80/"
-data_dir = "../../../../../Dropbox/att_dyn/data_phasediag/phasediag_data_N10_extended5_80x80/"
+data_dir = "../../../../../Dropbox/att_dyn/data/data_phasediag/phasediag_data_N10_extended5_80x80/"
 #lyap_vals = reshape(readdlm(data_dir*"lyap_values_Ttr10000.txt"),(80,80))
 lyap_vals = reshape(readdlm(data_dir * "lyap_values_Ttr10000.txt"), (80, 80))
 params = readdlm(data_dir*"phasediag_params.txt")
@@ -26,10 +26,13 @@ N=10
 pl_lyaps = plot_phase_diagram(lyap_vals, ws_phasediag, gs_phasediag, N;
     xlims=(0.0, 1.0),
     ylims=(gs_phasediag[1], gs_phasediag[end]) ./ (N - 1),
+    critical_curve_colors=[:gray10,:gray10],
+    critical_curve_lines=[:dash, :dot],
     HEATMAP_DEFAULTS...,
-    ylabel=L"\frac{1}{\epsilon(N-1)}",clims=(-0.8,0.8),
+    ylabel=L"\frac{1}{\epsilon(N-1)}",clims=(-1,1),
     right_margin=6Plots.mm,
     left_margin=6Plots.mm,
+    plot_critical_curve=true,
     tickfontsize=tick_fontsize_large,
     guidefontsize=guide_fontsize_medium,
     xguidefontsize=guide_fontsize_large,
@@ -41,22 +44,27 @@ pl_lyaps = plot_phase_diagram(lyap_vals, ws_phasediag, gs_phasediag, N;
 #fill in with analytical eigenvalues
 λa = -1
 λ_b(g,w,N) = g*(1-1/(N-1)*1/(1/w-1)) 
+λ_d_realpart = -0.5
+
 lyap_vals_filled = deepcopy(lyap_vals)
 for (j,g) in enumerate(gs_phasediag) 
     for (i, w) in enumerate(ws_phasediag)
         w < (N-1)/N && continue
 
         λb = λ_b(g, w, N)
-        lyap_vals_filled[j, i] = max(λa, λb)
-        max(λa, λb) > -1.0 && @info "largest eigenvalue at $(w),$(g): $(max(λa, λb))"
+        lyap_vals_filled[j, i] = max(λa, λb, λ_d_realpart)
+        #max(λa, λb, λ_d_realpart) > -1.0 && @info "largest eigenvalue at $(w),$(g): $(max(λa, λb,λ_d_realpart))"
     end
 end
 
 pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws_phasediag, gs_phasediag, N;
     xlims=(0.0, 1.0),
     ylims=(gs_phasediag[1], gs_phasediag[end]) ./ (N - 1),
+    critical_curve_colors=[:gray15, :gray15],
+    critical_curve_lines=[:dash, :dot],
+    critical_curve_lw = [3,3],
     HEATMAP_DEFAULTS...,
-    ylabel=L"\frac{1}{\epsilon(N-1)}", clims=(-0.7, 0.7),
+    ylabel=L"\frac{1}{\epsilon(N-1)}", clims=(-1, 1),
     right_margin=6Plots.mm,
     left_margin=6Plots.mm,
     tickfontsize=tick_fontsize_large,
@@ -156,7 +164,7 @@ annotate!(w_B5, g_B5 + 0.5, text(L"B_4", :darkgreen, :left, annot_size))
 
 
 
-savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended5_80x80_filled_Ttr_5000_" * "labeled_horizontal_alpha_curve_article_params.png")
+savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended5_80x80_filled_Ttr_10000_" * "labeled_horizontal_alpha_curve_article_params.png")
 
 
 #=

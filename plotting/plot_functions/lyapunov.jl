@@ -61,14 +61,26 @@ critical_curve_adim(w) = 1/w
 w_g_dependence_curve(w,N;K=1.0,c=2.4) = K*c*(N-1)*(1/w -1)
 w_g_dependence_curve_adim(w;K=1.0,c=2.4) = K*c*(1/w -1)
 
-function plot_phase_diagram(Λ,wvalues,gvalues,N;plot_critical_curve=true,kwargs...)
+function plot_phase_diagram(Λ, wvalues, gvalues, N; plot_critical_curve=true, 
+    critical_curve_colors=[:gray10, :gray80], critical_curve_lines=[:dash,:dash],
+    critical_curve_lw=[3,3],
+    kwargs...)
 	pl = plot()
 	#plot lyapunov matrix as heatmap
 	pl = heatmap(wvalues,gvalues/(N-1),Λ;kwargs...)
 	
 	#plot bifurcation curves
-	plot_critical_curve && plot!(pl,wvalues,critical_curve_adim.(wvalues);kwargs...,ls=:dash,label="") #label=L"g_c(w)")
-	plot!(pl,[(N-1)/N,(N-1)/N],[gvalues[1],gvalues[end]]./(N-1);kwargs...,ls=:dash,label="")#label=L"w_{d}=(N-1)/N")	
+	if plot_critical_curve 
+        plot!(pl, wvalues, critical_curve_adim.(wvalues); kwargs..., 
+            ls=critical_curve_lines[1],
+            lw = critical_curve_lw[1],
+            lc=critical_curve_colors[1], label="") #label=L"g_c(w)")
+        plot!(pl, [(N - 1) / N-0.001, (N - 1) / N-0.001], [gvalues[1], gvalues[end]] ./ (N - 1); kwargs..., 
+            lc=critical_curve_colors[2], 
+            ls=critical_curve_lines[2],
+            lw=critical_curve_lw[2],
+            label="") #label=L"w_{d}=(N-1)/N")	
+    end
 	#plot!(ylims=(gvalues[1]/(N-1),gvalues[end]/(N-1)),xlims=(wvalues[1],wvalues[end]))
 	return pl
 end

@@ -2,8 +2,8 @@ using Plots
 using LaTeXStrings
 using DelimitedFiles
 cd(@__DIR__)
-include("../../plotting/plot_functions/orbit_diagrams.jl")
-include("../../plotting/defaults.jl")
+include("../plot_functions/orbit_diagrams.jl")
+include("defaults.jl")
 #-----------------------plot od data-----------------------
 
 #data dirs
@@ -11,11 +11,11 @@ include("../../plotting/defaults.jl")
 #cont_dir = "../../bifkit_data_gN5_210/"
 #cont_dir = "../../bifkit_data_gN5/"
 
-od_dir = "./orbit_diagram_data_gN5/"
-cont_dir = "./bifkit_data_g5/"
+od_dir = "../../data/orbit_diagram_data_gN5/"
+cont_dir = "../../data/bifkit_data_g5/"
 
 #create dir for figs
-figs_dir = "./poster_figs/"
+figs_dir = "../../paper_figs/"
 mkpath(figs_dir)
 
 #saved params
@@ -55,9 +55,10 @@ for (i,N) in enumerate(Ns)
     pl = plot_orbit_diagram(ps,od;OD_DEFAULTS...,ma=0.6,ms=0.8,
         ylabel="",xlims=xlims_pl,widen=true,
         xformatter=:none,xlabel="",ylims=ylims_od[i],
-        yticks=yticks_od[i],bottom_margin = reduced_margin,
+        yticks=yticks_od[i],
         tickfontsize=tick_fontsize+3,yformatter=:auto,
-        title=L"N=%$N"*"\n"*L"\epsilon(N-1)=%$(round(gval_phase_diag;digits=0))")
+        title=L"N=%$N")
+        #*"\n"*L"\epsilon(N-1)=%$(round(gval_phase_diag;digits=0))")
     i == 1 && ylabel!(pl,L"x_1")
 
     vline!([wc1],ls=:dash,lc=:gray10,lw=2)
@@ -98,6 +99,7 @@ for (i,N) in enumerate(Ns)
     g = gval_phase_diag * (N-1)
     wc1 = (N-1)/g
     wc2 = (N-1)/N
+    @show g,gval_phase_diag,wc1,wc2
 
     #--------------------plot bifdiagram------------------
 
@@ -112,8 +114,7 @@ for (i,N) in enumerate(Ns)
 
     #-------------------plot fixed point results----------------------
     pl = plot(params, xs; lc=:gray10,legend=false,guidefontsize=guide_fontsize,
-        ls=linestyle,lw=linewidth,bottom_margin = reduced_margin,top_margin = reduced_margin,
-        left_margin=reduced_margin_side,right_margin=reduced_margin_side,
+        ls=linestyle,lw=linewidth,
         xformatter=:none,xlims=xlims_pl,yticks=yticks_bif[i],widen=true,
         DEFAULTS...,tickfontsize=tick_fontsize+3,yformatter=:auto)
 
@@ -179,10 +180,10 @@ for (i,N) in enumerate(Ns)
 
     #annotations
     if i == 1 
-        annotate!(0.3, 4.0 , text("limit cycles", :gray10, :center, annotation_size))
+        #annotate!(0.3, 4.0 , text("limit cycles", :gray10, :center, annotation_size))
     elseif i == 2
-        annotate!(0.35, 8.0 , text("limit \n cycles", :gray10, :center, annotation_size))
-        annotate!(0.25, 3.0 , text("tori", :gray10, :center, annotation_size))
+        #annotate!(0.35, 8.0 , text("limit \n cycles", :gray10, :center, annotation_size))
+        #annotate!(0.25, 3.0 , text("tori", :gray10, :center, annotation_size))
         annotate!(0.25, 12.0 , text("NS", :gray10, :center, annotation_size))
 
         #annotate!(0.25, 12.0 , text("shorter chaotic \n transients", :gray10, :center, annotation_size))
@@ -191,13 +192,12 @@ for (i,N) in enumerate(Ns)
         annotate!(0.28, 26.0 , text("NS", :gray10, :center, annotation_size))
         annotate!(0.22, 19.0 , text("NS", :gray10, :center, annotation_size))
 
-        annotate!(0.38, 20.0 , text("limit \n cycles", :gray10, :center, annotation_size))
-        annotate!(0.28, 10.0 , text("tori", :gray10, :center, annotation_size))
+        #annotate!(0.38, 20.0 , text("limit \n cycles", :gray10, :center, annotation_size))
+        #annotate!(0.28, 10.0 , text("tori", :gray10, :center, annotation_size))
         #annotate!(0.25, 24.0 , text("longer chaotic \n transients", :gray10, :center, annotation_size))
     end
     push!(branch_plots,pl)
 end
-pl_bif = plot(branch_plots...,layout=(1,length(Ns)))#bottom_margin=reduced_bottom_margin)
 
 #------------------------plot Floquet exponents/multipliers--------------------------
 #plot all non-unity floquet multis (real and imag parts)    
@@ -259,14 +259,13 @@ for (i,N) in enumerate(Ns)
     #@show length(params),length(realparts_max)
     #@show realparts[:,1]
     labels = []
-    pl_maxfloq = plot(params,realparts[:,1];xformatter=:none,
+    pl_maxfloq = plot(params,realparts[:,1];xformatter=:auto,
         guidefontsize=guide_fontsize,xlabel=L"w",widen=true,
-        bottom_margin = reduced_margin,top_margin = reduced_margin,
-        left_margin=reduced_margin_side,right_margin=reduced_margin_side,
         ylims=ylims_floq,xlims=xlims_pl,ms=1, lw=2,
         legend_columns=2,legend=:bottomright,
         lc=:gray50,markerstrokewidth=0.0,label=L"\mu_i",DEFAULTS...,
-        yformatter=:auto,tickfontsize=tick_fontsize+3)
+        yformatter=:auto,tickfontsize=tick_fontsize+3,xticks=[0.3,0.4],
+        legendfontsize = 7)
 
     plot!(params,realparts[:,2:end],label="",lc=:gray50)
     #floq maximag
@@ -274,22 +273,25 @@ for (i,N) in enumerate(Ns)
     #    xlims=xlims_pl,markershape=:cross,ms=1,lc=:gray50,markerstrokewidth=0.0,legend=false)
 
     #lyapunov LLE
-    plot!(lyaps_params,lyaps,lw=2,mc=:gray10,lc=:gray10,markerstrokewidth=0.0,label=L"\lambda")
+    plot!(lyaps_params,lyaps,lw=3,mc=:gray10,lc=:gray10,markerstrokewidth=0.0,label=L"\Lambda")
 
     vline!([wc1],ls=:dash,lc=:gray10,lw=2,label="")
     #vline!([wc2],ls=:dash,lc=:blue,lw=2,label="")
 
     hline!([0.0],ls=:dash,lc=:gray10,lw=0.5,label="")
-    i == 1 && ylabel!(pl_maxfloq,L"\mathrm{Re}(\mu),\lambda")
+    i == 1 && ylabel!(pl_maxfloq,L"\mathrm{Re}(\mu),\Lambda")
     yticks!([-1,0,1])
 
     #annotations
     if i == 1 
         #annotate!(0.3, 4.0 , text("limit cycles", :gray10, :center, annotation_size))
+        annotate!(wc1, -1.3, text(L"w_{\mathrm{c}}", :gray10, :center, 16))
     elseif i == 2
-        annotate!(0.35, 0.3 , text("shorter chaotic \n transients", :gray10, :center, annotation_size-5))
+        #annotate!(0.35, 0.3 , text("shorter chaotic \n transients", :gray10, :center, annotation_size-5))
+        annotate!(wc1, -1.3, text(L"w_{\mathrm{c}}", :gray10, :center, 16))
     elseif i == 3
-        annotate!(0.37, 0.3 , text("longer chaotic \n transients", :gray10, :center, annotation_size-5))
+        #annotate!(0.37, 0.3 , text("longer chaotic \n transients", :gray10, :center, annotation_size-5))
+        annotate!(wc1, -1.3, text(L"w_{\mathrm{c}}", :gray10, :center, 16))
     end
 
     push!(plots_maxfloq,pl_maxfloq)
@@ -297,15 +299,15 @@ for (i,N) in enumerate(Ns)
 
 
 end
-pl_floq = plot(plots_maxfloq...,layout=(1,length(Ns)))#bottom_margin=reduced_bottom_margin)
 
 #l = @layout [a{0.5h}; b{0.25h}; c{0.25h} ]
 
 
 
+#=
 #plot transient lifetimes 
 
-tr_data_dir = "../../transient_lifetimes/"
+tr_data_dir = "../../data/transient_lifetimes/"
 transient_lifetime_files = readdir(tr_data_dir)
 plots_trs = []
 ylims_trs = (0,1800)
@@ -335,12 +337,12 @@ for (i,N) in enumerate(Ns)
 end
 #pl_trs = plot(plots_trs...,layout=(1,length(Ns)))#bottom_margin=reduced_bottom_margin)
 
-
-
-pl = plot(plots_od...,branch_plots...,plots_maxfloq...,plots_trs...,layout=(4,3),size=(1000,700),
-    dpi=300,left_margin=6Plots.mm,bottom_margin=7Plots.mm)
+=#
+pl = plot(plots_od...,branch_plots...,plots_maxfloq...,layout=(3,3),size=(700,400),
+    dpi=300)
 
 #pl = plot(pl_od,pl_bif,pl_floq,layout=(3,1),size=(1000,500),dpi=300,left_margin=7Plots.mm,bottom_margin=7Plots.mm)
 #savefig(pl,"../../continuation_test_maxreal.png")
+
 savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_trans_od_Ttr20000_noreinit_g5_N310_test.png")
 

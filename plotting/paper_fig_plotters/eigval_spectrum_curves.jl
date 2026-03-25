@@ -72,7 +72,7 @@ tickfontsize = 10
 guidefontsize = 20
 legendfontsize = 10
 lw = 3
-hlinew = 2
+hlinew = 1
 samp = 1 #point sampling
 plot_labels = ["a)", "b)"]
 
@@ -141,7 +141,7 @@ for (gi,g) in enumerate(gs)
     #add stability annotation 
     annotate!(0.5, 4.5, text("unstable", :gray10, :center, 12))
 
-    annotate!(-0.35, 6.2, text(plot_labels[gi] * " " * L" 1/\epsilon = %$(gs[gi])", :gray10, :left, 16))
+    annotate!(-0.35, 7.2, text(plot_labels[gi] * " " * L" 1/\epsilon = %$(gs[gi])", :gray10, :left, 16))
 
     #-------------------------------M = 1---------------------------------
 
@@ -199,9 +199,10 @@ for (gi,g) in enumerate(gs)
     #add stability annotation 
     annotate!(0.3, 2.5 , text("unstable", :gray10, :center, 12))
     annotate!(0.85, 2.5 , text("stable", :gray10, :center, 12))
+    annotate!(0.85, 1.9, text("WTA", :gray10, :center, 12))
 
     #add critical value annotation 
-    annotate!(critical_w_values[gi][2], -3.6, text(L"w_{\mathrm{d}}", :red, :center, 16))
+    annotate!(critical_w_values[gi][2], -3.6, text(L"w_{\mathrm{d}}", :gray10, :center, 16))
 
     #-------------------------------1 < M < N ---------------------------------
 
@@ -314,6 +315,8 @@ for (gi,g) in enumerate(gs)
 
     #add stability annotation 
     annotate!(0.3, 2.5, text("stable", :gray10, :center, 12))
+    annotate!(0.3, 1.9, text("coex.", :gray10, :center, 12))
+
     if gi == 1
         annotate!(0.73, 2.5, text("unstable", :gray10, :center, 12))
     elseif gi == 2
@@ -322,7 +325,7 @@ for (gi,g) in enumerate(gs)
 
     #add critical value annotation 
     annotate!(critical_w_values[gi][1], -3.6, text(L"w_{\mathrm{c}}", :gray10, :center, 16))
-    annotate!(critical_w_values[gi][2], -3.6, text(L"w_{\mathrm{d}}", :red, :center, 16))
+    annotate!(critical_w_values[gi][2], -3.6, text(L"w_{\mathrm{d}}", :gray10, :center, 16))
 
     #pl_g1 = plot(pl0,pl1,pl2,pl3,layout=(1,4),size=(1200,300))
     push!(plots,[pl0,pl1,pl2,pl3])
@@ -338,13 +341,13 @@ for i in 1:length(plots)
 
         #add vertical lines
         if j == 2 
-            vline!(pls[j],[ws_crit[2]],lc=:red,lw=2,ls=:dash,label="") #label=L"w^{(2)}_c")
+            vline!(pls[j],[ws_crit[2]],lc=:gray10,lw=2,ls=:dot,label="") #label=L"w^{(2)}_c")
         elseif j == 4
             vline!(pls[j],[ws_crit[1]],lc=:gray10,lw=2,ls=:dash,label="") #,label=L"w^{(1)}_c")
-            vline!(pls[j],[ws_crit[2]],lc=:red,lw=2,ls=:dash,label="") #label=L"w^{(2)}_c")
+            vline!(pls[j], [ws_crit[2]], lc=:gray10, lw=2, ls=:dot, label="") #label=L"w^{(2)}_c")
 
             if i == 2
-                vline!(pls[j],[ws_crit[2]],lc=:red,lw=2,ls=:dash,label="") #label=L"w^{(2)}_c")
+                vline!(pls[j], [ws_crit[2]], lc=:gray10, lw=2, ls=:dot, label="") #label=L"w^{(2)}_c")
                 #vline!(pls[j],[ws_crit[1]],lc=:gray10,lw=2,ls=:dash,label="") #,label=L"w^{(1)}_c")
                 #vline!(pls[j],[ws_crit[3]],lc=:gray50,lw=2,ls=:dash,label="") #,label=L"w^{(1)}_c")
             end
@@ -380,9 +383,9 @@ for i in 1:length(plots)
         end
 
 
-        #add bottom margins to second row figs 
+        #add bottom margins to first row figs 
         if i == 1
-            plot!(pls[j], bottom_margin=8Plots.mm)
+            plot!(pls[j], top_margin=8Plots.mm)
         end
 
         #add bottom margins to second row figs 
