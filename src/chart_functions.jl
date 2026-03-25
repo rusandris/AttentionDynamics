@@ -1,5 +1,5 @@
 export get_lifetimes,get_lifetimes_integ, get_distrib, integrate_activity
-export chart_stats, consecutive_occurrences
+export chart_stats, consecutive_occurrences, activity_periods, active_period_lengths
 export autohist, parabolic, linear #plot_distrib,plot_distrib!
 
 
