@@ -17,6 +17,7 @@ module AttentionDynamics
 	include("evolve_system.jl")
 	include("import_system.jl")
     include("chart_functions.jl")
+    include("transient_functions.jl")
 	include("count_limitcycles.jl")
 	include("lyapunov.jl")
 	#include("find_periodic_orbit.jl")

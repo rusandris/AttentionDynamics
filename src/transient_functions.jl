@@ -1,3 +1,5 @@
+export simple_transient_time, transient_lifetimes, transient_decay_curve
+
 function simple_transient_time(ds,state=current_state(ds); Tmax=1000, threshold, period_tol=1e-3, max_tol=1e-3)
 
 	reinit!(ds, state) #reinitialize integrator
@@ -51,7 +53,7 @@ function simple_transient_time(ds,state=current_state(ds); Tmax=1000, threshold,
 end
 
 #threaded version
-function transient_lifetime_statistics(ds,init_states;
+function transient_lifetimes(ds,init_states;
 		 Tmax=10000, threshold=1.0, period_tol=1e-3, max_tol=1e-3)
 	
 	ensemble_size = length(init_states)
@@ -69,4 +71,25 @@ function transient_lifetime_statistics(ds,init_states;
 
 	end
 	return lifetimes
+end
+
+function transient_decay_curve(trs;Δt)
+	trs = filter(x -> x != Inf,vec(trs))    #filter out Infs
+	n = length(trs)
+	lifetime_ts = [n]
+	time = [minimum(trs):Δt:maximum(trs)+Δt;]  #construct equidistant timepoints with Δt between
+	
+	for i in 1:length(time)-1
+		escaped = findall(τ -> (time[i] <= τ < time[i+1]),trs) #binning
+		nr_escaped = length(escaped)
+		
+		if nr_escaped != 0 	#check if some transient time values fall into a bin
+			push!(lifetime_ts,lifetime_ts[end] - nr_escaped) #substract the escaped
+			deleteat!(trs,escaped) #delete the escaped ones from trs
+		else
+			push!(lifetime_ts,lifetime_ts[end])
+		end
+	end
+
+	lifetime_ts,time
 end
