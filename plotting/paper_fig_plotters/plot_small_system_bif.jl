@@ -79,7 +79,7 @@ contres_bifp = readdlm(cont_dir*contres_bifp_file)
 
 
 #--------------------plot bifdiagram------------------
-lc_color = collect(Colors.JULIA_LOGO_COLORS)[[3]]  #use logo colors
+lc_color = collect(Colors.JULIA_LOGO_COLORS)[[1]]  #use logo colors
 
 #-------------------plot fixed point results----------------------
 #use analytical results for fixed points
@@ -262,7 +262,12 @@ annotate!(pl_bif[4], 5, -1.6, text(L"t", :gray10, :center, 14))
 hline!(pl_bif[4], [1 / (1 - 0.55)], lw=2, lc=:gray10, ls=:dash, label="") #xlabel=L"t")
 plot!(pl_bif[1], [0.55, 0.55], [2.5, 2.8], arrow=true, color=:gray10, linewidth=2, label="")
 
+#add title 
 plot!(pl_bif,plot_title=L"N=2",size=(700,400))
+
+#add plot label annotation 
+annotate!(pl_bif[1], 0.07, 4.3, text(L"(a)", :gray10, :center, 18))
+
 savefig(pl_bif,figs_dir*"system_small_N2_bifdiag_complicated.pdf")
 
 

@@ -1,7 +1,7 @@
 using DelimitedFiles
 using Plots, LaTeXStrings
+using AttentionDynamics
 cd(@__DIR__)
-include("chart_functions.jl")
 
 
 #---------------------------read trajectory files------------------------------------ 
@@ -9,55 +9,52 @@ include("chart_functions.jl")
 #read file names
 #data_dir_traj_root = "../../data/trajs_precomp_test_c/"
 #data_dir_traj_root = "../../data/trajs_precomp_test8_origpar/"
-data_dir_traj_root = "../../data/trajs_precomp_alpha/"
-data_dir_traj = data_dir_traj_root
+data_dir_traj_root = "../../data/trajs_precomp_orig/"
+data_dir_traj = data_dir_traj_root * "horizontal_and_curve_article_test_Δt0.1_T5000_Ttr500/"
 files = readdir(data_dir_traj)
 files_trajs = files[findall(f -> occursin(".dat", f), files)] #select binary only
 
 #read an example traj
 
 #read params
-αs = vec(readdlm(data_dir_traj * files[1]))
-r = parse(Float64, files_trajs[1][10:11])
-dt = parse(Float64, files_trajs[1][end-6:end-4]) #sampling of trajectories
-T = parse(Float64, files_trajs[1][end-25:end-21])
-t = [0.0:dt:T;]
+N,Δt,T = vec(readdlm(data_dir_traj * files[2]))
+t = [0.0:Δt:T;]
 N = 300
-data_shape = (Int(T / dt) + 1, N)
+data_shape = (Int(T / Δt) + 1, N)
 
 #----------------------------read file---------------------
-file_example = files_trajs[1]
+file_example = files_trajs[21]
 traj = Matrix(reshape(reinterpret(Float64, read(data_dir_traj * file_example)), data_shape))
 
 #decide timespan 
 tspan = (1,20)
-tspan_end_idx = Int(tspan[end]/dt)
-tspan_start_idx = Int(tspan[1]/dt) + 1 
+tspan_end_idx = Int(tspan[end]/Δt)
+tspan_start_idx = Int(tspan[1]/Δt) + 1 
 tidxs = tspan_start_idx:tspan_end_idx
 
 #compute integrated variables
-int_act, time_segments = integrate_activity(traj, t, Int(Δt/dt));
+int_act, time_segments = integrate_activity(traj, t, Int(Δt_chart/Δt));
 int_act_matrix = stack(int_act)'
 t_int = [time_segments[i][end] for i in 1:length(time_segments)]
 
-tspan_end_intidx = Int(tspan[end] / Δt)
-tspan_start_intidx = Int(tspan[1] / Δt) 
+tspan_end_intidx = Int(tspan[end] / Δt_chart)
+tspan_start_intidx = Int(tspan[1] / Δt_chart) 
 tint_idxs = tspan_start_intidx:tspan_end_intidx
-
-
 
 #------------------------------visualize charting process-----------------------------------
 
 #find out who is active in that timespan
-k = 5
-topk_idxs, topk_vals, L_minmax, L_mean = chart_stats(int_act_matrix[tint_idxs, :], k, 1)
+k = 10
+topk_idxs, _ = chart_stats(int_act_matrix[tint_idxs, :], k, 1)
 
 #count number of colors needed
 idxs_active = unique(stack(topk_idxs))
 nr_colors = length(idxs_active)
 #colors = range(HSV(0, 1, 1), stop=HSV(-300, 1, 1), length=26)
 #range(HSV(colorant"red"), stop=HSV(colorant"yellow"), length=nr_colors)
-colors = distinguishable_colors(nr_colors, [RGB(1, 1, 1), RGB(0, 0, 0)], dropseed=true)
+colors = distinguishable_colors(nr_colors, 
+    [RGB(1, 1, 1), RGB(0, 0, 0), RGB(0.8, 1.0, 0.8),RGB(0.6274, 1.0, 1.0), RGB(1.0, 1.0, 0.0)], 
+    dropseed=true, lchoices=range(0, stop=80, length=15),)
 idx_to_color = Dict(zip(idxs_active,colors))
 
 #plot trajectory itself
@@ -66,8 +63,8 @@ pl_ts = plot(t[tidxs], traj[tidxs, idxs_active], lc=colors', lw=3,
     tickfontsize=6, guidefontsize=18, left_margin=5Plots.mm)
 
 #add vertical lines 
-Δt = 1.0
-n_Δt = Int(Δt / dt)
+Δt_chart = 1.0
+n_Δt = Int(Δt_chart / Δt)
 vline!(pl_ts, t[tidxs[1]:n_Δt:tidxs[end]], ls=:dash, lc=:gray50, la=0.5)
 
 #plot inactive with gray separately
@@ -84,16 +81,14 @@ plot!(pl_ts,t[tidxs], traj[tidxs, idxs_inactive], lc=:gray50, lw=1,
 #plot integrated variables
 pl_int_act = plot(t_int[tint_idxs], int_act_matrix[tint_idxs, idxs_active],
     lc=colors', mc=colors', lw=0.5,markershape=:circle,ms=6,
-    markerstrokewidth=0.0,
+    markerstrokewiΔth=0.0, markerstrokecolor=colors',
     ylabel = L"\tilde{L}_i(t,\Delta t)",xlabel="",
     legend=false, tickfontsize=6, guidefontsize=15,
     left_margin=5Plots.mm, xformatter=:none)
 
-#ylabel = L"\int_{Δt_i}^{Δt_{i+1}} L_i(t)dt"
+#ylabel = L"\int_{Δt_i}^{Δt_{i+1}} L_i(t)Δt"
 #add vertical lines 
-Δt = 1.0
-n_Δt = Int(Δt / dt)
-vline!(pl_int_act, tint_idxs, ls=:dash, lc=:gray50, la=0.5)
+vline!(pl_int_act, t_int[tint_idxs], ls=:dash, lc=:gray50, la=0.5)
 
 #plot inactive with gray separately
 plot!(t_int[tint_idxs], int_act_matrix[tint_idxs, idxs_inactive],
@@ -105,7 +100,7 @@ plot!(t_int[tint_idxs], int_act_matrix[tint_idxs, idxs_inactive],
 pl_topk = plot(legend=false,dpi=300,
     ylabel="ranks",xlabel=L"t",guidefontsize=18,
     left_margin=5Plots.mm,bottom_margin=6Plots.mm,
-    yflip=true, yticks=[1:k;], ylims=(0, k + 1),
+    yflip=true, yticks=[1:k;], ylims=(0, 5+0.5),
     tickfontsize=15)
 
 cons_occ = consecutive_occurrences(topk_idxs)
@@ -129,8 +124,16 @@ for (i,t) in enumerate(t_int[tint_idxs])
     
 end
 =#
-plot!(pl_ts,ylims=(0.0,0.03),yticks=[0.0,0.015,0.03])
-plot!(pl_int_act, ylims=(0.0, 0.03), yticks=[0.0, 0.015, 0.03])
+
+
+#add fig labels
+annotate!(pl_ts, -1.5, 0.1, text(L"(a)", :gray10, :center, 18))
+annotate!(pl_int_act, -1.5, 0.1, text(L"(b)", :gray10, :center, 18))
+annotate!(pl_topk, -1.5, 0.0, text(L"(c)", :gray10, :center, 18))
+
+plot!(pl_ts,ylims=(0.0,0.1),yticks=[0.0,0.05,0.1])
+plot!(pl_int_act, ylims=(0.0, 0.1), yticks=[0.0, 0.05, 0.1])
 
 pl = plot(pl_ts, pl_int_act, pl_topk, layout=(3, 1), size=(800, 600),dpi=300)
+
 savefig(pl,"../../paper_figs/chart_explanation_example.png")

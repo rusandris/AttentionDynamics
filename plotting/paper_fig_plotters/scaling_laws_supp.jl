@@ -71,7 +71,7 @@ plot!(log10.(Δw_clinic), log10.((x -> 10^b2 * x^a2).(Δw_clinic));
     mc=:gray10, label="",yticks=(0:2,[L"10^{%$(i)}" for i in 0:2]),
     xticks=(-3:-1, [L"10^{%$(i)}" for i in -3:-1]), tickfontsize=18)
 
-savefig(pl_hopf, "../../paper_figs/hopf_amplitude_scaling_N2_g5.png")
-savefig(pl_clinic, "../../paper_figs/homoclinic_period_scaling_N2_g5.png")
+#savefig(pl_hopf, "../../paper_figs/hopf_amplitude_scaling_N2_g5.png")
+#savefig(pl_clinic, "../../paper_figs/homoclinic_period_scaling_N2_g5.png")
 
 

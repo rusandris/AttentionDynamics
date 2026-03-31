@@ -6,8 +6,8 @@ using StatsBase
 using DelimitedFiles
 using Plots,LaTeXStrings
 cd(@__DIR__)
-include("../../plotting/defaults.jl")
-include("../../plotting/plot_functions/lyapunov.jl")
+#include("../../plotting/defaults.jl")
+#include("../../plotting/plot_functions/lyapunov.jl")
 include("bif_floq_od_method_parameters.jl")
 include("transient_functions.jl")
 
@@ -23,17 +23,16 @@ g = 45.0
 #g = 20.0
 
 #N=10 first NS bif at w = 0.329206866618409 
-ws = [0.4:-0.001:0.362;]
-u0 = rand(2N)
+w_NS = 0.329206866618409
+ws = [0.4:-0.001:w_NS;]
+writedlm(data_dir*"w_values.txt",ws)
 
+u0 = rand(2N)
 ds = create_ds(u0,[g,ws[1],N];diffeq=diffeq)
 
-Tmax = 20000
-ensemble_size = 10000
+Tmax = 10000
+ensemble_size = 1000 #10000
 threshold = 1.5
-
-fig_dir = "../../lifetime_distribs/"
-mkpath(fig_dir)
 
 avgs = zeros(length(ws))
 stds = similar(avgs)
@@ -41,22 +40,22 @@ nr_infs = similar(avgs)
 mins = similar(avgs)
 maxs = similar(avgs)
 
-data_dir = "../../transient_lifetimes/"
+data_dir = "../../data/transient_lifetimes_update/"
 mkpath(data_dir)
 
-file_name = data_dir*"transient_lifetime_avg_ens$ensemble_size"*"N$N"*"g_$g"*".txt"
+file_name = data_dir*"transient_lifetime_avg_ens$ensemble_size"*"_N$N"*"g_$g"*".txt"
 
 for (j,w) in enumerate(ws)
     set_parameter!(ds,2,w)
     @show w
-    init_states = [rand(20) .* 10 for i in 1:ensemble_size]
+    init_states = [rand(2N) .* 10 for i in 1:ensemble_size]
 
     lts = transient_lifetime_statistics(ds,init_states;
         Tmax=Tmax, period_tol=1e-3, max_tol=1e-3)
 
     #plot distribution
-    pl = histogram(lts;bins=100,xlims=(0,6000),ylabel="",xlabel=L"\tau")
-    savefig(pl,fig_dir*"lifetime_distrib_w$w"*".png")
+    #pl = histogram(lts;bins=100,xlims=(0,6000),ylabel="",xlabel=L"\tau")
+    #savefig(pl,fig_dir*"lifetime_distrib_w$w"*".png")
 
 
     #save lifetime statistics

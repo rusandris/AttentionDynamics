@@ -265,7 +265,7 @@ for (i,N) in enumerate(Ns)
         legend_columns=2,legend=:bottomright,
         lc=:gray50,markerstrokewidth=0.0,label=L"\mu_i",DEFAULTS...,
         yformatter=:auto,tickfontsize=tick_fontsize+3,xticks=[0.3,0.4],
-        legendfontsize = 7)
+        legendfontsize = 10)
 
     plot!(params,realparts[:,2:end],label="",lc=:gray50)
     #floq maximag
@@ -305,6 +305,7 @@ end
 
 
 #=
+
 #plot transient lifetimes 
 
 tr_data_dir = "../../data/transient_lifetimes/"
@@ -312,37 +313,40 @@ transient_lifetime_files = readdir(tr_data_dir)
 plots_trs = []
 ylims_trs = (0,1800)
 
-for (i,N) in enumerate(Ns)
+for (i,N) in enumerate(Ns[end:end])
     trs_file_N = transient_lifetime_files[findall(f -> occursin("N$N",f),transient_lifetime_files)][1]
+    @show trs_file_N
     transient_data = readdlm(tr_data_dir*trs_file_N) 
-    ws = transient_data[:,1]
-    transient_avgs = transient_data[:,2]
+    ws = readdlm(tr_data_dir*"w_values.txt")
+    transient_avgs = transient_data[:,1]
 
-    pl = plot(reverse(ws),reverse(transient_avgs);
+    pl = plot(log10.(reverse(ws)),reverse(log10.(transient_avgs));
         xlabel=L"w",ylabel="",xformatter=:auto,
         guidefontsize=guide_fontsize,widen=true,
-        ms=1, lw=2,xlims=xlims_pl,ylims=ylims_trs,
+        ms=1, lw=2,
         legend_columns=2,legend=false,
-        bottom_margin = reduced_margin,top_margin = reduced_margin,
-        left_margin=reduced_margin_side,right_margin=reduced_margin_side,
         lc=:gray10,markerstrokewidth=0.0,DEFAULTS...,
         yformatter=:auto,tickfontsize=tick_fontsize+3)
 
-    i == 1 && ylabel!(pl,L"\langle \tau \rangle")
+    #i == 1 && ylabel!(pl,L"\langle \tau \rangle")
 
 
-    vline!([0.2],ls=:dash,lc=:gray10,lw=2,label="")
+    #vline!([0.2],ls=:dash,lc=:gray10,lw=2,label="")
     push!(plots_trs,pl)
 
 end
 #pl_trs = plot(plots_trs...,layout=(1,length(Ns)))#bottom_margin=reduced_bottom_margin)
-
 =#
+
 pl = plot(plots_od...,branch_plots...,plots_maxfloq...,layout=(3,3),size=(700,400),
     dpi=300)
+
+#add plot label annotation 
+annotate!(pl[1], 0.11, 1.3, text(L"(b)", :gray10, :center, 18))
+
 
 #pl = plot(pl_od,pl_bif,pl_floq,layout=(3,1),size=(1000,500),dpi=300,left_margin=7Plots.mm,bottom_margin=7Plots.mm)
 #savefig(pl,"../../continuation_test_maxreal.png")
 
-savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_trans_od_Ttr20000_noreinit_g5_N310_test.png")
+#savefig(pl,figs_dir*"continuation_results_bif_floq_lyap_trans_od_Ttr20000_noreinit_g5_N310_test.png")
 

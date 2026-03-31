@@ -19,8 +19,24 @@ include("scaling_laws_supp.jl")
 #l = @layout [ grid(2,3) a{1.0h,0.3w}]
 l = grid(2,4)
 
-pl = plot(plots_limc[1:2]..., pl_hopf, plots_limc[3],
-    plots_limc[4:5]..., pl_clinic, plots_limc[6],
+#add fig label annotations 
+
+#top row
+annotate!(plots_limc[1], 496, 2.1, text(L"(a)", :gray10, :center, 18))
+annotate!(plots_limc[2], 497, 3.1, text(L"(c)", :gray10, :center, 18))
+annotate!(plots_limc[3], -1, 2.6, text(L"(e)", :gray10, :center, 18))
+annotate!(pl_hopf, -0.03, 1.53, text(L"(g)", :gray10, :center, 18))
+
+
+#bottom row
+annotate!(plots_limc[4], 450, 5.2, text(L"(b)", :gray10, :center, 18))
+annotate!(plots_limc[5], 458, 8.2, text(L"(d)", :gray10, :center, 18))
+annotate!(plots_limc[6], -1.5, 4, text(L"(f)", :gray10, :center, 18))
+annotate!(pl_clinic, -3.5, 2.7, text(L"(h)", :gray10, :center, 18))
+
+
+pl = plot(plots_limc[1:3]..., pl_hopf,
+    plots_limc[4:6]..., pl_clinic,
     layout=l, size=(1600, 600), legend_columns=-1,
     tickfontsize=12, guidefontsize=18, bottom_margin=10Plots.mm, 
     legendfontsize=15, dpi=300, left_margin=10Plots.mm)

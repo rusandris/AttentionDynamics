@@ -105,10 +105,10 @@ for (i,w) in enumerate(ws)
     #plot trajectory projection
     pl_proj = plot(traj[:, 1], traj[:, 3],
         xlims=xlimits_proj[i], ylims=ylimits_proj[i], 
-        ylabel=L"x_2", xlabel=L"x_1",
-        xformatter=:auto, labels=labels, lw=lw_proj, la=1.0,
+        ylabel=L"x_2", xlabel=L"x_1",label="",
+        xformatter=:auto, lw=lw_proj, la=1.0,
         legend=true, size=(600, 600), lc=colors_projs[1],
-        left_margin=-5Plots.mm, aspect_ratio=1,label=L"w=%$(w)",
+        left_margin=-5Plots.mm, aspect_ratio=1,
         title=titles[i],ticks=ticks_projs[i]) #
     
     #plot fixed points 
@@ -150,7 +150,7 @@ pl_limc = plot(plots_limc..., layout=(2, 3), size=(1200, 600), legend_columns=-1
 tickfontsize=10,guidefontsize = 18, bottom_margin=5Plots.mm, legendfontsize=15, dpi=300)
 
 figs_dir = "../../paper_figs/"
-savefig(pl_limc, figs_dir * "distance_to_fixedpoints_N2_g5.png")
+#savefig(pl_limc, figs_dir * "distance_to_fixedpoints_N2_g5.png")
 
 #plot!(pl_ts,pl_d,layout=(2,1),size=(400,600),
 #    guidefontsize=18,legendfontsize=15,tickfontsize=10)

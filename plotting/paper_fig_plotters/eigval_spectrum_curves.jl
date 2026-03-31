@@ -70,7 +70,7 @@ xticks = [0.0,0.5,1.0]
 xlims = (0,1)
 tickfontsize = 10
 guidefontsize = 20
-legendfontsize = 10
+legendfontsize = 13
 lw = 3
 hlinew = 1
 samp = 1 #point sampling
@@ -121,7 +121,10 @@ for (gi,g) in enumerate(gs)
         xformatter=x_axis_setting,yformatter=y_axis_setting,
         legendcolumns=-1,legendfontsize=legendfontsize,
         guidefontsize=guidefontsize,tickfontsize=tickfontsize,
-        yticks=yticks, xticks=xticks, title=L"M = 0")
+        yticks=yticks, xticks=xticks)
+
+    #add title to top row figues 
+    gi == 1 && plot!(pl0, title=L"\mathbf{u}^{*}_{M = 0}", titlefontsize=16)
 
     bool_mask = S_a .< 0
     linestyle_mask = similar(bool_mask,Symbol)
@@ -183,7 +186,10 @@ for (gi,g) in enumerate(gs)
         xformatter=x_axis_setting, yformatter=y_axis_setting,
         legendcolumns=-1, legendfontsize=legendfontsize, legend=:bottomleft,
         guidefontsize=guidefontsize, tickfontsize=tickfontsize,
-        yticks=yticks2,xticks=xticks,title=L"M = 1")
+        yticks=yticks2,xticks=xticks)
+
+    #add title to top row figues 
+    gi == 1 && plot!(pl1, title=L"\mathbf{u}^{*}_{M = 1}", titlefontsize=16)
 
     bool_mask = S_a .< 0
     linestyle_mask = similar(bool_mask,Symbol)
@@ -199,7 +205,7 @@ for (gi,g) in enumerate(gs)
     #add stability annotation 
     annotate!(0.3, 2.5 , text("unstable", :gray10, :center, 12))
     annotate!(0.85, 2.5 , text("stable", :gray10, :center, 12))
-    annotate!(0.85, 1.9, text("WTA", :gray10, :center, 12))
+    annotate!(0.85, 1.9, text("dom.", :gray10, :center, 12))
 
     #add critical value annotation 
     annotate!(critical_w_values[gi][2], -3.6, text(L"w_{\mathrm{d}}", :gray10, :center, 16))
@@ -253,7 +259,10 @@ for (gi,g) in enumerate(gs)
         xformatter=x_axis_setting,yformatter=y_axis_setting,
         legendcolumns=-1, legendfontsize=legendfontsize, legend=:bottomleft,
         guidefontsize=guidefontsize,tickfontsize=tickfontsize,
-        yticks=yticks2,xticks=xticks,title = L"M = 2")
+        yticks=yticks2,xticks=xticks)
+
+    #add title to top row figues 
+    gi == 1 && plot!(pl2, title=L"\mathbf{u}^{*}_{M = 2}", titlefontsize=16)
 
     plot!(ws[1:samp:end],S_a[1:samp:end,1:end],ls=linestyle_mask[1:samp:end,1:end], lw=lw, lc=colors, label = labels)
     #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
@@ -306,7 +315,10 @@ for (gi,g) in enumerate(gs)
         xformatter=x_axis_setting,yformatter=y_axis_setting,
         legendcolumns=-1,legendfontsize=legendfontsize,
         guidefontsize=guidefontsize,tickfontsize=tickfontsize,
-        yticks=yticks2,xticks=xticks,legend=:bottomleft,title = L"M = N = %$N")
+        yticks=yticks2,xticks=xticks,legend=:bottomleft)
+
+    #add title to top row figues 
+    gi == 1 && plot!(pl3, title=L"\mathbf{u}^{*}_{M = N = %$N}", titlefontsize=16)
 
     plot!(ws[1:samp:end],S_a[1:samp:end,1:end],ls=linestyle_mask[1:samp:end,1:end], lw=lw, lc=colors, label = labels)
     #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
@@ -320,7 +332,7 @@ for (gi,g) in enumerate(gs)
     if gi == 1
         annotate!(0.73, 2.5, text("unstable", :gray10, :center, 12))
     elseif gi == 2
-        annotate!(0.88, 2.5, text("unstable", :gray10, :center, 12))
+        annotate!(0.87, 2.5, text("unstable", :gray10, :center, 12))
     end
 
     #add critical value annotation 
@@ -383,14 +395,14 @@ for i in 1:length(plots)
         end
 
 
-        #add bottom margins to first row figs 
+        #add margins to first row figs 
         if i == 1
             plot!(pls[j], top_margin=8Plots.mm)
         end
 
-        #add bottom margins to second row figs 
+        #add margins to second row figs 
         if i == 2
-            plot!(pls[j],bottom_margin=5Plots.mm)
+            plot!(pls[j], top_margin=10Plots.mm, bottom_margin=5Plots.mm)
         end
 
         #add left margins to first column figs 
