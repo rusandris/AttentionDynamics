@@ -25,8 +25,7 @@ ds_noisy = create_ds_noisy(u0, p_noisy; diffeq=diffeq)
 
 traj, t = trajectory(ds, 50, u0; Ttr=2000, Δt=1e-3)
 
-
-σs = [1e-3, 1e-2, 1e-1, 0.0] #noise levels
+σs =  [0.0,1e-3,5*1e-2] #[1e-3, 1e-2, 1e-1, 0.0] #noise levels
 colors = [:gray70, :gray40, :gray10, :red]
 pl_N2 = plot(; guidefontsize=20, legendfontsize=15, xlabel=L"x_1", ylabel=L"y_1",
     title=L"N = %$N" * ", " * L"g = %$g" * L"w = %$w" * ", with added noise"
@@ -71,7 +70,7 @@ traj, t = trajectory(ds, 50, u0; Ttr=2000, Δt=1e-3)
 
 #lyapunov(ds_noisy,200;Ttr=200)
 
-σs = [1e-3,5*1e-3,1e-2,5*1e-2,1e-1,0.0] #noise levels
+σs = [0.0,1e-3,5*1e-2]  #[1e-3,5*1e-3,1e-2,5*1e-2,1e-1,0.0] #noise levels
 colors = [:gray80, :gray60, :gray40, :gray20, :gray10,:red]
 pl_N10 = plot(; guidefontsize=20, legendfontsize=15, xlabel=L"x_1", 
     ylabel=L"y_1",title=L"N = %$N" * ", " * L"g = %$g" * L"w = %$w" * ", with added noise", 
@@ -96,5 +95,5 @@ pl = plot(pl_N2, pl_N10, size=(800, 300), left_margin=5Plots.mm,
     bottom_margin=5Plots.mm, legendfontsize=8, legendtitlefontsize=6, 
     legend_columns=3, legend=:bottomright,titlefontsize=10)
 
-savefig(pl,figs_dir*"noisy_equations_same_initcond.png")
+#savefig(pl,figs_dir*"noisy_equations_same_initcond.png")
 #savefig(pl,figs_dir*"noisy_equations_short_traj_initcond_on_attr_.png")
