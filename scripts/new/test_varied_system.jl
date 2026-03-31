@@ -20,7 +20,7 @@ diffeq = (alg=Tsit5(), dt=1e-3, dtmax=dtmax, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-2, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
 
-T = 2000
+T = 1000
 Ttr = 2000
 Δt = 0.1
 nbins = 20
@@ -94,6 +94,50 @@ lts_vr = get_lifetimes_integ(int_act, k)
 lengths_act_vr = activity_periods(trajm_vr .* Δt, thresh)
 pl_ap_vr = histogram(lengths_act_vr, bins=nbins, xlabel=L"\tau_{active} \cdot \Delta t", title=L"r_p \in N(10,1) ,r_c=%$(r),\alpha = %$(α0)")
 pl_lt_vr = histogram(lts_vr, bins=nbins, xlabel=L"\tau_{active}", title=L"r_p \in N(10,1) ,r_c=%$(r),\alpha = %$(α0)")
+
+#------------------try asymmetric coupling---------------------
+
+#setup interaction matrix
+C = randn(N, N) .* 0.5 .+ 2.0
+for i in 1:N
+    C[i, i] = 0.0
+    null_idxs = rand(1:N, rand(50:250))
+    C[i, null_idxs] .= 0.0
+    #anti_idxs = rand(1:N, rand(1:50))
+    #C[i, anti_idxs] .= C[i, anti_idxs] .* (-1.0)
+end
+
+ds_as = create_original_asymmetric_interaction(u0, (r, r, K, C, α0); diffeq=diffeq)
+
+traj_as, times_as = trajectory(ds_as, 50; Ttr=0, Δt=Δt)
+trajm_as = Matrix(traj_as)[:, 1:2:end]
+
+rs = [6.0,8.0,10.0]
+p_sets_r = [[rs[i], rs[i]] for i in 1:length(rs)]
+nr_ics=10
+savedir_traj = "../../data/trajs_precomp_asymmetric/"
+mkpath(savedir_traj)
+
+#test precompute traj
+precompute_trajectories(ds_as, nr_ics, p_sets_r, [1,2]; Δt=Δt_traj,
+    T_traj=T, Ttr=Ttr, savedir=savedir_traj, p_names=["r"],
+    ic_counter=ic_counter,
+    filename="asymmetric_coupling_N$(N)_rp$(rs[2])_rp$(rs[2])_K$(K)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
+
+
+chart_time = 0.5
+k = 10
+int_act, time_segments = integrate_activity(trajm_as, collect(times_as), Int(chart_time / Δt))
+lts_as = get_lifetimes_integ(int_act, k)
+
+thresh = 0.01
+
+lengths_act_as = activity_periods(trajm_as, thresh)
+pl_lt_as = histogram(lts_as, bins=nbins, xlabel=L"\tau", title=L"r_p=%$(r),r_c=%$(r),K=%$(K),c=%$(c),\alpha=%$(α0)")
+pl_ap_as = histogram(lengths_act_as, bins=nbins, xlabel=L"\tau_{active} \cdot \Delta t", title=L"r_p=%$(r),r_c=%$(r),K=%$(K),c=%$(c),\alpha=%$(α0)")
+
+
+#------------------------------------make plots-------------------------------------------
 
 pl_lt = plot(pl_lt_classic,pl_lt_vd,pl_lt_vr,layout=(3,1),size=(400,800),dpi=300)
 pl_ap = plot(pl_ap_classic, pl_ap_vd, pl_ap_vr, layout=(3, 1), size=(400, 800), dpi=300)

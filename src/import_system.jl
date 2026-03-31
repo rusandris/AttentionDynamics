@@ -2,7 +2,8 @@ export att_din!, att_din_original!, skipsum, create_original_ds, att_din_origina
 export create_ds, generate_initial_condition, rescaled_params, rescaling_factors
 export create_ds_noisy, create_ds_prop_noisy, create_ds_alle, create_ds_symLV, create_original_ds_noisy,
     create_original_varied_delay, create_original_varied_rate, 
-    create_original_varied_rate_delay, create_original_varied_params
+    create_original_varied_rate_delay, create_original_varied_params,
+    create_original_asymmetric_interaction
 
 #sum skipping the i-th element
 function skipsum(u,i;step=2)
@@ -11,6 +12,10 @@ function skipsum(u,i;step=2)
         sum += u[j]
     end
     return sum - u[i]
+end
+
+function gensum(u, C, idx; step=2)
+    return sum(C[idx,:] .* u[1:step:end])
 end
 
 #system definition (in-place)
@@ -135,6 +140,19 @@ function att_din_original_varied_params!(du, u, p, t)
     end
 end
 
+
+#system definition (in-place) with varied prod rates and delay
+function att_din_asymmetric_interaction!(du, u, p, t)
+    rp, rc, K, C, α = p
+
+    N = Int(length(u) / 2)
+    for (idx,i) in enumerate(1:2:(2*N))
+        du[i] = rp * u[i] * (1 - rc / K * u[i+1] - gensum(u,C,idx))
+        du[i+1] = u[i] - α * u[i+1]
+    end
+
+end
+
 #system definition (in-place) with original parameters with added noise
 function att_din_original_noisy!(du, u, p, t)
     rp, rc, K, c, α, σ = p
@@ -164,6 +182,7 @@ function create_original_varied_delay(u0, p; diffeq=diffeq_default) CoupledODEs(
 function create_original_varied_rate(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_original_varied_rate!, u0, p; diffeq=diffeq) end
 function create_original_varied_rate_delay(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_original_varied_rate_delay!, u0, p; diffeq=diffeq) end
 function create_original_varied_params(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_original_varied_params!, u0, p; diffeq=diffeq) end
+function create_original_asymmetric_interaction(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_asymmetric_interaction!, u0, p; diffeq=diffeq) end
 function create_original_mod_ds(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_original_mod!, u0, p; diffeq=diffeq) end
 function create_ds_noisy(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_noise!, u0, p; diffeq=diffeq) end
 function create_ds_prop_noisy(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_prop_noise!, u0, p; diffeq=diffeq) end

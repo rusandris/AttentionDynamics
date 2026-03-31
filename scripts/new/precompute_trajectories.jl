@@ -29,6 +29,7 @@ ds = create_original_ds(u0, deepcopy(p_init); diffeq=diffeq)
 #write traj specific params
 writedlm(savedir_traj * "traj_spec_params.txt", [N Δt_traj T]) #save traj specific params
 
+
 #precompute trajectories (c)
 set_parameter!(ds, 1, rs[2])
 set_parameter!(ds, 2, rs[2])
