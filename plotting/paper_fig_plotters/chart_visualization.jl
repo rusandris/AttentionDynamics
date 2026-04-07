@@ -33,6 +33,7 @@ tspan_start_idx = Int(tspan[1]/Δt) + 1
 tidxs = tspan_start_idx:tspan_end_idx
 
 #compute integrated variables
+Δt_chart = 1.0
 int_act, time_segments = integrate_activity(traj, t, Int(Δt_chart/Δt));
 int_act_matrix = stack(int_act)'
 t_int = [time_segments[i][end] for i in 1:length(time_segments)]
