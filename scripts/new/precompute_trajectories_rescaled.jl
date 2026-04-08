@@ -34,7 +34,7 @@ ds = create_ds(u0, [g, w, N]; diffeq=diffeq2) #no noise
 #precompute trajectories
 #nr_ics = 10
 writedlm(savedir_traj*"traj_spec_params.txt", [N Δt_traj T])
-precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,ic_counter=0,
+precompute_trajectories(ds, nr_ics, p_sets, [1, 2]; Δt=Δt_traj,ic_counter=9,
     T_traj=T, Ttr=Ttr, savedir=savedir_traj, 
     filename="N$(N)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat",
     phasediag_ids=phasediag_ids)

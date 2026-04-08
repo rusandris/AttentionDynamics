@@ -18,7 +18,6 @@ T_plot = 50
 #---------------------------read trajectories filenames------------------------------------ 
 dir_content = readdir(data_dir_traj)
 files = dir_content[findall(f -> occursin(".txt", f) || occursin(".dat", f), dir_content)]
-
 files_trajs = files[findall(f -> occursin(".dat", f), files)] #select binary only
 
 #search for param names

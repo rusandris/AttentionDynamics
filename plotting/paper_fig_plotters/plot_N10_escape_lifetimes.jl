@@ -54,23 +54,24 @@ w_NS = 0.329206866618409
 Δws = w_vals_valid .- w_NS
 Δlog_ws = log10.(w_vals_valid) .- log10(w_NS)
 
-#=
+
 #plot escape time scaling
 pl_esc = plot(Δws, escape_times;
     xlabel=L"\Delta w", ylabel=L" \langle \tau_\mathrm{tr} \rangle", 
     xformatter=:auto,guidefontsize=20, widen=true,st=:scatter,
     ms=3, legend_columns=2,legend=false,yscale=:log10,xscale=:log10,
-    mc=:gray20, markerstrokewidth=0.0, xlims=(0.006, 0.16),
+    mc=:gray20, markerstrokewidth=0.0, xlims=(0.004, 0.1),
     ylims=(1e2, 1e5),tickfontsize=10)
-=#
 
+
+#=
 #plot escape time scaling
 pl_esc = plot(Δlog_ws, log10.(escape_times);
     xlabel=L"\log w - \log w_{NS}", ylabel=L" \log(\langle \tau_\mathrm{tr} \rangle)",
     xformatter=:auto, guidefontsize=20, widen=true, st=:scatter,
     ms=2, legend_columns=2, legend=false, ylims=(2,5),xlims=(-0.07,0.16),
     mc=:gray20, markerstrokewidth=0.0,tickfontsize=10)
-
+=#
 
 #-----------------------plot transient decay examples---------------------------
 #from individual parameters 
@@ -85,18 +86,20 @@ plot!(pl_esc[2], ts_e2[1:end-1], Ne2[1:end-1], lc=:orange, yscale=:log10)
 plot!(pl_esc[2], ts_e3[1:end-1], Ne3[1:end-1], lc=:green, yscale=:log10)
 
 #replot example points with colors 
-plot!(pl_esc[1], [Δlog_ws[25]], [log10.(escape_times[25])],
+plot!(pl_esc[1], [Δws[25]], [escape_times[25]],
     st=:scatter,mc=:blue,ms=8,markershape=:diamond)
 
-plot!(pl_esc[1], [Δlog_ws[30]], [log10.(escape_times[30])],
+plot!(pl_esc[1], [Δws[30]], [escape_times[30]],
     st=:scatter, mc=:orange, ms=6, markershape=:rect)
 
-plot!(pl_esc[1], [Δlog_ws[35]], [log10.(escape_times[35])],
+plot!(pl_esc[1], [Δws[35]], [escape_times[35]],
     st=:scatter, mc=:green, ms=6, markershape=:utriangle)
 
+#=
 #add fit line with offset
 b, a = linreg(log10.(Δws), log10.(escape_times))
 plot!(pl_esc[1], Δws, 10 .^ (b-0.2) .* Δws .^a,ls=:dash,lc=:red)
+=#
 
 #--------------------------plot timeseries transition point--------------------------
 #inset 2
@@ -110,12 +113,17 @@ diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-3, adaptive=true, maxiters=1e8)
 u0 = rand(2N)
 ds = create_ds(u0, p; diffeq=diffeq)
 
-τ_tr = simple_transient_time(ds, u0; Tmax=4000, threshold=1.0,period_tol=1e-2,max_tol=1e-2)
+τ_tr = simple_transient_time(ds, u0; Tmax=4000, threshold=1.0,period_tol=1e-3,max_tol=1e-3)
 traj, t = trajectory(ds, τ_tr+100, u0; Ttr=0, Δt=1e-2)
 
 #plot time series 
 trajm = Matrix(traj)[:,1:2:end]
-plot!(pl_esc,inset=(1, bbox(0.13, 0.58, 0.35, 0.25)), subplot=3)
-plot!(pl_esc[3], t, trajm, legend=false, lw=0.5, xlims=(τ_tr - 40, τ_tr+20), ylims=(0, 40),
+plot!(pl_esc,inset=(1, bbox(0.13, 0.6, 0.5, 0.2)), subplot=3)
+plot!(pl_esc[3], t, trajm, legend=false, lw=0.5, xlims=(τ_tr-140, τ_tr+120), ylims=(0, 40),
     ylabel="", xlabel=L"t", yticks=[0,20,40], guidefontsize=15)
-annotate!(pl_esc[3], τ_tr - 50, 20, text(L"x_i", :gray10, :center, 15))
+
+#adjust limits
+plot!(pl_esc[3],xlims=(50,120))
+
+#add annotation
+annotate!(pl_esc[3], 36, 20, text(L"x_i", :gray10, :center, 18))

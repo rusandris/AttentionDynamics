@@ -37,40 +37,41 @@ ws_curve = params_rescaled_curve[:, 1]
 gs_curve = params_rescaled_curve[:, 2] * (N_small - 1)
 
 #gather g,w pairs (horizontal,curve)
-p_sets = [[gs_horizontal[i], ws_horizontal[i]] for i in 3:3]
-push!(p_sets, [gs_curve[1], ws_curve[1]], [gs_curve[3], ws_curve[3]])
+p_sets = [[gs_horizontal[i], ws_horizontal[i]] for i in 2:2]
+#push!(p_sets, [gs_curve[1], ws_curve[1]], [gs_curve[3], ws_curve[3]])
 
 
 #--------------------------------precompute trajectories-------------------------------------
 #settings of precomputed trajs
-T = 1000 #20000 #10000 #100 #5000
+T = 20000 #10000 #100 #5000
 Ttr = 500 #500
 Δt_traj = 1e-2 #5*1e-2
-nr_ics = 1 #number of initial conditions
+nr_ics = 10 #number of initial conditions
 
 #paths
 
 savedir_traj_root = "../../data/trajs_precomp_rescaled/"
-savedir_traj = savedir_traj_root * "wg_horizontal_and_curve_article_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
+savedir_traj = savedir_traj_root * "wg_horizontal_and_curve_B1B2B3B4C_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
 mkpath(savedir_traj)
 
-#phasediag_ids = ["B3"]
-phasediag_ids = ["B1","B2","B3","B4","B5"]
+#phasediag_ids = ["B2"]
+#phasediag_ids = ["B1","B2","B3","C","B4"]
+#phasediag_ids = ["C", "B3", "B4"]
 include("precompute_trajectories_rescaled.jl")
 
 #-------------------------------precompute lifetimes------------------------------------------
 #lifetime settings 
 k = 4
-chart_times = [0.01, 0.05, 0.1, 0.2] #2.0]
+chart_times = [0.01, 0.02, 0.1, 0.2, 1.0, 2.0] #2.0]
 
 #path
 data_dir_traj = savedir_traj
 savedir_lt_root = "../../data/lifetimes_precomp_rescaled/"
-savedir_lt = savedir_lt_root * "wg_horizontal_and_curve_article_k$(k)_Δt$(Δt_traj)_T$(T)/" #* "c2/" #"rp_rc/"
+savedir_lt = savedir_lt_root * "wg_horizontal_and_curve_B1B2B3B4C_k$(k)_Δt$(Δt_traj)_T$(T)/" #* "c2/" #"rp_rc/"
 mkpath(savedir_lt)
 
-p_values = [[1, 2, 3, 4, 5]] #[[3]]#
-p_names = ["B"]#["g", "w"] #["c"] #["rp", "rc"]
+#p_values = [[1, 2, 3, 4]] #[[3]]#
+#p_names = ["B", "C"]#["g", "w"] #["c"] #["rp", "rc"]
 
 writedlm(savedir_lt * "chart_times.txt", chart_times)
 #chart_times = [2.0]
