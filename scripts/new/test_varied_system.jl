@@ -108,10 +108,13 @@ for i in 1:N
 end
 
 ds_as = create_original_asymmetric_interaction(u0, (r, r, K, C, α0); diffeq=diffeq)
-
-traj_as, times_as = trajectory(ds_as, 50; Ttr=0, Δt=Δt)
+traj_as, times_as = trajectory(ds_as, T; Ttr=Ttr, Δt=Δt)
 trajm_as = Matrix(traj_as)[:, 1:2:end]
 
+plot(times_as, trajm_as[:, 1:2:end], legend=false,xlims=(600,630))
+
+
+#=
 rs = [6.0,8.0,10.0]
 p_sets_r = [[rs[i], rs[i]] for i in 1:length(rs)]
 nr_ics=10
@@ -124,8 +127,9 @@ precompute_trajectories(ds_as, nr_ics, p_sets_r, [1,2]; Δt=Δt_traj,
     ic_counter=ic_counter,
     filename="asymmetric_coupling_N$(N)_rp$(rs[2])_rp$(rs[2])_K$(K)_alpha$(α)_T$(T)_Ttr$(Ttr)_deltat$(Δt_traj).dat")
 
+=#
 
-chart_time = 0.5
+chart_time = 1.0
 k = 10
 int_act, time_segments = integrate_activity(trajm_as, collect(times_as), Int(chart_time / Δt))
 lts_as = get_lifetimes_integ(int_act, k)
@@ -133,8 +137,40 @@ lts_as = get_lifetimes_integ(int_act, k)
 thresh = 0.01
 
 lengths_act_as = activity_periods(trajm_as, thresh)
-pl_lt_as = histogram(lts_as, bins=nbins, xlabel=L"\tau", title=L"r_p=%$(r),r_c=%$(r),K=%$(K),c=%$(c),\alpha=%$(α0)")
+pl_lt_as = histogram(lts_as, bins=100, xlabel=L"\tau", 
+    title=L"r_p=%$(r),r_c=%$(r),K=%$(K),c=%$(c),\alpha=%$(α0)",
+    yaxis=:log10, xaxis=:log10)
 pl_ap_as = histogram(lengths_act_as, bins=nbins, xlabel=L"\tau_{active} \cdot \Delta t", title=L"r_p=%$(r),r_c=%$(r),K=%$(K),c=%$(c),\alpha=%$(α0)")
+
+#------------------try asymmetric coupling with varied delay---------------------
+
+#setup interaction matrix
+C = randn(N, N) .* 0.5 .+ 2.0
+for i in 1:N
+    C[i, i] = 0.0
+    null_idxs = rand(1:N, rand(50:250))
+    C[i, null_idxs] .= 0.0
+    #anti_idxs = rand(1:N, rand(1:50))
+    #C[i, anti_idxs] .= C[i, anti_idxs] .* (-1.0)
+end
+
+ds_asd = create_original_asymmetric_interaction_varied_delay(u0, (r, r, K, C, αs); diffeq=diffeq)
+traj_asd, times_asd = trajectory(ds_asd, 500; Ttr=500, Δt=Δt)
+trajm_asd = Matrix(traj_asd)[:, 1:2:end]
+
+plot(times_asd, trajm_asd[:, 1:2:end], legend=false, xlims=(900, 920))
+
+chart_time = 1.0
+k = 10
+int_act, time_segments = integrate_activity(trajm_asd, collect(times_asd), Int(chart_time / Δt))
+lts_asd = get_lifetimes_integ(int_act, k)
+
+thresh = 0.01
+
+lengths_act_asd = activity_periods(trajm_asd, thresh)
+pl_lt_asd = histogram(lts_asd, bins=100, xlabel=L"\tau",
+    title=L"r_p=%$(r),r_c=%$(r),K=%$(K),c=%$(c),\alpha=%$(α0)")
+pl_ap_asd = histogram(lengths_act_asd, bins=nbins, xlabel=L"\tau_{active} \cdot \Delta t", title=L"r_p=%$(r),r_c=%$(r),K=%$(K),c=%$(c),\alpha=%$(α0)")
 
 
 #------------------------------------make plots-------------------------------------------

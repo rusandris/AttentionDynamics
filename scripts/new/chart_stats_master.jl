@@ -45,7 +45,7 @@ gs_curve = params_rescaled_curve[:, 2] * (N_orig - 1)
 p_sets_r = [[rs[i],rs[i]] for i in 1:length(rs)]
 p_sets_c = [[cs[i]] for i in 1:length(cs)]
 
-
+#=
 #--------------------------------precompute trajectories-------------------------------------
 #settings of precomputed trajs
 T = 500 #10000 #100 #5000
@@ -62,21 +62,20 @@ savedir_traj = savedir_traj_root * "B1B2B3B4C_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
 mkpath(savedir_traj)
 
 include("precompute_trajectories.jl")
-
+=#
 
 #-------------------------------precompute lifetimes------------------------------------------
 #lifetime settings 
 k = 10
-chart_times = [0.002, 0.02, 0.2, 2.0] #2.0]
+chart_times = [0.1,0.5,1.0,2.0,3.0,5.0] #[2.0]
+chart_times = [5.0]
 
 #path
-data_dir_traj = savedir_traj
+data_dir_traj = "../../data/trajs_precomp_orig/horizontal_and_curve_article_test_Δt0.1_T5000_Ttr500/"
 savedir_lt_root = "../../data/lifetimes_precomp_orig/"
-savedir_lt = savedir_lt_root * "B1B2B3B4C_k$(k)_Δt$(Δt_traj)_T$(T)/" #* "c2/" #"rp_rc/"
+savedir_lt = savedir_lt_root * "horizontal_and_curve_article_test_k10_Δt0.1_T5000/"
 mkpath(savedir_lt)
-
-p_values = [[1, 2, 3, 4, 5]]
-p_names = ["B"]#["g", "w"] #["c"] #["rp", "rc"]
+writedlm(savedir_lt * "chart_times.txt", chart_times)
 
 include("precompute_lifetimes.jl")
 

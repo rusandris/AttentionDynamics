@@ -62,7 +62,8 @@ include("precompute_trajectories_rescaled.jl")
 #-------------------------------precompute lifetimes------------------------------------------
 #lifetime settings 
 k = 4
-chart_times = [0.01, 0.02, 0.1, 0.2, 1.0, 2.0] #2.0]
+chart_times = [0.01, 0.02, 0.1, 0.2, 0.5, 1.0, 2.0] #2.0]
+#chart_times = [0.5]
 
 #path
 data_dir_traj = savedir_traj

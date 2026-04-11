@@ -9,36 +9,20 @@ cd(@__DIR__)
 
 
 #-------------------big system (N=300)---------------------------------
+@info "Plotting chart lifetime distributions (N=300)"
 #basic parameters 
 N = 300
 k = 10
 
 #lifetime paths 
 #data_dir_lt = savedir_lt
-data_dir_lt_root = "../../../../../Dropbox/att_dyn/data/data_lifetimes/"
+data_dir_lt_root = "../../data/lifetimes_precomp_orig/"
 dirs_lifetimes = readdir(data_dir_lt_root)
-data_dir_lt = data_dir_lt_root * dirs_lifetimes[1] * "/"
-#chart_times = readdlm(data_dir_lt*"chart_times.txt") 
-chart_times = [0.1,0.5,1.0]
+data_dir_lt = data_dir_lt_root * "horizontal_and_curve_article_test_k10_Δt0.1_T5000/"
+chart_times = readdlm(data_dir_lt*"chart_times.txt") 
+chart_times = chart_times[[1,3,6]]
 
 #plot params
-
-#=
-#par labels 
-p_names_ltx = [L"B"] #["g", "w"] #[L"r_p", L"r_c"]
-
-#label names  
-par_labels = []
-for j in 1:length(p_values[1])
-    #put strings together
-    par_names = ""
-    for i in 1:length(p_values)
-        par_names *= p_names_ltx[i] * L"_%$(p_values[i][j])"
-    end
-    @show par_names
-    push!(par_labels, par_names)
-end
-=#
 
 par_labels = [L"B1", L"B2", L"B3", L"B4", L"C"]
 
@@ -51,11 +35,27 @@ include("../../plotting/paper_fig_plotters/plot_lifetime_distributions.jl")
 pl_loglog_N300 = pl_loglog_all
 pl_linlin_N300 = pl_linlin_all
 pl_loglin_N300 = pl_loglin_all
+plots_linhist_N300 = plots_linhist
+
+#simple histograms
+hist_xlims = [(0,50),(0,1000),(0,2000),(0,2000),(0,2000),
+    (0, 20), (0, 50), (0, 200), (0, 200), (0, 200),
+    (0, 20), (0, 20), (0, 20), (0, 20), (0, 20)]
+
+for i in 1:length(plots_linhist_N300)
+ plot!(plots_linhist_N300[i],xlims=hist_xlims[i])
+end
+
+pl_histN300 = plot(plots_linhist_N300..., layout=(3, 5), size=(1200, 600), 
+    dpi=300, legendfontsize=15, ylabel="count", xlabel=L"\tau",
+    bottom_margin=5Plots.mm, left_margin=4Plots.mm,
+    ytickfontsize=5)
 
 plot!(plots_loglog[1][1], left_margin=5Plots.mm)
 plots_uniform_binning_N300 = [plots_loglog[i][1] for i in 1:length(plots_loglog)]
 
 #-------------------small system (N=10)---------------------------------
+@info "Plotting chart lifetime distributions (N=10)"
 #basic parameters 
 N = 10
 k = 4
@@ -67,7 +67,7 @@ dirs_lifetimes = readdir(data_dir_lt_root)
 data_dir_lt = data_dir_lt_root * "/" * "wg_horizontal_and_curve_B1B2B3B4C_k4_Δt0.01_T20000/"
 
 chart_times = readdlm(data_dir_lt*"chart_times.txt")
-chart_times = chart_times[[1,3,4]]
+chart_times = chart_times[[1,3,5]]
 #plot params
 
 #=
@@ -98,6 +98,22 @@ include("../../plotting/paper_fig_plotters/plot_lifetime_distributions.jl")
 pl_loglog_N10 = pl_loglog_all
 pl_linlin_N10 = pl_linlin_all
 pl_loglin_N10 = pl_loglin_all
+plots_linhist_N10 = plots_linhist
+
+#simple histograms
+hist_xlims = [(0, 100), (0, 300), (0, 300), (0, 400), (20, 200),
+    (0, 20), (0, 50), (0, 50), (0, 50), (0, 20),
+    (0, 10), (0, 10), (0, 10), (0, 10), (0, 10)]
+
+
+for i in 1:length(plots_linhist_N10)
+    plot!(plots_linhist_N10[i], xlims=hist_xlims[i])
+end
+
+pl_histN10 = plot(plots_linhist_N10..., layout=(3, 5), size=(1200, 600), 
+    dpi=300, legendfontsize=15,ylabel="count",xlabel=L"\tau",
+    bottom_margin=5Plots.mm, left_margin=4Plots.mm,
+    ytickfontsize=5)
 
 plot!(plots_loglog[1][1],left_margin=5Plots.mm)
 plots_uniform_binning_N10 = [plots_loglog[i][1] for i in 1:length(plots_loglog)]
@@ -114,3 +130,5 @@ savedir_pl_root = "../../paper_figs/"
 savedir_pl = savedir_pl_root 
 #mkpath(savedir_pl)
 savefig(pl,savedir_pl * "chart_lifetime_distributions_N10_N300_diff_chart_times.png")
+savefig(pl_histN300, savedir_pl * "lifetime_chart_distribs_linhists_k$(k)_T$(T)_N300.png")
+savefig(pl_histN10, savedir_pl * "lifetime_chart_distribs_linhists_k$(k)_T$(T)_N10.png")

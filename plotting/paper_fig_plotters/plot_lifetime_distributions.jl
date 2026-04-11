@@ -12,6 +12,7 @@ files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time",
 
 ms = 6
 plots_loglog = [] #gather plots here
+plots_linhist = [] #gather plots here
 plots_linlin = [] #gather plots here
 plots_loglin = [] #gather plots here
 
@@ -27,12 +28,25 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         @show f
         #read lifetimes
         lifetimes = reinterpret(Int64, read(data_dir_lt * f)) 
+        @show length(lifetimes)
         color = colors[j]
 
         #--------------------------get binning for lifetimes--------------------------
 
         #preset bins, one for each possible \tau value (discrete)
-        bin_edges = minimum(lifetimes):1:maximum(lifetimes)
+        min_lt,max_lt = extrema(lifetimes)
+        bin_edges = min_lt:1:max_lt
+
+        #plot normal linear histogram plots
+        pl_hist = barhist(lifetimes; bins=100,
+            label="$(par_labels[j])",
+            title=L"\Delta t = %$(chart_times[i])",
+            color=color)
+        push!(plots_linhist, pl_hist)
+
+        #skip if distribution collapses into one or two bins 
+        length(bin_edges) <= 2 && continue
+
         h_discrete = fit(Histogram, Float64.(lifetimes), bin_edges)
         @show extrema(lifetimes)
         h_discrete = normalize(h_discrete; mode=:pdf)
