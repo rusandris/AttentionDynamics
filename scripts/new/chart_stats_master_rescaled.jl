@@ -47,7 +47,7 @@ T = 20000 #10000 #100 #5000
 Ttr = 500 #500
 Δt_traj = 1e-2 #5*1e-2
 nr_ics = 10 #number of initial conditions
-
+#=
 #paths
 
 savedir_traj_root = "../../data/trajs_precomp_rescaled/"
@@ -59,14 +59,17 @@ mkpath(savedir_traj)
 #phasediag_ids = ["C", "B3", "B4"]
 include("precompute_trajectories_rescaled.jl")
 
+=#
 #-------------------------------precompute lifetimes------------------------------------------
 #lifetime settings 
-k = 4
+k = 6
 chart_times = [0.01, 0.02, 0.1, 0.2, 0.5, 1.0, 2.0] #2.0]
 #chart_times = [0.5]
 
 #path
-data_dir_traj = savedir_traj
+#data_dir_traj = savedir_traj
+datadir_traj_root = "../../data/trajs_precomp_rescaled/"
+data_dir_traj = datadir_traj_root * "wg_horizontal_and_curve_B1B2B3B4C_Δt0.01_T20000_Ttr500/"
 savedir_lt_root = "../../data/lifetimes_precomp_rescaled/"
 savedir_lt = savedir_lt_root * "wg_horizontal_and_curve_B1B2B3B4C_k$(k)_Δt$(Δt_traj)_T$(T)/" #* "c2/" #"rp_rc/"
 mkpath(savedir_lt)

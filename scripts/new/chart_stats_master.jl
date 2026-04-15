@@ -67,8 +67,8 @@ include("precompute_trajectories.jl")
 #-------------------------------precompute lifetimes------------------------------------------
 #lifetime settings 
 k = 10
-chart_times = [0.1,0.5,1.0,2.0,3.0,5.0] #[2.0]
-chart_times = [5.0]
+chart_times = [0.1,0.2,0.5,1.0,2.0,3.0,5.0] #[2.0]
+chart_times = [0.2]
 
 #path
 data_dir_traj = "../../data/trajs_precomp_orig/horizontal_and_curve_article_test_Δt0.1_T5000_Ttr500/"
