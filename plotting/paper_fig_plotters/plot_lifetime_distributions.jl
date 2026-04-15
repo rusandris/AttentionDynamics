@@ -10,7 +10,8 @@ files = readdir(data_dir_lt)
 files_lifetime = files[findall(f -> occursin(".dat", f), files)]#[[13,14,15,16,1:12...]] #select binary only
 files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times]#select binary only
 
-ms = 6
+ms = 5
+αs = [0.3,0.3,0.3,0.3,1.0] 
 plots_loglog = [] #gather plots here
 plots_linhist = [] #gather plots here
 plots_linlin = [] #gather plots here
@@ -22,9 +23,11 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
     pls_linlin = [plot(), plot(), plot()]#init empty 3-plot
     pls_loglin = [plot(), plot(), plot()]#init empty 3-plot
 
+    ylabel = i == 1 ? L"\log(\textnormal{PDF})" : ""
+
     chart_time = chart_times[i]
     @show chart_time
-    for (j,f) in enumerate(fileset)
+    for (j,f) in enumerate(fileset[[1,3,4,5,2]])
         @show f
         #read lifetimes
         lifetimes = reinterpret(Int64, read(data_dir_lt * f)) 
@@ -53,12 +56,12 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         bins_discrete = h_discrete.edges[1][1:end-1]
         counts_discrete = h_discrete.weights
 
-        #=
+        
         #---------------exponential binning----------------
 
         #get exponential binning automatically adjusted for each
         bins_exp, counts_exp = autohist(lifetimes; m=1, nbins=nbins,mode=:pdf)
-
+    
         #---------------linear binning (coarse)----------------
 
         #get linear binning automatically adjusted for each
@@ -66,7 +69,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         h_lin = normalize(h_lin;mode=:pdf)
         bins_lin = h_lin.edges[1][1:end-1]
         counts_lin = h_lin.weights
-        =#
+        
 
         #--------------------------------make plots-------------------------------------------
 
@@ -74,13 +77,29 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         plot!(pls_loglog[1], log10.(bins_discrete), log10.(counts_discrete), 
             markershape=markershapes[j],#st=:scatter,
-            mc=color, markerstrokecolor=color,
+            mc=color, markerstrokecolor=:gray10,
+            markerstrokewidth=0.1,
             lc=color,
+            alpha = αs[j],
             dpi=300,
-            title=L"N = %$(N), k = %$(k), \Delta t = %$(chart_time)", ms=ms,
+            title=L"N = %$(N), k = %$(k), \Delta t = %$(chart_time)", 
+            ms=ms,
             label= par_labels[j],
             xlabel=L"\log(\tau)",
-            ylabel=L"\log(\textnormal{pdf})")
+            ylabel=ylabel)
+
+        #add linear guiding line
+        if i == 1 && j == 5
+            n_τ = length(bins_discrete)
+            linear_interval = round(Int, 0.05 * n_τ):round(Int, 0.15 * n_τ)
+
+            #vline!([log10.(bins_discrete[linear_interval[1]]), log10.(bins_discrete[linear_interval[end]])],ls=:dash)
+            b, a = linreg(log10.(bins_discrete[linear_interval]), log10.(counts_discrete[linear_interval]))
+            @show b,a
+
+            plot!(log10.(bins_discrete[linear_interval]), log10.(10 .^ (b+0.3) .* bins_discrete[linear_interval] .^ (-4)),
+                ls=:solid, lc=:red,lw=1.5, label=L"\tau ^{-4}", legendfontsize=15)
+        end
 
         plot!(pls_loglin[1], bins_discrete, log10.(counts_discrete),
             markershape=markershapes[j],#st=:scatter,
@@ -90,7 +109,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             title=L"N = %$(N), k = %$(k), \Delta t = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\tau",
-            ylabel=L"\log(\textnormal{pdf})")
+            ylabel=ylabel)
 
         plot!(pls_linlin[1], bins_discrete, counts_discrete,
             markershape=markershapes[j],#st=:scatter,
@@ -100,14 +119,13 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             title=L"N = %$(N), k = %$(k), \Delta t = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\tau",
-            ylabel=L"\textnormal{pdf}")
+            ylabel=ylabel)
         
         #show bin sizes 
         #plot!(pls[1],log10.(bins_discrete), fill(-11-j,length(bins_discrete)),
         #    markershape=:vline, st=:scatter,mc=color,ms=5,
         #    markerstrokewidth = 0.5,label="")
 
-        #=
 
         #--------------------plot exponential binning-------------------------- 
 
@@ -119,7 +137,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             title=L"\Delta t = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\log(\tau)",
-            ylabel=L"\log(\textnormal{pdf})")
+            ylabel=ylabel)
 
         plot!(pls_linlin[2], bins_exp[1:end-1], counts_exp,
             markershape=markershapes[j], #st=:scatter,
@@ -129,7 +147,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             title=L"\Delta t = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\tau",
-            ylabel=L"\textnormal{pdf}")
+            ylabel=ylabel)
 
         plot!(pls_loglin[2], bins_exp[1:end-1], log10.(counts_exp),
             markershape=markershapes[j], #st=:scatter,
@@ -139,7 +157,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             title=L"\Delta t = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\tau",
-            ylabel=L"\log(\textnormal{pdf})")
+            ylabel=ylabel)
 
         #show bin sizes 
         #plot!(pls[2], log10.(bins_exp), fill(-11-j, length(bins_exp)),
@@ -156,7 +174,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             title=L"\Delta t = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\log(\tau)",
-            ylabel=L"\log(\textnormal{pdf})")
+            ylabel=ylabel)
 
         plot!(pls_linlin[3], bins_lin, counts_lin,
             markershape=markershapes[j], #st=:scatter,
@@ -166,7 +184,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             title=L"\Delta t = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\tau",
-            ylabel=L"\textnormal{pdf}")
+            ylabel=ylabel)
 
         plot!(pls_loglin[3], bins_lin, log10.(counts_lin),
             markershape=markershapes[j], #st=:scatter,
@@ -176,14 +194,14 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             title=L"\Delta t = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\tau",
-            ylabel=L"\log(\textnormal{pdf})")
+            ylabel=ylabel)
 
         #show bin sizes 
         #plot!(pls[3], log10.(bins_lin), fill(-11-j, length(bins_lin)),
         #    markershape=:vline, st=:scatter, mc=color, ms=5,
         #    markerstrokewidth=0.5, label="")
 
-        =#
+        
     end
     push!(plots_loglog,pls_loglog)
     push!(plots_linlin, pls_linlin)

@@ -27,7 +27,7 @@ file_example = files_trajs[21]
 traj = Matrix(reshape(reinterpret(Float64, read(data_dir_traj * file_example)), data_shape))
 
 #decide timespan 
-tspan = (1,20)
+tspan = (10,20)
 tspan_end_idx = Int(tspan[end]/Δt)
 tspan_start_idx = Int(tspan[1]/Δt) + 1 
 tidxs = tspan_start_idx:tspan_end_idx
@@ -45,7 +45,7 @@ tint_idxs = tspan_start_intidx:tspan_end_intidx
 #------------------------------visualize charting process-----------------------------------
 
 #find out who is active in that timespan
-k = 10
+k = 50
 topk_idxs, _ = chart_stats(int_act_matrix[tint_idxs, :], k, 1)
 
 #count number of colors needed
@@ -134,7 +134,9 @@ annotate!(pl_topk, -1.5, 0.0, text(L"(c)", :gray10, :center, 18))
 
 plot!(pl_ts,ylims=(0.0,0.1),yticks=[0.0,0.05,0.1])
 plot!(pl_int_act, ylims=(0.0, 0.1), yticks=[0.0, 0.05, 0.1])
+plot!(pl_topk,xticks=[10,15,20],guidefontsize=25)
+
 
 pl = plot(pl_ts, pl_int_act, pl_topk, layout=(3, 1), size=(800, 600),dpi=300)
 
-savefig(pl,"../../paper_figs/chart_explanation_example.png")
+savefig(pl,"../../paper_figs/chart_explanation_example_shorter.png")

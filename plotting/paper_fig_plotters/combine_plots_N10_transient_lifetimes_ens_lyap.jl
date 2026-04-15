@@ -15,4 +15,4 @@ pl = plot(pl_lyap,pl_esc,layout=(1,2),size=(1200,400),
     bottom_margins=8Plots.mm,dpi=300)
 
 figs_dir = "../../paper_figs/"
-savefig(pl,figs_dir*"transient_chaos_N10_g45_ens1e3_Tmax1e5_ensemble_lyap_escape_times.png")
+savefig(pl,figs_dir*"transient_chaos_N10_g45_ens1e3_Tmax1e6_ensemble_lyap_escape_times_logdiffparam_cutoff.png")

@@ -8,9 +8,10 @@ cd(@__DIR__)
 
 #-------------------------read transient time files-------------------------------
 
-data_dir_root = "../../data/transient_lifetimes_from_ensembles_N10_g45_nens1000_Tmax1e5_merged_recalc_end_Tmax1e6/"
-data_dir = data_dir_root * "transient_lifetimes_from_ensembles_Tmax1e5_merged_recalc_end_Tmax1e6/"
-escape_time_files = readdir(data_dir)
+data_dir_root = "../../data/transient_lifetimes/"
+data_dir = data_dir_root * "transient_lifetimes_from_ensembles_logdiffparams_N10_g45_nens1000_Tmax1e5_merged_recalc_end_Tmax1e6/"
+escape_time_files_all = readdir(data_dir)
+escape_time_files = escape_time_files_all[2:end-2]
 
 #--------------------------make escape number curves----------------------------
 Δt_bin = 1.0
@@ -55,21 +56,28 @@ escape_times = [-1/s for s in slopes] #from fitting
  
 #-----------------------------------plot------------------------------------
 
+#cutoff 
+cutoff_idx = 40
 
-w_vals = readdlm(data_dir_root * "w_vals_transients_N10_g45_nens1000_Tmax1e5.txt")
+#w_vals = readdlm(data_dir_root * "w_vals_transients_N10_g45_nens1000_Tmax1e5.txt")
+w_vals = readdlm(data_dir * escape_time_files_all[end-1])[1:length(escape_time_files)]
 w_vals_valid = w_vals[valid_runs]
+Δws = reverse(readdlm(data_dir * escape_time_files_all[end])[1:length(escape_time_files)])
+
 w_NS = 0.329206866618409
-Δws = w_vals_valid .- w_NS
-Δlog_ws = log10.(w_vals_valid) .- log10(w_NS)
+
+
+#Δws = w_vals_valid .- w_NS
+#Δlog_ws = log10.(w_vals_valid) .- log10(w_NS)
 
 
 #plot escape time scaling
-pl_esc = plot(Δws, escape_times;
+pl_esc = plot(Δws[1:cutoff_idx], escape_times[1:cutoff_idx];
     xlabel=L"\Delta w", ylabel=L" \langle \tau_\mathrm{tr} \rangle", 
     xformatter=:auto,guidefontsize=20, widen=true,st=:scatter,
-    ms=3, legend_columns=2,legend=false,yscale=:log10,xscale=:log10,
-    mc=:gray20, markerstrokewidth=0.0, xlims=(0.0005, 0.15),
-    ylims=(1e2, 5*1e5),yticks = [1e2,1e3,1e4,1e5], 
+    ms=3, legend_columns=2,label="",yscale=:log10,xscale=:log10,
+    mc=:gray20, markerstrokewidth=0.0, xlims=(0.001, 0.10),
+    ylims=(1e2, 2*1e5),yticks = [1e2,1e3,1e4,1e5], legend=:bottomright,
     tickfontsize=10, xticks=[1e-4, 1e-3, 1e-2, 1e-1])
 
 
@@ -84,36 +92,38 @@ pl_esc = plot(Δlog_ws, log10.(escape_times);
 
 #-----------------------plot transient decay examples---------------------------
 #from individual parameters 
-Ne1,ts_e1 = transient_curves[25]
-Ne2, ts_e2 = transient_curves[30]
-Ne3, ts_e3 = transient_curves[35]
+idxs_param_example = [10,15,20]
+Ne1, ts_e1 = transient_curves[idxs_param_example[1]]
+Ne2, ts_e2 = transient_curves[idxs_param_example[2]]
+Ne3, ts_e3 = transient_curves[idxs_param_example[3]]
 
-plot!(inset=(1, bbox(0.17, 0.45, 0.35, 0.35)), subplot=2)
+plot!(inset=(1, bbox(0.17, 0.45, 0.3, 0.3)), subplot=2)
 plot!(pl_esc[2], ts_e1[1:end-1], Ne1[1:end-1], lc=:blue, yscale=:log10, legend=false,
-    ylabel=L"N_s(t)", xlabel=L"t", guidefontsize=15,yticks=[1e1,1e3,1e5], xticks=[0, 8000])
+    ylabel=L"N_s(t)", xlabel=L"t", guidefontsize=15,yticks=[1e1,1e3,1e5], xticks=[0, 30000])
 plot!(pl_esc[2], ts_e2[1:end-1], Ne2[1:end-1], lc=:orange, yscale=:log10)
 plot!(pl_esc[2], ts_e3[1:end-1], Ne3[1:end-1], lc=:green, yscale=:log10)
 
 #replot example points with colors 
-plot!(pl_esc[1], [Δws[25]], [escape_times[25]],
-    st=:scatter,mc=:blue,ms=8,markershape=:diamond)
+plot!(pl_esc[1], [Δws[idxs_param_example[1]]], [escape_times[idxs_param_example[1]]],
+    st=:scatter,mc=:blue,ms=8,markershape=:diamond,label="")
 
-plot!(pl_esc[1], [Δws[30]], [escape_times[30]],
-    st=:scatter, mc=:orange, ms=6, markershape=:rect)
+plot!(pl_esc[1], [Δws[idxs_param_example[2]]], [escape_times[idxs_param_example[2]]],
+    st=:scatter, mc=:orange, ms=6, markershape=:rect,label="")
 
-plot!(pl_esc[1], [Δws[35]], [escape_times[35]],
-    st=:scatter, mc=:green, ms=6, markershape=:utriangle)
+plot!(pl_esc[1], [Δws[idxs_param_example[3]]], [escape_times[idxs_param_example[3]]],
+    st=:scatter, mc=:green, ms=6, markershape=:utriangle,label="")
 
 
 #add fit line with offset
-b, a = linreg(log10.(Δws[1:end-20]), log10.(escape_times[1:end-20]))
-plot!(pl_esc[1], Δws[1:end-20], 10 .^ (b + 0.3) .* Δws[1:end-20] .^ a, ls=:dash, lc=:red)
+b, a = linreg(log10.(Δws[1:end-35]), log10.(escape_times[1:end-35]))
+plot!(pl_esc[1], Δws[1:end-35], 10 .^ (b+0.3) .* Δws[1:end-35] .^ (-3.0), 
+    ls=:dash, lc=:red, label=L"\Delta w ^{-3}", legendfontsize=15)
 
 
 #--------------------------plot timeseries transition point--------------------------
 #inset 2
 N=10
-w_example_ts = w_vals[25] 
+w_example_ts = w_vals[idxs_param_example[1]]
 
 p = [45, w_example_ts, N]
 u0 = rand(2N)
