@@ -4,6 +4,7 @@ using StatsBase
 using AttentionDynamics
 import FractalDimensions: linreg
 using LinearAlgebra
+using CurveFit
 cd(@__DIR__)
 
 #-------------------------combine chart lifetime distributions---------------------------------
@@ -19,17 +20,18 @@ k = 10
 #data_dir_lt = savedir_lt
 data_dir_lt_root = "../../data/lifetimes_precomp_orig/"
 dirs_lifetimes = readdir(data_dir_lt_root)
-data_dir_lt = data_dir_lt_root * "horizontal_and_curve_article_test_k10_Δt0.1_T5000/"
+data_dir_lt = data_dir_lt_root * "horizontal_and_curve_article_test_k10_Δt0.02_T500/"
+#data_dir_lt = data_dir_lt_root * "horizontal_and_curve_article_test_k10_Δt0.1_T5000/"
+
 chart_times = readdlm(data_dir_lt*"chart_times.txt") 
-chart_times = chart_times[[1,2,5]]
-T = 5000
+chart_times = chart_times[[1,3,6]]
+T = 500
 #plot params
-
 par_labels = [L"B1", L"B2", L"B3", L"B4", L"C"][[1,3,4,5,2]]
-
-colors = [:cyan :lime :gray10 :blue :darkgreen][[1,3,4,5,2]]
+colors = [:cyan :lime :blue :darkgreen :gray10][[1, 3, 4, 5, 2]]
 markershapes = [:rect :circle :utriangle :ltriangle :rtriangle][[1, 3, 4, 5, 2]]
 nbins = 30 #[25,10]
+plot_fits = true
 
 include("../../plotting/paper_fig_plotters/plot_lifetime_distributions.jl")
 
@@ -66,12 +68,13 @@ k = 4
 data_dir_lt_root = "../../data/lifetimes_precomp_rescaled/"
 dirs_lifetimes = readdir(data_dir_lt_root)
 data_dir_lt = data_dir_lt_root * "/" * "wg_horizontal_and_curve_B1B2B3B4C_k4_Δt0.01_T20000/"
-
 chart_times = readdlm(data_dir_lt*"chart_times.txt")
 chart_times = chart_times[[2,4,7]]
-#plot params
 
+#plot params
 nbins = 30 #[25,10]
+plot_fits = false
+
 include("../../plotting/paper_fig_plotters/plot_lifetime_distributions.jl")
 
 pl_loglog_N10 = pl_loglog_all
@@ -83,7 +86,6 @@ plots_linhist_N10 = plots_linhist
 hist_xlims = [(0, 100), (0, 300), (0, 300), (0, 400), (20, 200),
     (0, 20), (0, 50), (0, 50), (0, 50), (0, 20),
     (0, 10), (0, 10), (0, 10), (0, 10), (0, 10)]
-
 
 for i in 1:length(plots_linhist_N10)
     plot!(plots_linhist_N10[i], xlims=hist_xlims[i])
@@ -99,7 +101,7 @@ plots_uniform_binning_N10 = [plots_loglog[i][1] for i in 1:length(plots_loglog)]
  
 #combine N=300, N=10 plots 
 pl = plot(plots_uniform_binning_N10..., plots_uniform_binning_N300...,
-    layout=(2,3),size=(1200,600),legend=:bottomleft,bottom_margin=8Plots.mm,
+    layout=(2,3),size=(1200,600),legend=:topright,bottom_margin=8Plots.mm,
     legendfontsize=12, tickfontsize=10, guidefontsize=18, dpi=300)
 
 
@@ -108,6 +110,6 @@ pl = plot(plots_uniform_binning_N10..., plots_uniform_binning_N300...,
 savedir_pl_root = "../../paper_figs/"
 savedir_pl = savedir_pl_root 
 #mkpath(savedir_pl)
-savefig(pl,savedir_pl * "chart_lifetime_distributions_N10_N300_diff_chart_times.png")
-savefig(pl_histN300, savedir_pl * "lifetime_chart_distribs_linhists_k$(k)_T$(T)_N300.png")
-savefig(pl_histN10, savedir_pl * "lifetime_chart_distribs_linhists_k$(k)_T$(T)_N10.png")
+savefig(pl, savedir_pl * "chart_lifetime_distributions_N10_N300_diff_chart_times_Δt=0.02.png")
+savefig(pl_histN300, savedir_pl * "lifetime_chart_distribs_linhists_k$(k)_T$(T)_N300_Δt=0.02.png")
+savefig(pl_histN10, savedir_pl * "lifetime_chart_distribs_linhists_k$(k)_T$(T)_N10_Δt=0.01.png")

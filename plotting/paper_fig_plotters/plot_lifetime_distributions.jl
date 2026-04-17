@@ -16,6 +16,8 @@ plots_loglog = [] #gather plots here
 plots_linhist = [] #gather plots here
 plots_linlin = [] #gather plots here
 plots_loglin = [] #gather plots here
+lifetimes_stats = []
+#plot_fits = false
 
 for (i, fileset) in enumerate(files_lifetime_by_time)
 
@@ -31,7 +33,6 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         @show f
         #read lifetimes
         lifetimes = reinterpret(Int64, read(data_dir_lt * f)) 
-        @show length(lifetimes)
         color = colors[j]
 
         #--------------------------get binning for lifetimes--------------------------
@@ -50,8 +51,14 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         #skip if distribution collapses into one or two bins 
         length(bin_edges) <= 2 && continue
 
+        #lifetime stats
+        nr_lifetimes =  length(lifetimes)
+
+        @show max_lt, nr_lifetimes
+        push!(lifetimes_stats, ["$(par_labels[j])", chart_time,max_lt, nr_lifetimes])
+
+        #hist
         h_discrete = fit(Histogram, Float64.(lifetimes), bin_edges)
-        @show extrema(lifetimes)
         h_discrete = normalize(h_discrete; mode=:pdf)
         bins_discrete = h_discrete.edges[1][1:end-1]
         counts_discrete = h_discrete.weights
@@ -88,17 +95,34 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             xlabel=L"\log(\tau)",
             ylabel=ylabel)
 
-        #add linear guiding line
-        if i == 1 && j == 5
+        #add fits, guiding lines
+        if plot_fits && i == 3 && j == 5
+
+            #linear 
             n_τ = length(bins_discrete)
-            linear_interval = round(Int, 0.05 * n_τ):round(Int, 0.15 * n_τ)
+            linear_interval = round(Int, 0.15 * n_τ):round(Int, 0.7 * n_τ)
 
             #vline!([log10.(bins_discrete[linear_interval[1]]), log10.(bins_discrete[linear_interval[end]])],ls=:dash)
             b, a = linreg(log10.(bins_discrete[linear_interval]), log10.(counts_discrete[linear_interval]))
             @show b,a
 
-            plot!(log10.(bins_discrete[linear_interval]), log10.(10 .^ (b+0.3) .* bins_discrete[linear_interval] .^ (-4)),
-                ls=:solid, lc=:red,lw=1.5, label=L"\tau ^{-4}", legendfontsize=15)
+            plot!(log10.(bins_discrete[linear_interval]), log10.(10 .^ (b) .* bins_discrete[linear_interval] .^ (a)),
+                ls=:dot, lc=:gray10,lw=2, label=L"\propto \tau ^{-6.4}", legendfontsize=15)
+
+        end
+
+        #add higher order fit
+        if plot_fits && i == 1 && j == 5
+            n_τ = length(bins_discrete) 
+            interval = 1:round(Int, 0.055 * n_τ)
+            #vline!([log10.(bins_discrete[quad_interval[1]]), log10.(bins_discrete[quad_interval[end]])], ls=:dash)
+            fn(a, x) = @. a[1] + a[2] * x^3
+            param_guesses = [1.0,-1.0]
+            prob = NonlinearCurveFitProblem(fn, param_guesses, log10.(bins_discrete[interval]), log10.(counts_discrete[interval]))
+            sol = solve(prob)
+            ps_fit = sol.u
+            plot!(log10.(bins_discrete[interval]), fn(ps_fit,log10.(bins_discrete[interval])),
+                ls=:dot, lc=:gray10, lw=2, label=L"\propto \tau^3", legendfontsize=15)
         end
 
         plot!(pls_loglin[1], bins_discrete, log10.(counts_discrete),

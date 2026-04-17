@@ -23,7 +23,6 @@ writedlm(savedir * "params_c.txt", cs)
 writedlm(savedir*"params_rp_rc_K_α_N.txt", [rp, rc, K, α, N_orig])
 writedlm(savedir*"params_w_g.txt", hcat(ws_horizontal,gs_horizontal))
 
-
 #------------------small system alpha curve-------------------
 #alpha curve in terms of g(w)
 #same as when r changes (rp=rc=r)
