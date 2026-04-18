@@ -10,8 +10,8 @@ cd(@__DIR__)
 
 #setup system 
 
-N = 300
-
+#N = 300
+#N = 10
 #------------------------------solver settings----------------------------------
 dtmax = 1e-2 #5*1e-2
 diffeq = (alg=Tsit5(), dt=1e-3, dtmax=dtmax, adaptive=true, maxiters=1e8)
