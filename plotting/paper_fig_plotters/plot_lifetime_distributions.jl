@@ -25,7 +25,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
     pls_linlin = [plot(), plot(), plot()]#init empty 3-plot
     pls_loglin = [plot(), plot(), plot()]#init empty 3-plot
 
-    ylabel = i == 1 ? L"\log(\textnormal{PDF})" : ""
+    ylabel = i == 1 ? L"\log(p_{\Delta t}(\tau))" : ""
 
     chart_time = chart_times[i]
     @show chart_time
@@ -100,21 +100,22 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
             #linear 
             n_τ = length(bins_discrete)
-            linear_interval = round(Int, 0.15 * n_τ):round(Int, 0.7 * n_τ)
+            linear_interval = round(Int, 0.05 * n_τ):round(Int, 0.6 * n_τ)
 
             #vline!([log10.(bins_discrete[linear_interval[1]]), log10.(bins_discrete[linear_interval[end]])],ls=:dash)
             b, a = linreg(log10.(bins_discrete[linear_interval]), log10.(counts_discrete[linear_interval]))
             @show b,a
+            a_round = round(a;digits=3)
 
             plot!(log10.(bins_discrete[linear_interval]), log10.(10 .^ (b) .* bins_discrete[linear_interval] .^ (a)),
-                ls=:dot, lc=:gray10,lw=2, label=L"\propto \tau ^{-6.4}", legendfontsize=15)
+                ls=:dot, lc=:gray10, lw=2, label=L"\propto \tau ^{%$(a_round)}", legendfontsize=15)
 
         end
 
         #add higher order fit
         if plot_fits && i == 1 && j == 5
             n_τ = length(bins_discrete) 
-            interval = 1:round(Int, 0.055 * n_τ)
+            interval = 1:round(Int, 0.02 * n_τ)
             #vline!([log10.(bins_discrete[quad_interval[1]]), log10.(bins_discrete[quad_interval[end]])], ls=:dash)
             fn(a, x) = @. a[1] + a[2] * x^3
             param_guesses = [1.0,-1.0]
@@ -239,7 +240,7 @@ n_ct = length(chart_times)
 plots_reorder_loglog = [plots_loglog[i][j] for j in 1:3 for i in 1:n_ct]
 xlimits = (0.0, 3.2); ylimits = (-12.0, 0.0);
 pl_loglog_all = plot(plots_reorder_loglog..., layout=(3, n_ct), size=(1200, 800),xlims=xlimits,#ylims=ylimits,
-    plot_title=L"N=%$N,k=%$k", left_margin=5Plots.mm,legend=:topright,legendfontsize=8,dpi=300)
+    plot_title=L"N=%$N,k=%$k", left_margin=7Plots.mm,legend=:topright,legendfontsize=8,dpi=300)
 
 #---------------------------linlin-------------------------
 plots_reorder_linlin = [plots_linlin[i][j] for j in 1:3 for i in 1:n_ct]

@@ -19,8 +19,10 @@ Ns = [3,4,5]
 #--------------------------------plot attractor finding----------------------------
 lcolors = [logocolors.red,logocolors.green,logocolors.purple]
 markershapes = [:circle,:dtriangle,:utriangle]
+markercolors = [:lightblue, :orange, :darkorange4 ]
 pl_atr = plot(;ylabel="# attractors",xlabel="# initial conditions",
     legend=:bottomright,legend_columns=-1,DEFAULTS...,legendfontsize=legend_fontsize+5)
+
 
 for (i,N) in enumerate(Ns)
 
@@ -29,7 +31,7 @@ for (i,N) in enumerate(Ns)
     nr_atr_max = factorial(Ns[i]-1)
     annotate!(35, nr_atr_max*1.2, text(L"(N-1)! = %$nr_atr_max", :gray10, :center, 28))
     #plot!(nr_atrs_avg ./ length(resu   lts),lw=4,lc=lcolors[i],label=L"N=%$(Ns[i])")
-    plot!(nr_atrs_avg[1:3:end], ms=8, st=:scatter, lc=:gray10,mc=:gray10,  
+    plot!(nr_atrs_avg[1:3:end], ms=8, st=:scatter, lc=:gray10, mc=markercolors[i],
         markershape=markershapes[i], label=L"N=%$(Ns[i])")
     hline!([nr_atr_max],lw=3,ls=:dash,lc=:gray10,label="")
 

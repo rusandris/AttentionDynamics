@@ -20,12 +20,12 @@ k = 10
 #data_dir_lt = savedir_lt
 data_dir_lt_root = "../../data/lifetimes_precomp_orig/"
 dirs_lifetimes = readdir(data_dir_lt_root)
-data_dir_lt = data_dir_lt_root * "horizontal_and_curve_article_test_k10_Δt0.02_T500/"
-#data_dir_lt = data_dir_lt_root * "horizontal_and_curve_article_test_k10_Δt0.1_T5000/"
+data_dir_lt = data_dir_lt_root * "chart_lifetimes_B1B2B3B4C_Cmod34_k10_Δt0.02_T1000_Ttr2000/"
+#data_dir_lt = data_dir_lt_root * "horizontal_and_curve_article_test_k10_Δt0.02_T500/"
 
 chart_times = readdlm(data_dir_lt*"chart_times.txt") 
 chart_times = chart_times[[1,3,6]]
-T = 500
+T = 1000
 #plot params
 par_labels = [L"B1", L"B2", L"B3", L"B4", L"C"][[1,3,4,5,2]]
 colors = [:cyan :lime :blue :darkgreen :gray10][[1, 3, 4, 5, 2]]
@@ -65,11 +65,11 @@ k = 4
 
 #lifetime paths 
 #data_dir_lt = savedir_lt
-data_dir_lt_root = "../../data/lifetimes_precomp_rescaled/"
+data_dir_lt_root = "../../data/lifetimes_precomp_orig_N10/"
 dirs_lifetimes = readdir(data_dir_lt_root)
-data_dir_lt = data_dir_lt_root * "/" * "wg_horizontal_and_curve_B1B2B3B4C_k4_Δt0.01_T20000/"
+data_dir_lt = data_dir_lt_root * "/" * "B1B2B3B4C_N10_Δt0.01_T5000_Ttr1000/"
 chart_times = readdlm(data_dir_lt*"chart_times.txt")
-chart_times = chart_times[[2,4,7]]
+chart_times = chart_times[[1,3,6]]
 
 #plot params
 nbins = 30 #[25,10]
@@ -110,6 +110,6 @@ pl = plot(plots_uniform_binning_N10..., plots_uniform_binning_N300...,
 savedir_pl_root = "../../paper_figs/"
 savedir_pl = savedir_pl_root 
 #mkpath(savedir_pl)
-savefig(pl, savedir_pl * "chart_lifetime_distributions_N10_N300_diff_chart_times_Δt=0.02.png")
-savefig(pl_histN300, savedir_pl * "lifetime_chart_distribs_linhists_k$(k)_T$(T)_N300_Δt=0.02.png")
-savefig(pl_histN10, savedir_pl * "lifetime_chart_distribs_linhists_k$(k)_T$(T)_N10_Δt=0.01.png")
+savefig(pl, savedir_pl * "chart_lifetime_distributions_N10_N300_orig_params_diff_chart_times_Δt=0.02_T1000_Ttr2000_C34.png")
+savefig(pl_histN300, savedir_pl * "lifetime_chart_distribs_linhists_orig_params_k$(k)_T$(T)_N300_Δt=0.02_T1000_Ttr2000_C34.png")
+savefig(pl_histN10, savedir_pl * "lifetime_chart_distribs_linhists_orig_params_k$(k)_T$(T)_N10_Δt=0.02_T1000_Ttr2000_C34.png")

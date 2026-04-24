@@ -37,7 +37,7 @@ pl_lyaps = plot_phase_diagram(lyap_vals, ws_phasediag, gs_phasediag, N;
     guidefontsize=guide_fontsize_medium,
     xguidefontsize=guide_fontsize_large,
     colorbar_title="",
-    colorbar_ticks = [-0.5,0.0,0.5],
+    colorbar = false,
     x_ticks = [0.0, 0.5, 1.0])
 
 
@@ -71,7 +71,8 @@ pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws_phasediag, gs_phasedia
     guidefontsize=guide_fontsize_medium,
     xguidefontsize=guide_fontsize_large,
     colorbar_title="",
-    colorbar_ticks=[-0.7, 0.0, 0.7],
+    legend = false,
+    colorbar = false,
     x_ticks=[0.0, 0.5, 1.0])
 
 
@@ -162,9 +163,17 @@ plot!([w_B4 w_B5], [g_B4 g_B5],
 annotate!(w_B4 + 0.08, g_B4 - 0.5, text(L"B_3", :blue, :center, annot_size))
 annotate!(w_B5, g_B5 + 0.5, text(L"B_4", :darkgreen, :left, annot_size))
 
+#add colorbar
+cbar_range = [-0.7:0.01:0.7;]
+pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [-0.5,0.0,0.5], 
+    c=HEATMAP_DEFAULTS.c, fg_color=:gray10, colorbar=false, xaxis=false, 
+    ymirror=true, left_margin=-6Plots.mm,tickfontsize=tick_fontsize_large-5)
 
+#conbine heatmap with the separate colorbar
+l = @layout [a{0.95w} b]
+pl = plot!(pl_lyaps_filled, pl_cbar, layout=l, tick_direction=:out)
 
-savefig(pl_lyaps_filled, figs_dir * "N10_phasediagram_extended5_80x80_filled_Ttr_10000_" * "labeled_horizontal_alpha_curve_article_params.png")
+savefig(pl, figs_dir * "N10_phasediagram_extended5_80x80_filled_Ttr_10000_" * "labeled_horizontal_alpha_curve_article_params.png")
 
 
 #=
