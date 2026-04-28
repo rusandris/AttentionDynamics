@@ -10,14 +10,19 @@ files = readdir(data_dir_lt)
 files_lifetime = files[findall(f -> occursin(".dat", f), files)]#[[13,14,15,16,1:12...]] #select binary only
 files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times]#select binary only
 
-ms = 5
-αs = [0.3,0.3,0.3,0.3,1.0] 
+ms = 6
+linealphas = [0.3,0.3,0.3,1.0] 
 plots_loglog = [] #gather plots here
 plots_linhist = [] #gather plots here
 plots_linlin = [] #gather plots here
 plots_loglin = [] #gather plots here
 lifetimes_stats = []
 #plot_fits = false
+
+#fit curves
+quadratic(a, x) = @. a[1] + a[2] * x  + a[3] * x^2
+cubic(a, x) = @. a[1] + a[2] * x^3
+
 
 for (i, fileset) in enumerate(files_lifetime_by_time)
 
@@ -29,7 +34,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
     chart_time = chart_times[i]
     @show chart_time
-    for (j,f) in enumerate(fileset[[1,3,4,5,2]])
+    for (j,f) in enumerate(fileset[[1,3,4,2]])
         @show f
         #read lifetimes
         lifetimes = reinterpret(Int64, read(data_dir_lt * f)) 
@@ -49,7 +54,8 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         push!(plots_linhist, pl_hist)
 
         #skip if distribution collapses into one or two bins 
-        length(bin_edges) <= 2 && continue
+        @show length(bin_edges)
+        length(bin_edges) < 2 && continue
 
         #lifetime stats
         nr_lifetimes =  length(lifetimes)
@@ -83,11 +89,11 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         #--------------------plot uniform discrete binning-------------------------- 
 
         plot!(pls_loglog[1], log10.(bins_discrete), log10.(counts_discrete), 
-            markershape=markershapes[j],#st=:scatter,
+            markershape=markershapes[j],st=:scatter,
             mc=color, markerstrokecolor=:gray10,
             markerstrokewidth=0.1,
             lc=color,
-            alpha = αs[j],
+            alpha = 1,
             dpi=300,
             title=L"N = %$(N), k = %$(k), \Delta t = %$(chart_time)", 
             ms=ms,
@@ -95,8 +101,9 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             xlabel=L"\log(\tau)",
             ylabel=ylabel)
 
+        n_τ = length(bins_discrete)
         #add fits, guiding lines
-        if plot_fits && i == 3 && j == 5
+        if plot_fits && i == 3 && j == length(par_labels)
 
             #linear 
             n_τ = length(bins_discrete)
@@ -107,27 +114,38 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             @show b,a
             a_round = round(a;digits=3)
 
-            plot!(log10.(bins_discrete[linear_interval]), log10.(10 .^ (b) .* bins_discrete[linear_interval] .^ (a)),
-                ls=:dot, lc=:gray10, lw=2, label=L"\propto \tau ^{%$(a_round)}", legendfontsize=15)
+            plot!(log10.(bins_discrete[linear_interval]), log10.(10 .^ (b) .* bins_discrete[linear_interval] .^ (-4)),
+                ls=:dot, lc=:gray10, lw=2, label=L"\propto \tau ^{-4}", legendfontsize=15)
+
+        end
+
+        if plot_fits && i == 3 && j == 3
+            #quadratic 
+            interval = 1:round(Int, 0.99 * n_τ)
+            param_guesses = [1.0, 1.0, -1.0]
+            prob = NonlinearCurveFitProblem(quadratic, param_guesses, log10.(bins_discrete[interval]), log10.(counts_discrete[interval]))
+            sol = solve(prob)
+            ps_fit = sol.u
+            xs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
+            plot!(xs_fit, quadratic(ps_fit, xs_fit),
+                ls=:dot, lc=:gray50, lw=2, label=L"\propto \tau^2", legendfontsize=15)
 
         end
 
         #add higher order fit
-        if plot_fits && i == 1 && j == 5
-            n_τ = length(bins_discrete) 
+        if plot_fits && i == 1 && j == length(par_labels)
             interval = 1:round(Int, 0.02 * n_τ)
             #vline!([log10.(bins_discrete[quad_interval[1]]), log10.(bins_discrete[quad_interval[end]])], ls=:dash)
-            fn(a, x) = @. a[1] + a[2] * x^3
             param_guesses = [1.0,-1.0]
-            prob = NonlinearCurveFitProblem(fn, param_guesses, log10.(bins_discrete[interval]), log10.(counts_discrete[interval]))
+            prob = NonlinearCurveFitProblem(cubic, param_guesses, log10.(bins_discrete[interval]), log10.(counts_discrete[interval]))
             sol = solve(prob)
             ps_fit = sol.u
-            plot!(log10.(bins_discrete[interval]), fn(ps_fit,log10.(bins_discrete[interval])),
+            plot!(log10.(bins_discrete[interval]), cubic(ps_fit,log10.(bins_discrete[interval])),
                 ls=:dot, lc=:gray10, lw=2, label=L"\propto \tau^3", legendfontsize=15)
         end
 
         plot!(pls_loglin[1], bins_discrete, log10.(counts_discrete),
-            markershape=markershapes[j],#st=:scatter,
+            markershape=markershapes[j],st=:scatter,
             mc=color, markerstrokecolor=color,
             lc=color,
             dpi=300,
@@ -137,7 +155,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             ylabel=ylabel)
 
         plot!(pls_linlin[1], bins_discrete, counts_discrete,
-            markershape=markershapes[j],#st=:scatter,
+            markershape=markershapes[j],st=:scatter,
             mc=color, markerstrokecolor=color,
             lc=color,
             dpi=300,

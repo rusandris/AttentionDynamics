@@ -27,7 +27,7 @@ file_example = files_trajs[21]
 traj = Matrix(reshape(reinterpret(Float64, read(data_dir_traj * file_example)), data_shape))
 
 #decide timespan 
-tspan = (10,20)
+tspan = (10,30)
 tspan_end_idx = Int(tspan[end]/Δt)
 tspan_start_idx = Int(tspan[1]/Δt) + 1 
 tidxs = tspan_start_idx:tspan_end_idx
@@ -85,7 +85,7 @@ pl_int_act = plot(t_int[tint_idxs], int_act_matrix[tint_idxs, idxs_active],
     markerstrokewiΔth=0.0, markerstrokecolor=colors',
     ylabel = L"\tilde{L}_i(t,\Delta t)",xlabel="",
     legend=false, tickfontsize=6, guidefontsize=15,
-    left_margin=5Plots.mm, xformatter=:none)
+    left_margin=7Plots.mm, xformatter=:none)
 
 #ylabel = L"\int_{Δt_i}^{Δt_{i+1}} L_i(t)Δt"
 #add vertical lines 
@@ -95,14 +95,14 @@ vline!(pl_int_act, t_int[tint_idxs], ls=:dash, lc=:gray50, la=0.5)
 plot!(t_int[tint_idxs], int_act_matrix[tint_idxs, idxs_inactive],
     lc=:gray50, mc=:gray50, lw=1,
     legend=false, tickfontsize=10, guidefontsize=15,
-    left_margin=5Plots.mm, xformatter=:none)
+    left_margin=7Plots.mm, xformatter=:none)
 
 #plot charts and ranks
 pl_topk = plot(legend=false,dpi=300,
-    ylabel="ranks",xlabel=L"t",guidefontsize=18,
-    left_margin=5Plots.mm,bottom_margin=6Plots.mm,
+    ylabel="ranks",xlabel=L"t",guidefontsize=12,
+    left_margin=7Plots.mm,bottom_margin=8Plots.mm,
     yflip=true, yticks=[1:k;], ylims=(0, 5+0.5),
-    tickfontsize=15)
+    tickfontsize=12)
 
 cons_occ = consecutive_occurrences(topk_idxs)
 
@@ -128,15 +128,16 @@ end
 
 
 #add fig labels
-annotate!(pl_ts, -1.5, 0.1, text(L"(a)", :gray10, :center, 18))
-annotate!(pl_int_act, -1.5, 0.1, text(L"(b)", :gray10, :center, 18))
-annotate!(pl_topk, -1.5, 0.0, text(L"(c)", :gray10, :center, 18))
+x_annot = 8
+annotate!(pl_ts, x_annot, 0.11, text(L"(a)", :gray10, :center, 18))
+annotate!(pl_int_act, x_annot, 0.12, text(L"(b)", :gray10, :center, 18))
+annotate!(pl_topk, x_annot, -0.2, text(L"(c)", :gray10, :center, 18))
 
-plot!(pl_ts,ylims=(0.0,0.1),yticks=[0.0,0.05,0.1])
-plot!(pl_int_act, ylims=(0.0, 0.1), yticks=[0.0, 0.05, 0.1])
-plot!(pl_topk,xticks=[10,15,20],guidefontsize=25)
+plot!(pl_ts,ylims=(0.0,0.11),yticks=[0.0,0.05,0.1])
+plot!(pl_int_act, ylims=(0.0, 0.11), yticks=[0.0, 0.05, 0.1])
+plot!(pl_topk,xticks=[10:5:tspan[end];],guidefontsize=18)
 
 
-pl = plot(pl_ts, pl_int_act, pl_topk, layout=(3, 1), size=(800, 600),dpi=300)
+pl = plot(pl_ts, pl_int_act, pl_topk, layout=(3, 1), size=(1200, 450),dpi=300)
 
 savefig(pl,"../../paper_figs/chart_explanation_example_shorter.png")

@@ -64,7 +64,7 @@ x_idx_WTA = findfirst(x->x>1.0,traj_WTA[end])
 plots = []
 colors = collect(Colors.JULIA_LOGO_COLORS)[[1, 2, 4]]  #use three colors
 titles = [L"A",L"B_2",L"C",L"D"]
-title_colors = [:orange :lime :gray15 :gray80]
+title_colors = [:orangered :lime :gray15 :gray80]
 
 
 guidefontsize = 24

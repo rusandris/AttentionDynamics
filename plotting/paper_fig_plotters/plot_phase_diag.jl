@@ -8,7 +8,8 @@ include("../../plotting/plot_functions/lyapunov.jl")
 #plot settings 
 annot_size = 20
 ms = 6
-
+msw = 1.0
+logocolors = Colors.JULIA_LOGO_COLORS
 #-------------------------plot phase diagram---------------------
 
 #--------------read lyaps--------------------
@@ -103,7 +104,7 @@ gs_curve = params_rescaled_curve[:, 2]
 
 plot!([ws_horizontal[1]], [gs_horizontal[1]],
     ms=ms, st=:scatter, mc=:cyan,
-    markerstrokewidth=0.0,markershape=:dtriangle,
+    markerstrokewidth=msw,markershape=:diamond,
     label=L"c=%$(cs[1]), r=%$(rs[2])") 
 
 annotate!(ws_horizontal[1] + 0.05, g_horizontal * 0.9, text(L"B_1", :cyan, :center, annot_size))
@@ -111,14 +112,14 @@ annotate!(ws_horizontal[1] + 0.05, g_horizontal * 0.9, text(L"B_1", :cyan, :cent
 #------------------------plot param values for time series examples-------------------------
 ws_example = [0.1, ws_horizontal[2], ws_horizontal[3], 0.95]
 color_default = :gray15
-example_colors = [:orange :lime color_default :gray80]
-markershapes = [:rect :circle :utriangle :diamond]
+example_colors = [:orangered :lime color_default :gray80]
+markershapes = [:circle :circle :dtriangle :circle]
 
 hline!([g_horizontal], ls=:dot, la=0.5, lw=2, lc=:gray10, label="") #horizontal line
 
 plot!(ws_example', fill(g_horizontal, 4)',
     ms=ms, st=:scatter, mc=example_colors,
-    markerstrokewidth=0.0, markerstrokecolor=example_colors,
+    markerstrokewidth=msw,
     markershape=markershapes, 
     label=["" L"c=%$(cs[2]),r=%$(rs_rounded[2])" L"c=%$(cs[3]),r=%$(rs_rounded[2])" ""],
     legend_columns=1,legendfontsize=8)
@@ -156,12 +157,12 @@ plot!(ws_B4_B5, gs_alpha, ls=:dot, la=1,
     lw=2, lc=:lightblue, label="")
 
 plot!([w_B4 w_B5], [g_B4 g_B5],
-    ms=ms + 4, st=:scatter, mc=[:blue :darkgreen],
-    markerstrokewidth=0.0, markershape=[:ltriangle :rtriangle],
+    ms=ms, st=:scatter, mc=[:orange :purple],
+    markershape=[:utriangle :rect],
     label=[L"c=%$(cs[2]),r=%$(rs_rounded[1])" L"c=%$(cs[2]), r=%$(rs_rounded[3])"])
 
-annotate!(w_B4 + 0.08, g_B4 - 0.5, text(L"B_3", :blue, :center, annot_size))
-annotate!(w_B5, g_B5 + 0.5, text(L"B_4", :darkgreen, :left, annot_size))
+annotate!(w_B4 + 0.08, g_B4 - 0.5, text(L"B_3", :orange, :center, annot_size))
+annotate!(w_B5, g_B5 + 0.5, text(L"B_4", :purple, :left, annot_size))
 
 #add colorbar
 cbar_range = [-0.7:0.01:0.7;]
@@ -169,12 +170,11 @@ pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [-0.5,0.0,0.5],
     c=HEATMAP_DEFAULTS.c, fg_color=:gray10, colorbar=false, xaxis=false, 
     ymirror=true, left_margin=-6Plots.mm,tickfontsize=tick_fontsize_large-5)
 
-#conbine heatmap with the separate colorbar
+#combine heatmap with the separate colorbar
 l = @layout [a{0.95w} b]
 pl = plot!(pl_lyaps_filled, pl_cbar, layout=l, tick_direction=:out)
 
 savefig(pl, figs_dir * "N10_phasediagram_extended5_80x80_filled_Ttr_10000_" * "labeled_horizontal_alpha_curve_article_params.png")
-
 
 #=
 #example parameters 
