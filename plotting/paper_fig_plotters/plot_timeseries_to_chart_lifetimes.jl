@@ -8,7 +8,7 @@ datadir_traj_root = "../../data/trajs_precomp_orig_N10/"
 data_dir_traj = datadir_traj_root * "traj_N10_B1B2B3B4C_Δt0.01_T5000_Ttr1000_examples/"
 
 N, Δt_traj, T = readdlm(data_dir_traj * "traj_spec_params.txt")
-Ttr = 5000
+Ttr = 1000
 Δt_traj = 1e-2
 
 files_trajdata = readdir(data_dir_traj)[2:end]

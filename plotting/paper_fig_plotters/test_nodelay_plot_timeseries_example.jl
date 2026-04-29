@@ -63,7 +63,7 @@ hline!([0], ls=:dash, lc=:gray10)
 #titles = [L"A", L"D"]
 
 guidefontsize = 24
-legendfontsize = 12
+legendfontsize = 20
 tickfontsize = 14
 titlefontsize = 16
 
@@ -99,7 +99,7 @@ for i in 1:N
 end
 plot!(t, Matrix(traj1[:, idxs_others]), lw=1, la=1, label="", lc=:gray50)
 
-hline!([x_1], ls=:dash, lc=:gray10, lw=2, label=L"x^{*}_N")
+hline!([x_1], ls=:dash, lc=:gray10, lw=2, label=L"x^{*}_{\mathrm{d}}",legend=:bottomright)
 #L"x^*_N = \frac{1}{w_1 + (N-1)w_2}"
 
 #coexistence
@@ -125,7 +125,7 @@ plot!(t, Matrix(trajN[:, idxs_others]), lw=1, label="", lc=:gray50)
 #plot top 3 with colors 
 plot!(t, Matrix(trajN[:, idxs]), lw=4, label="", lc=colors')
 
-hline!([x_N], ls=:dash, lc=:gray10,lw=2, label=L"x^{*}_1")
+hline!([x_N], ls=:dash, lc=:gray10, lw=2, label=L"x^{*}_{\mathrm{c}}", legend=:topright)
 #L"x^*_N = \frac{1}{w_1 + (N-1)w_2}")
 
 #save figs 

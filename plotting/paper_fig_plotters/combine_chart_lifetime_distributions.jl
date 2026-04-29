@@ -29,9 +29,11 @@ T = 1000
 
 #--------------------------plot params---------------------------
 logocolors = Colors.JULIA_LOGO_COLORS
-par_labels = [L"B1", L"B2", L"B3", L"B4", L"C"][[1,3,4,2]]
-colors = [:cyan :lime :orange :purple :gray10][[1, 3, 4, 2]]
-markershapes = [:diamond :circle :utriangle :rect][[1, 3, 4, 2]]
+plot_order = [1, 2, 4, 5, 3]
+#plot_order = [1:5;]
+par_labels = [L"B1", L"B12", L"B2", L"B3", L"B4"][plot_order]
+colors = [:cyan :gray60 :lime :orange :purple][plot_order]
+markershapes = [:diamond, :star4 ,:circle, :utriangle, :rect][plot_order]
 nbins = 30 #[25,10]
 plot_fits = true
 
@@ -128,7 +130,7 @@ pl_main = plot(pl_distribs_N10, pl_distribs_N300,
 savedir_pl_root = "../../paper_figs/"
 savedir_pl = savedir_pl_root 
 #mkpath(savedir_pl)
-savefig(pl_main, savedir_pl * "chart_lifetime_distributions_N10_N300_orig_params_diff_chart_times_Δt=0.02_T1000_Ttr2000_main.png")
-savefig(pl_sup, savedir_pl * "chart_lifetime_distributions_N10_N300_orig_params_diff_chart_times_Δt=0.02_T1000_Ttr2000_noC.png")
-savefig(pl_histN300, savedir_pl * "lifetime_chart_distribs_linhists_orig_params_k$(k)_T$(T)_N300_Δt=0.02_T1000_Ttr2000_C34.png")
-savefig(pl_histN10, savedir_pl * "lifetime_chart_distribs_linhists_orig_params_k$(k)_T$(T)_N10_Δt=0.02_T1000_Ttr2000_C34.png")
+#savefig(pl_main, savedir_pl * "chart_lifetime_distributions_N10_N300_orig_params_diff_chart_times_Δt=0.02_T1000_Ttr2000_main.png")
+#savefig(pl_sup, savedir_pl * "chart_lifetime_distributions_N10_N300_orig_params_diff_chart_times_Δt=0.02_T1000_Ttr2000_noC.png")
+#savefig(pl_histN300, savedir_pl * "lifetime_chart_distribs_linhists_orig_params_k$(k)_T$(T)_N300_Δt=0.02_T1000_Ttr2000_C34.png")
+#savefig(pl_histN10, savedir_pl * "lifetime_chart_distribs_linhists_orig_params_k$(k)_T$(T)_N10_Δt=0.02_T1000_Ttr2000_C34.png")

@@ -96,6 +96,7 @@ idxs_param_example = [10,15,20]
 Ne1, ts_e1 = transient_curves[idxs_param_example[1]]
 Ne2, ts_e2 = transient_curves[idxs_param_example[2]]
 Ne3, ts_e3 = transient_curves[idxs_param_example[3]]
+@show w_vals[idxs_param_example]
 
 plot!(inset=(1, bbox(0.17, 0.45, 0.3, 0.3)), subplot=2)
 plot!(pl_esc[2], ts_e1[1:end-1], Ne1[1:end-1], lc=:blue, yscale=:log10, legend=false,

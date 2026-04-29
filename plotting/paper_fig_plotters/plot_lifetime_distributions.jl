@@ -8,7 +8,7 @@ cd(@__DIR__)
 #read lifetime filenames
 files = readdir(data_dir_lt)
 files_lifetime = files[findall(f -> occursin(".dat", f), files)]#[[13,14,15,16,1:12...]] #select binary only
-files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times]#select binary only
+files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times] #select binary only
 
 ms = 6
 linealphas = [0.3,0.3,0.3,1.0] 
@@ -17,6 +17,7 @@ plots_linhist = [] #gather plots here
 plots_linlin = [] #gather plots here
 plots_loglin = [] #gather plots here
 lifetimes_stats = []
+#plot_order = [1,2,3,4,5]
 #plot_fits = false
 
 #fit curves
@@ -34,7 +35,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
     chart_time = chart_times[i]
     @show chart_time
-    for (j,f) in enumerate(fileset[[1,3,4,2]])
+    for (j, f) in enumerate(fileset[[2, 1, 4, 5, 3]])
         @show f
         #read lifetimes
         lifetimes = reinterpret(Int64, read(data_dir_lt * f)) 
@@ -115,7 +116,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             a_round = round(a;digits=3)
 
             plot!(log10.(bins_discrete[linear_interval]), log10.(10 .^ (b) .* bins_discrete[linear_interval] .^ (-4)),
-                ls=:dot, lc=:gray10, lw=2, label=L"\propto \tau ^{-4}", legendfontsize=15)
+                ls=:dash, lc=:gray10, lw=2, label="", legendfontsize=15)
 
         end
 
@@ -128,7 +129,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             ps_fit = sol.u
             xs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
             plot!(xs_fit, quadratic(ps_fit, xs_fit),
-                ls=:dot, lc=:gray50, lw=2, label=L"\propto \tau^2", legendfontsize=15)
+                ls=:dot, lc=:gray50, lw=2, label="", legendfontsize=15)
 
         end
 
@@ -141,7 +142,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             sol = solve(prob)
             ps_fit = sol.u
             plot!(log10.(bins_discrete[interval]), cubic(ps_fit,log10.(bins_discrete[interval])),
-                ls=:dot, lc=:gray10, lw=2, label=L"\propto \tau^3", legendfontsize=15)
+                ls=:dot, lc=:gray10, lw=2, label="", legendfontsize=15)
         end
 
         plot!(pls_loglin[1], bins_discrete, log10.(counts_discrete),

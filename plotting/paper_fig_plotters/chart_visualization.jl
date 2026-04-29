@@ -99,10 +99,10 @@ plot!(t_int[tint_idxs], int_act_matrix[tint_idxs, idxs_inactive],
 
 #plot charts and ranks
 pl_topk = plot(legend=false,dpi=300,
-    ylabel="ranks",xlabel=L"t",guidefontsize=12,
-    left_margin=7Plots.mm,bottom_margin=8Plots.mm,
+    ylabel="ranks",xlabel=L"t",guidefontsize=10,
+    left_margin=7Plots.mm,bottom_margin=4Plots.mm,
     yflip=true, yticks=[1:k;], ylims=(0, 5+0.5),
-    tickfontsize=12)
+    tickfontsize=11)
 
 cons_occ = consecutive_occurrences(topk_idxs)
 
@@ -128,7 +128,7 @@ end
 
 
 #add fig labels
-x_annot = 8
+x_annot = 7.85
 annotate!(pl_ts, x_annot, 0.11, text(L"(a)", :gray10, :center, 18))
 annotate!(pl_int_act, x_annot, 0.12, text(L"(b)", :gray10, :center, 18))
 annotate!(pl_topk, x_annot, -0.2, text(L"(c)", :gray10, :center, 18))
@@ -138,6 +138,6 @@ plot!(pl_int_act, ylims=(0.0, 0.11), yticks=[0.0, 0.05, 0.1])
 plot!(pl_topk,xticks=[10:5:tspan[end];],guidefontsize=18)
 
 
-pl = plot(pl_ts, pl_int_act, pl_topk, layout=(3, 1), size=(1200, 450),dpi=300)
+pl = plot(pl_ts, pl_int_act, pl_topk, layout=(3, 1), size=(1200, 500),dpi=300)
 
 savefig(pl,"../../paper_figs/chart_explanation_example_shorter.png")
