@@ -60,12 +60,12 @@ hline!([0], ls=:dash, lc=:gray10)
 
 #----------------------------plots for symmetric no delay LV------------------------------
 
-#titles = [L"A", L"D"]
+titles = [L"A", L"D"]
 
 guidefontsize = 24
 legendfontsize = 20
 tickfontsize = 14
-titlefontsize = 16
+titlefontsize = 20
 
 #WTA
 
@@ -85,7 +85,7 @@ pl_1 = plot(xlabel=L"t",
     guidefontsize=guidefontsize, legendfontsize=legendfontsize,
     tickfontsize=tickfontsize, titlefontsize=titlefontsize,
     yticks=[0.0, 2.5, 5], xticks=[0.0, 25, 50],
-    title=L"w_2 - w_1 = 0.45",
+    title=titles[2],
     xlims=(0, 50), ylims=(0.0, 5.0), dpi=300)
     #title=L"N = %$N" * L", w_1 = %$w1" * L", w_2 = %$(ws[2])")
 
@@ -99,11 +99,11 @@ for i in 1:N
 end
 plot!(t, Matrix(traj1[:, idxs_others]), lw=1, la=1, label="", lc=:gray50)
 
-hline!([x_1], ls=:dash, lc=:gray10, lw=2, label=L"x^{*}_{\mathrm{d}}",legend=:bottomright)
+hline!([x_1], ls=:dash, lc=:gray10, lw=2, label=L"\mathbf{x}^{*}_{\mathrm{d}}",legend=:bottomright)
 #L"x^*_N = \frac{1}{w_1 + (N-1)w_2}"
 
 #coexistence
-ws = [0.3,0.8]
+#ws = [0.3,0.8]
 
 set_parameter!(ds_symLV, 2, w1)
 set_parameter!(ds_symLV, 3, w2)
@@ -115,7 +115,7 @@ pl_N = plot(ylabel=L"x_i", xlabel=L"t",
   guidefontsize=guidefontsize, legendfontsize=legendfontsize,
     tickfontsize=tickfontsize, titlefontsize=titlefontsize,
     yticks=[0.0, 0.5, 1.0], xticks=[0.0, 25, 50],
-    title=L"w_2 - w_1 = -0.45",
+    title=titles[1],
     xlims=(0,50),ylims=(0.0, 1.0), dpi=300)
     #title=L"N = %$N"*L", w_1 = %$w1"*L", w_2 = %$(ws[1])")
 
@@ -125,7 +125,7 @@ plot!(t, Matrix(trajN[:, idxs_others]), lw=1, label="", lc=:gray50)
 #plot top 3 with colors 
 plot!(t, Matrix(trajN[:, idxs]), lw=4, label="", lc=colors')
 
-hline!([x_N], ls=:dash, lc=:gray10, lw=2, label=L"x^{*}_{\mathrm{c}}", legend=:topright)
+hline!([x_N], ls=:dash, lc=:gray10, lw=2, label=L"\mathbf{x}^{*}_{\mathrm{c}}", legend=:topright)
 #L"x^*_N = \frac{1}{w_1 + (N-1)w_2}")
 
 #save figs 

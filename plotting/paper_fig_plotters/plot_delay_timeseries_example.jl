@@ -68,7 +68,7 @@ title_colors = [:orangered :lime :gray15 :gray80]
 
 
 guidefontsize = 24
-legendfontsize = 12
+legendfontsize = 14
 tickfontsize = 14
 titlefontsize = 24
 
@@ -96,7 +96,7 @@ for (i,w) in enumerate(ws_example)
     pl = plot( xlabel=L"t",title=titles[i],
         guidefontsize=guidefontsize, legendfontsize=legendfontsize,
         tickfontsize=tickfontsize, titlefontsize=titlefontsize, 
-        titlefontcolor=title_colors[i],legend=false, xlims=(Ttr, Ttr + 50))
+        titlefontcolor=title_colors[i],legend=true, xlims=(Ttr, Ttr + 50))
         #title=L"N = %$N"*L", 1/\epsilon = %$(g), w = %$w")
 
     #plot some with gray
@@ -107,10 +107,10 @@ for (i,w) in enumerate(ws_example)
 
     if i == 1
         x_fp = 1.0
-        hline!([x_fp], ls=:dash, lc=:gray10,lw=2,label="") #label=L"x^*_N = 1")
+        hline!([x_fp], ls=:dash, lc=:gray10,lw=2,label=L"\mathbf{u}^*_{\mathrm{c}}")
     elseif i == 4
         x_fp = 1.0/(1-w)
-        hline!([x_fp], ls=:dash, lc=:gray10, lw=2, label="") #label=L"x^*_1 = \frac{1}{1 - w}")
+        hline!([x_fp], ls=:dash, lc=:gray10, lw=2,label=L"\mathbf{u}^*_{\mathrm{d}}")
     end
     push!(plots,pl)
 end
