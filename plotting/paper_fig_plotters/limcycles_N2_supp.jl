@@ -48,7 +48,7 @@ titles = [L"w_c = %$(wc1), w = %$(ws_rounded[1])",
     L"w_d = %$(wc2), w = %$(ws_rounded[2])"]
 
 logocolors = Colors.JULIA_LOGO_COLORS
-colors = [logocolors.green logocolors.purple]
+colors = [logocolors.red logocolors.green]
 xticks_ts = [[Ttr, Ttr + 10], [Ttr:50:Ttr+T_long;]]
 
 #make single combined projection plot
@@ -116,11 +116,11 @@ for (i,w) in enumerate(ws)
     #coexistence
     x_co_val = x_fp(w, N, N)
     plot!([x_co_val], [x_co_val], st=:scatter, mc=:orange,
-        ms=6,markerstrokecolor=:orange,label=L"x_c^{*}")
+        ms=6,markerstrokecolor=:orange,label=L"\mathbf{u}_\mathrm{c}^{*}")
 
     #WTA
     plot!([x_wta_val], [0.0], st=:scatter, 
-        mc=:white, ms=8, markerstrokecolor=:blue,label=L"x_d^{*}")
+        mc=:white, ms=8, markerstrokecolor=:blue, label=L"\mathbf{u}_\mathrm{d}^{*}")
     plot!([0.0], [x_wta_val], st=:scatter, 
         mc=:white, ms=8, markerstrokecolor=:blue,label="")
 

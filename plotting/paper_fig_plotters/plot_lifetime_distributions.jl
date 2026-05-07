@@ -19,6 +19,7 @@ plots_loglin = [] #gather plots here
 lifetimes_stats = []
 #plot_order = [1,2,3,4,5]
 #plot_fits = false
+#fileset_order = [1:4;]
 
 #fit curves
 quadratic(a, x) = @. a[1] + a[2] * x  + a[3] * x^2
@@ -35,7 +36,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
     chart_time = chart_times[i]
     @show chart_time
-    for (j, f) in enumerate(fileset[[2, 1, 4, 5, 3]])
+    for (j, f) in enumerate(fileset[fileset_order])
         @show f
         #read lifetimes
         lifetimes = reinterpret(Int64, read(data_dir_lt * f)) 
@@ -104,7 +105,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         n_τ = length(bins_discrete)
         #add fits, guiding lines
-        if plot_fits && i == 3 && j == length(par_labels)
+        if plot_fits && i == 3 && j == 2
 
             #linear 
             n_τ = length(bins_discrete)
@@ -120,7 +121,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         end
 
-        if plot_fits && i == 3 && j == 3
+        if plot_fits && i == 3 && j == 4
             #quadratic 
             interval = 1:round(Int, 0.99 * n_τ)
             param_guesses = [1.0, 1.0, -1.0]
@@ -134,7 +135,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         end
 
         #add higher order fit
-        if plot_fits && i == 1 && j == length(par_labels)
+        if plot_fits && i == 1 && j == 2
             interval = 1:round(Int, 0.02 * n_τ)
             #vline!([log10.(bins_discrete[quad_interval[1]]), log10.(bins_discrete[quad_interval[end]])], ls=:dash)
             param_guesses = [1.0,-1.0]

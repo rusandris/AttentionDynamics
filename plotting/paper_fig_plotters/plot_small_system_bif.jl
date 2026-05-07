@@ -205,7 +205,7 @@ annotate!(0.15,0.7, text(L"\mathbf{u}^{*}_{\mathrm{c}}", :gray10, :center, 20))
 annotate!(0.55,1.9, text(L"\mathbf{u}^{*}_{\mathrm{d}}", :gray10, :center, 20))
 
 #--------------------------plot inset----------------------------
-colors = collect(Colors.JULIA_LOGO_COLORS)[[2, 4]]  #use logo colors
+colors = collect(Colors.JULIA_LOGO_COLORS)[[1, 2]]  #use logo colors
 
 #--------------------coexistence---------------------
 set_parameter!(ds,2,0.15)

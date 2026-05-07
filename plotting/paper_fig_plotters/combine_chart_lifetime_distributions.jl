@@ -29,11 +29,21 @@ T = 1000
 
 #--------------------------plot params---------------------------
 logocolors = Colors.JULIA_LOGO_COLORS
-plot_order = [1, 2, 4, 5, 3]
-#plot_order = [1:5;]
-par_labels = [L"B1", L"B12", L"B2", L"B3", L"B4"][plot_order]
-colors = [:cyan :gray60 :lime :orange :purple][plot_order]
-markershapes = [:diamond, :star4 ,:circle, :utriangle, :rect][plot_order]
+#plot_order = [1, 2, 4, 5, 3]
+#plot_order = [1, 3, 4, 2]
+#plot_order = [1:4;]
+plot_order = [1:6;]
+#fileset_order = [2, 3, 4, 5]
+fileset_order = [3,5,6,7,1,4]
+
+#par_labels = [L"B_1", L"B_2", L"B_3", L"B_4"][plot_order]
+par_labels = [L"B_1", L"B_2", L"B_3", L"B_4", L"B_{12}", L"B_{24}"][plot_order]
+#colors = [:cyan :gray60 :lime :orange :purple][plot_order]
+#colors = [:cyan :lime :orange :purple][plot_order]
+colors = [:cyan :lime :orange :purple :gray20 :gray60][plot_order]
+#markershapes = [:diamond, :star4 ,:circle, :utriangle, :rect][plot_order]
+#markershapes = [:diamond, :circle, :utriangle, :rect][plot_order]
+markershapes = [:diamond, :circle, :utriangle, :rect, :circle, :circle][plot_order]
 nbins = 30 #[25,10]
 plot_fits = true
 
@@ -44,6 +54,7 @@ pl_linlin_N300 = pl_linlin_all
 pl_loglin_N300 = pl_loglin_all
 plots_linhist_N300 = plots_linhist
 
+#=
 #simple histograms
 hist_xlims = [(0,50),(0,1000),(0,2000),(0,2000),(0,2000),
     (0, 20), (0, 50), (0, 200), (0, 200), (0, 200),
@@ -57,7 +68,7 @@ pl_histN300 = plot(plots_linhist_N300..., layout=(3, 5), size=(1200, 600),
     dpi=300, legendfontsize=15, ylabel="count", xlabel=L"\tau",
     bottom_margin=5Plots.mm, left_margin=8Plots.mm,
     ytickfontsize=5)
-
+=#
 plot!(plots_loglog[1][1], left_margin=5Plots.mm)
 plots_uniform_binning_N300 = [plots_loglog[i][1] for i in 1:length(plots_loglog)]
 
@@ -78,6 +89,7 @@ chart_times = chart_times[[1,3,6]]
 #plot params
 nbins = 30 #[25,10]
 plot_fits = false
+fileset_order = [1:4;]
 
 include("../../plotting/paper_fig_plotters/plot_lifetime_distributions.jl")
 
@@ -122,7 +134,7 @@ pl_distribs_N300 = plot!(plots_uniform_binning_N300[end],legend=:topright, ylims
 pl_main = plot(pl_distribs_N10, pl_distribs_N300,
     layout=(1, 2), size=(600, 300), legend=:topright, ylims=(-4.5,0.1),
     bottom_margin=2Plots.mm, xlims = [0.2,1.7],xticks = [0.5,1.0,1.5],
-    legendfontsize=12, tickfontsize=10, guidefontsize=18, dpi=300)
+    legendfontsize=15,ms=5, tickfontsize=10, guidefontsize=18, dpi=300)
 
 
 #----------------------------save plots---------------------------------------

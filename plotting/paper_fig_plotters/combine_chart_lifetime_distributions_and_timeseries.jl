@@ -25,6 +25,6 @@ annotate!(plots_ts_N300[1], 1997, 0.055, text(L"(d)", :gray10, :center, 25))
 
 l = @layout [a{0.3h} b{0.3h}; grid(4, 1) grid(4, 1)]
 pl_dist_ts = plot(pl_distribs_N10, pl_distribs_N300, plots_ts_N10..., plots_ts_N300...; 
-    layout=l, size=(1200, 1000),left_margin=5Plots.mm)
+    layout=l, size=(1200, 1000),left_margin=5Plots.mm,legendfontsize=17)
 
-#savefig(pl_dist_ts, savedir_pl * "chart_lifetime_distributions_and_timeseries_N10_N300_orig_params_diff_chart_times_Δt=0.02_T1000_Ttr2000_main.png")
+savefig(pl_dist_ts, savedir_pl * "chart_lifetime_distributions_and_timeseries_N10_N300_orig_params_diff_chart_times_Δt=0.02_T1000_Ttr2000_main_plus.png")
