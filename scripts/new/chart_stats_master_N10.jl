@@ -48,18 +48,20 @@ gs_curve = params_rescaled_curve[:, 2] * (N_small - 1)
 #gather g,w pairs (horizontal,curve)
 p_sets_r = [[rs[i],rs[i]] for i in 1:length(rs)]
 p_sets_c = [[cs[i]] for i in 1:length(cs)]
+p_sets_c = [[3.4]]
 
 
 #--------------------------------precompute trajectories-------------------------------------
 #settings of precomputed trajs
 N = N_small
-T = 50 #10000 #100 #5000
-Ttr = 0 #500
+T = 5000 #10000 #100 #5000
+Ttr = 5000 #500
 Δt_traj = 1e-2 #5*1e-2
-nr_ics = 2 #number of initial conditions
+nr_ics = 10 #number of initial conditions
 ic_counter = 0
 
-phasediag_ids = ["B1", "B2", "C", "B3", "B4"]
+#phasediag_ids = ["B1", "B2", "C", "B3", "B4"]
+phasediag_ids = ["C"]
 
 #paths
 savedir_traj_root = "../../data/trajs_precomp_orig_N10/"
@@ -68,20 +70,22 @@ mkpath(savedir_traj)
 
 include("precompute_trajectories.jl")
 
-#=
+
 #-------------------------------precompute lifetimes------------------------------------------
 #lifetime settings 
 k = 10
-chart_times = [0.1,0.2,0.5,1.0,2.0,3.0,5.0] #[2.0]
-chart_times = [0.2]
+chart_times = [0.02,0.1,0.2,0.5,1.0,2.0,3.0,5.0] #[2.0]
+#chart_times = [0.02]
 
 #path
-data_dir_traj = "../../data/trajs_precomp_orig/horizontal_and_curve_article_test_Δt0.1_T5000_Ttr500/"
-savedir_lt_root = "../../data/lifetimes_precomp_orig/"
-savedir_lt = savedir_lt_root * "horizontal_and_curve_article_test_k10_Δt0.1_T5000/"
+data_dir_traj = "../../data/trajs_precomp_orig_N10/B1B2B3B4C_Δt0.01_T5000_Ttr5000/"
+savedir_lt_root = "../../data/lifetimes_precomp_orig_N10/"
+savedir_lt = savedir_lt_root * "B1B2B3B4Cmod34_N10_Δt0.01_T5000_Ttr5000/"
 mkpath(savedir_lt)
 writedlm(savedir_lt * "chart_times.txt", chart_times)
 
+#par_names = ["B1", "B2", "C", "B3", "B4"]
+par_names = ["C"]
 include("precompute_lifetimes.jl")
-=#
+
 
