@@ -38,8 +38,8 @@ for j in 1:length(p_values[1])
 end
 =#
 #files corresponding to a certain param set
-par_names = ["B1","B2","C","B3","B4"]
-file_sets = [files_trajs[findall(f -> occursin(par_names[i], f), files_trajs)] for i in 1:5] 
+#par_names = ["B1","B2","C","B3","B4"]
+file_sets = [files_trajs[findall(f -> occursin(par_names[i], f), files_trajs)] for i in 1:length(par_names)] 
 
 #loop over chart times
 for (idx, chart_time) in enumerate(chart_times) 

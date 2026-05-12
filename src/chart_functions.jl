@@ -1,5 +1,5 @@
-export get_lifetimes,get_lifetimes_integ, get_distrib, integrate_activity
-export chart_stats, consecutive_occurrences, activity_periods, active_period_lengths
+export get_lifetimes,get_lifetimes_integ, get_distrib, integrate_activity,probability_first_entry
+export chart_stats, consecutive_occurrences,activity_periods, active_period_lengths
 export autohist, parabolic, linear #plot_distrib,plot_distrib!
 
 
@@ -394,12 +394,14 @@ function probability_first_entry(charts;rank1_idx = 1)
 
     for i in 2:length(charts)
         rank1 = charts[i][rank1_idx]
-
+		@show rank1,rank1_prev
         if !(rank1 in charts[i-1])        
             count_first_entry += 1
+            count_all += 1 
         elseif rank1 != rank1_prev
             count_all += 1 
         end
+         rank1_prev = rank1
          
     end
     @show count_first_entry, count_all

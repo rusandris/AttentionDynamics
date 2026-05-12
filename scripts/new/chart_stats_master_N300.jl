@@ -68,15 +68,17 @@ include("precompute_trajectories.jl")
 #-------------------------------precompute lifetimes------------------------------------------
 #lifetime settings 
 k = 10
-chart_times = [0.1,0.2,0.5,1.0,2.0,3.0,5.0] #[2.0]
-chart_times = [0.2]
+#chart_times = [0.1,0.2,0.5,1.0,2.0,3.0,5.0] #[2.0]
+#chart_times = [0.02]
+chart_times = [0.02,0.1,0.2,0.5,1.0,2.0]
 
 #path
-data_dir_traj = "../../data/trajs_precomp_orig/horizontal_and_curve_article_test_Δt0.1_T5000_Ttr500/"
+data_dir_traj = "../../data/trajs_precomp_orig/B1B2B3B4C_Δt0.02_T1000_Ttr2000/B24-r8.0/"
 savedir_lt_root = "../../data/lifetimes_precomp_orig/"
-savedir_lt = savedir_lt_root * "horizontal_and_curve_article_test_k10_Δt0.1_T5000/"
+savedir_lt = savedir_lt_root * "B24_change_r_Δt0.02_T1000_Ttr2000_k10_Δt0.1_T5000/B24-r8.0/"
 mkpath(savedir_lt)
 writedlm(savedir_lt * "chart_times.txt", chart_times)
-
+#par_names = ["B1","B2","C","B3","B4"]
+par_names = ["B24"]
 include("precompute_lifetimes.jl")
 
