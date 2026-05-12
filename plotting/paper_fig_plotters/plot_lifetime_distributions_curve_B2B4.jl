@@ -7,22 +7,22 @@ cd(@__DIR__)
 
 #path to lifetimes
 data_dir_lt_root = "../../data/lifetimes_precomp_orig/B24_change_r_Δt0.02_T1000_Ttr2000_k10_Δt0.1_T5000/"
-data_dirs = reverse(readdir(data_dir_lt_root))[[8,2,3,4,5,6,1,7]]
+data_dirs = reverse(readdir(data_dir_lt_root))[[2,9,3,4,5,6,7,1,8]]
 
 #files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times] #select binary only
 
 #charting time 
-Δt = 2.0 #0.02 
+Δt = 0.02 #2.0 #0.2 #0.02 
 
 #markersize
-ms = 6
+ms = 5
 N = 300
 k = 10
 
 pl = plot()
-colors = [:gray10, :gray30, :gray50, :gray70, :gray90]
+#colors = [:gray10, :gray30, :gray50, :gray70, :gray90]
 colors = range(colorant"lime", stop=colorant"purple", length=length(data_dirs))
-par_labels = [L"r=10", L"r=9", L"r=8", L"r=6", L"r=6", L"r=5",L"r=r_{B_4}", L"r=3.5"]
+par_labels = [L"r = 14.352 = r_{B_3}", L"r = 10 = r_{B_2}", L"r=9", L"r=8", L"r=6", L"r=6", L"r=5", L"r = 4.45 = r_{B_4}", L"r=3.5"]
 ylabel = L"log(p_{\Delta t}(\tau))"
 #loop through parameters (lifetime dirs)
 for (i, dir) in enumerate(data_dirs)
@@ -52,7 +52,7 @@ for (i, dir) in enumerate(data_dirs)
     plot!(pl, log10.(bins_discrete), log10.(counts_discrete),
         markershape=:circle, st=:scatter,
         mc=color, markerstrokecolor=:gray10,
-        markerstrokewidth=0.1,
+        markerstrokewidth=0.5,
         lc=color,
         alpha=1,
         dpi=300,
@@ -66,4 +66,4 @@ for (i, dir) in enumerate(data_dirs)
 
 end
 figs_dir = "../../paper_figs/"
-savefig(pl,figs_dir*"lifetime_distributions_B2_to_B4_change_r_charting_time_2.png")
+savefig(pl,figs_dir*"lifetime_distributions_B2_to_B4_change_r_charting_time_$(Δt).png")
