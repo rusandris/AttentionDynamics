@@ -3,7 +3,7 @@ using Revise
 using OrdinaryDiffEq
 using DynamicalSystems
 using StatsBase
-using Plots, LaTeXStrings
+#using Plots, LaTeXStrings
 using LinearAlgebra
 using DelimitedFiles
 cd(@__DIR__)
@@ -50,18 +50,19 @@ p_sets_c = [[cs[i]] for i in 1:length(cs)]
 
 #--------------------------------precompute trajectories-------------------------------------
 #settings of precomputed trajs
-T = 50 #1000 #500 #10000 #100 #5000
+T = 10 #1000 #500 #10000 #100 #5000
 Ttr = 0 #2000 #2000 #500
 Δt_traj = 2 * 1e-2 #5*1e-2
-nr_ics = 10 #number of initial conditions
-ic_counter = 400
+nr_ics = 2 #number of initial conditions
+ic_counter = 0
 
 #phasediag_ids = ["B1", "B2", "C", "B3", "B4"]
 phasediag_ids = ["B24"]
 
 #paths
 #savedir_traj_root = "../../../data/trajs_precomp_orig/B1B2B3B4C_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
-savedir_traj_root = "../../../data/trajs_precomp_orig/bashtest_B1B2B3B4C_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
+#savedir_traj_root = "../../../data/trajs_precomp_orig/bashtest_B1B2B3B4C_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
+savedir_traj_root = "../../../../../../../data/RESULTS/USERS/rusandris/B1B2B3B4C_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
 savedir_traj = savedir_traj_root * "B24-r$(r)/"
 mkpath(savedir_traj)
 

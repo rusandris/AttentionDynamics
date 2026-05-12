@@ -1,5 +1,5 @@
 using DelimitedFiles
-using Plots,LaTeXStrings
+#using Plots,LaTeXStrings
 using AttentionDynamics
 cd(@__DIR__)
 
