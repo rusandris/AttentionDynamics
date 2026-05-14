@@ -15,12 +15,13 @@ g_rel = 4.0 # 1/(\epsilon * (N-1)) is the same for all systems
 gs = g_rel .* (Ns .- 1)
 w_c1 = 1/g_rel
 ws_c2 = (Ns .- 1) ./ Ns
-w_values = [w_c1:0.03:ws_c2[end]+0.02;]
+#w_values = [w_c1:0.03:ws_c2[end]+0.02;]
+w_values = [w_c1-0.15:0.03:ws_c2[end]+0.02;]
 
 #calc time, transient time etc.
 T_WLC = 1000
 T_fp = 10
-Ttr_WLC = 1000
+Ttr_WLC = 10000
 Ttr_fp = 10
 dtmax = 1e-3
 dt = 1e-3
@@ -64,8 +65,8 @@ Threads.@threads for i in 1:length(Ns)
         set_parameter!(pds,2,w)
 
         #select calc time and transient time based on w
-        Ttr =  w < wc2 ? Ttr_WLC : Ttr_fp
-        T = w < wc2 ? T_WLC : T_fp
+        Ttr = w_c1 < w < wc2 ? Ttr_WLC : Ttr_fp
+        T = w_c1 < w < wc2 ? T_WLC : T_fp
 
         lyaps[j] = lyapunov(pds,T;Ttr=Ttr)
     end  
