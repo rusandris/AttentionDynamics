@@ -8,17 +8,18 @@ cd(@__DIR__)
 #path to lifetimes
 data_dir_lt_root = "../../data/lyapunovs_effect_size/"
 #data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws461_T_WLC1000_T_fp10_Ttr_WLC10000_Ttr_fp10_dtmax_0.001/"
-data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws_largerN_T_WLC1000_T_fp10_Ttr_WLC1000_Ttr_fp10_dtmax_0.001/"
-data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws_largerN_gnormalized_phasediag_sec1_T_WLC1000_T_fp10_Ttr_WLC1000_Ttr_fp10_dtmax_0.001/"
+#data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws_largerN_T_WLC1000_T_fp10_Ttr_WLC1000_Ttr_fp10_dtmax_0.001/"
+#data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws_largerN_gnormalized_phasediag_sec1_T_WLC1000_T_fp10_Ttr_WLC1000_Ttr_fp10_dtmax_0.001/"
+data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws_largestN_gn6.88_T_WLC1000_T_fp10_Ttr_WLC1000_Ttr_fp10_dtmax_0.001/"
 
 files = readdir(data_dir_lt)
-files_lyaps = readdir(data_dir_lt)[1:end-1][[2, 3, 4, 1]] #[[4,5,6,1,2,3]]
+files_lyaps = readdir(data_dir_lt)[1:end-1][[3,5,6,1,2,4]]#[[2, 3, 4, 1]] #[[4,5,6,1,2,3]]
 Ns = Int.(readdlm(data_dir_lt * "system_sizes.txt"))
 
 #plot all on one fig 
 
 pl = plot(ylabel=L"\lambda", xlabel=L"w",guidefontsize=20,tickfontsize=15,
-    legendfontsize = 12,legend=:topright,legendcolumns=3,ylims=(-0.5,4.5),
+    legendfontsize = 12,legend=:topright,legendcolumns=3,ylims=(-0.5,8.5),
     size=(1200, 400), bottom_margin=8Plots.mm, right_margin=8Plots.mm, 
     left_margin=8Plots.mm,dpi=300,xlims = (0.0,1.0),xticks=[0.2:0.2:1.0;])
 colors = distinguishable_colors(length(Ns)+3)[3:end]
@@ -36,47 +37,84 @@ for (i,file) in enumerate(files_lyaps)
     vline!([(N - 1) / N], ls=:dash, lc=colors[i], label="")
 
 end
-savefig(pl,"../../paper_figs/lyapunovs_system_size_effect_chaotic_width_Ttr1e3_tscale6.688_crop.png")
+savefig(pl,"../../paper_figs/lyapunovs_system_size_effect_chaotic_width_Ttr1e3_tscale6.688_large_sys_test.png")
 
 #example timeseries 
 using OrdinaryDiffEq
 using DynamicalSystems
 N_test = 300
-u0_test = rand(2N_test)
-p_test = [2000 / 299 * (N_test-1), 0.25, N_test]
-diffeq = (alg=Tsit5(), dt=1e-3, dtmax=1e-3, adaptive=true, maxiters=1e15)
-
-ds_test = create_ds(u0_test, p_test; diffeq=diffeq)
-traj1, t = trajectory(ds_test, 100, u0_test; Ttr=1000, Δt=1e-3)
-
-pl1 = plot(t[1:1000], Matrix(traj1)[1:1000, 1:2:end], legend=false,
-    xlabel=L"t", ylabel=L"x_i",title=L"N=%$(N_test),w=0.25",guidefontsize=25)
-
-diffeq2 = (alg=Tsit5(), dt=1e-3, dtmax=1e-3, adaptive=true, maxiters=1e15)
-p_test2 = [2000 / 299 * (N_test - 1), 0.4, N_test]
-ds_test2 = create_ds(u0_test, p_test2; diffeq=diffeq2)
-traj2, t = trajectory(ds_test2, 100, u0_test; Ttr=2000, Δt=1e-3)
-pl2 = plot(t[1:1000], Matrix(traj2)[1:1000, 1:2:end], legend=false,
-    xlabel=L"t", ylabel=L"x_i", title=L"N=%$(N_test),w=0.4", guidefontsize=25)
-
-pl = plot(pl1, pl2, layout=(1, 2), size=(800, 400), left_margin=6Plots.mm, bottom_margin=6Plots.mm,
-    right_margin=6Plots.mm)
-#savefig(pl,"../../paper_figs/timeseries_examples_N100_lyapunovs_system_size_effect_chaotic_width_Ttr1e3.png")
 
 #L system
-u0_test = rand(2N_test) .* 1e-2
-p_test = [10, 10, 1.0, 2.4, 0.005, 300]
-ds_L = create_original_ds(u0_test, p_test; diffeq=diffeq2)
-traj_L, t = trajectory(ds_L, 100, u0_test; Ttr=100, Δt=1e-3)
-pl_L = plot(t, Matrix(traj_L)[:, 1:2:end], legend=false,
+diffeq_L = (alg=Tsit5(), dt=1e-1, dtmax=1e-1, adaptive=true, maxiters=1e15)
+u0_L = rand(2N_test) .* 1e-2
+#fixed params 
+K = 1.0;r=10;
+p_L = [r, r, K, 2.4, r / (2000 / 299 * (N_test - 1)), 10]
+ds_L = create_original_ds(u0_L, p_L; diffeq=diffeq_L)
+traj_L, t = trajectory(ds_L, 1000, u0_L; Ttr=1000, Δt=1e-3)
+
+pl_L = plot(t[1:25000], Matrix(traj_L)[1:25000, 1:2:end], legend=false,
     xlabel=L"t", ylabel=L"L_i", title=L"N=%$(N_test),L", guidefontsize=25)
 
 #x system
-g, w = rescaled_params(p_test...)
-ds_x = create_ds(u0_test, [g,w,300]; diffeq=diffeq2)
-
+w,g = rescaled_params(p_L...)
 #init cond
-η_L,η_Y = rescaling_factors(p_test...)
-u0_test[1:2:end] .*= 1 / η_L
-u0_test[2:2:end] .*= 1 / η_Y
-traj_x, t = trajectory(ds_x, 10, rand(2N_test); Ttr=0, Δt=1e-3)
+η_L, η_Y = rescaling_factors(p_L...)
+#u0_x = traj_L[end][1:end]
+#u0_x[1:2:end] .*= 1 / η_L
+#u0_x[2:2:end] .*= 1 / η_Y
+
+p_x = [g,w, N_test]
+diffeq_x = (alg=Tsit5(), dt=1e-3, dtmax=1e-3, adaptive=true, maxiters=1e15)
+
+u0_x = u0_L
+ds_x = create_ds(u0_x, p_x; diffeq=diffeq_x)
+traj_x, t_x = trajectory(ds_x, 1000, u0_x; Ttr=1000, Δt=1e-3)
+
+pl_x = plot(t_x[1:5000], Matrix(traj_x)[1:5000, 1:2:end], legend=false,
+    xlabel=L"t", ylabel=L"x_i", title=L"N=%$(N_test),w=0.264", guidefontsize=25)
+
+pl = plot(pl_L, pl_x,layout = (1,2),size=(800,400),left_margin=5Plots.mm)
+
+#check lyapunovs 
+T = 1000
+Ttr = 1000
+λ_L = lyapunov(ds_L, T / α; Ttr=Ttr / α)
+λ_x = lyapunov(ds_x, T; Ttr=Ttr)
+α = p_L[5]
+λ_ratio = λ_L / λ_x
+
+#check lyapunovs for bigger system 
+p_L300 = [r, r, K, 2.4, 0.005, 300]
+u0_L = rand(2*300) .* 1e-2
+ds_L300 = create_original_ds(u0_L, p_L300; diffeq=diffeq_L)
+
+w, g = rescaled_params(p_L300...)
+p_x300 = [g,w,300]
+ds_x300 = create_ds(u0_L, p_x300; diffeq=diffeq_x)
+
+α0 = 0.005
+T = 5
+Ttr = 10
+@time λ_L300 = lyapunov(ds_L300, T / α0; Ttr=Ttr/α0,Δt=1)
+@time λ_x300 = lyapunov(ds_x300, T; Ttr=Ttr, Δt=1)
+λ_ratio = λ_L300 / λ_x300
+
+
+#check if moving to the right causes problems
+cs = [2.4, 3.4, 5.4]
+ws = [0.2640565204592287, 0.3370019226944242, 0.44668843025507665]
+
+#Lsystem 
+for c in cs
+    set_parameter!(ds_L300,4,c)
+    @time λ_L300 = lyapunov(ds_L300, T / α0; Ttr=Ttr / α0, Δt=1)
+    @show λ_L300
+end
+
+#xsystem 
+for w in ws
+    set_parameter!(ds_x300, 2, w)
+    @time λ_x300 = lyapunov(ds_x300, T ; Ttr=Ttr, Δt=1)
+    @show λ_x300
+end
