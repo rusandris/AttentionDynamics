@@ -172,9 +172,9 @@ pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [-0.5,0.0,0.5],
 
 #combine heatmap with the separate colorbar
 l = @layout [a{0.95w} b]
-pl = plot!(pl_lyaps_filled, pl_cbar, layout=l, tick_direction=:out)
+pl_phase_diag = plot!(pl_lyaps_filled, pl_cbar, layout=l, tick_direction=:out)
 
-savefig(pl, figs_dir * "N10_phasediagram_extended5_80x80_filled_Ttr_10000_" * "labeled_horizontal_alpha_curve_article_params.png")
+savefig(pl_phase_diag, figs_dir * "N10_phasediagram_extended5_80x80_filled_Ttr_10000_" * "labeled_horizontal_alpha_curve_article_params.png")
 
 #=
 #example parameters 
