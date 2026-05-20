@@ -94,8 +94,8 @@ p_x300 = [g,w,300]
 ds_x300 = create_ds(u0_L, p_x300; diffeq=diffeq_x)
 
 α0 = 0.005
-T = 5
-Ttr = 10
+T = 10
+Ttr = 50
 @time λ_L300 = lyapunov(ds_L300, T / α0; Ttr=Ttr/α0,Δt=1)
 @time λ_x300 = lyapunov(ds_x300, T; Ttr=Ttr, Δt=1)
 λ_ratio = λ_L300 / λ_x300
@@ -117,4 +117,20 @@ for w in ws
     set_parameter!(ds_x300, 2, w)
     @time λ_x300 = lyapunov(ds_x300, T ; Ttr=Ttr, Δt=1)
     @show λ_x300
+end
+
+#check different transient times 
+Ttrs = [1,5,50]
+set_parameter!(ds_L300,4,2.4)
+n_ens = 3
+for Ttr in Ttrs
+    lambdas = []
+    for n in 1:n_ens
+        @show n 
+        u0 = rand(2N_test) * 1e-2
+        @time λ_L300 = lyapunov(ds_L300, T / α0; u0 = u0, Ttr=Ttr / α0, Δt=1)
+        @show λ_L300
+        push!(lambdas,λ_L300)
+    end 
+    @show mean_and_std(lambdas)    
 end
