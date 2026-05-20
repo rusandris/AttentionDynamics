@@ -44,7 +44,7 @@ writedlm(savedir * "system_sizes.txt", Ns)
 Threads.@threads for i in 1:length(Ns)
     N = Ns[i]
     id = Threads.threadid()
-    #@info "N = $(N), thread id = $(id)"
+    @info "N = $(N), thread id = $(id)"
     #select g for each N (system size)
     #so g/(N-1) is the same for each N
     #g = gs[i]
@@ -71,7 +71,6 @@ Threads.@threads for i in 1:length(Ns)
     for (j,c) in enumerate(c_values)
         #@show w
         @info "w = $(c), thread id = $(id)"
-
 	reinit!(pds)
         #set_parameter!(pds,2,w)
 
