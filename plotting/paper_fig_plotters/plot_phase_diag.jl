@@ -16,13 +16,15 @@ logocolors = Colors.JULIA_LOGO_COLORS
 figs_dir = "../../paper_figs/"
 #data_dir = "../../data/phasediag_data_N10_extended_d0_1.0e-9_ut1e-6/"
 #data_dir = "../../data/phasediag_data_N10_extended3_80x80/"
-data_dir = "../../../../../Dropbox/att_dyn/data/data_phasediag/phasediag_data_N10_extended5_80x80/"
+data_dir = "../../data/phasediag_data_N10_extended5_80x80/"
 #lyap_vals = reshape(readdlm(data_dir*"lyap_values_Ttr10000.txt"),(80,80))
 lyap_vals = reshape(readdlm(data_dir * "lyap_values_Ttr10000.txt"), (80, 80))
 params = readdlm(data_dir*"phasediag_params.txt")
 ws_phasediag = params[:,1]
 gs_phasediag = params[:, 2]
 N=10
+chaos_curve(w) = w^(-1.5)
+
 
 pl_lyaps = plot_phase_diagram(lyap_vals, ws_phasediag, gs_phasediag, N;
     xlims=(0.0, 1.0),
@@ -42,6 +44,7 @@ pl_lyaps = plot_phase_diagram(lyap_vals, ws_phasediag, gs_phasediag, N;
     x_ticks = [0.0, 0.5, 1.0])
 
 
+plot!(pl_lyaps, ws_phasediag, chaos_curve.(ws_phasediag),ls=:dash,lw=2,lc=:purple)
 #fill in with analytical eigenvalues
 λa = -1
 λ_b(g,w,N) = g*(1-1/(N-1)*1/(1/w-1)) 
@@ -92,7 +95,7 @@ g_horizontal = gs_horizontal[1]
 
 #alpha (rp=rc) direction on phasediagram
 param_dir = param_dir_root * "alpha_rp=rc_article/"
-params_orig_curve = readdlm(param_dir * "params_K_c_N.txt")
+params_orig_curve = readdlm(param_dir * "params_K_c_alpha_N.txt")
 params_rescaled_curve = readdlm(param_dir * "params_w_g.txt")
 params_changed_curve = readdlm(param_dir * "params_r.txt")
 rs = params_changed_curve[:,1]

@@ -66,11 +66,11 @@ colors = collect(Colors.JULIA_LOGO_COLORS)[[1, 2, 4]]  #use three colors
 titles = [L"A",L"B_2",L"C",L"D"]
 title_colors = [:orangered :lime :gray15 :gray80]
 
-
 guidefontsize = 24
 legendfontsize = 14
 tickfontsize = 14
 titlefontsize = 24
+lw = 2
 
 if x_idx_WTA != 1 && x_idx_WTA != 19
     x_idxs = [x_idx_WTA-2, x_idx_WTA+2, x_idx_WTA] #plot with colors
@@ -93,11 +93,11 @@ for (i,w) in enumerate(ws_example)
     Ttr = Ttrs[i]
     traj, t = trajectory(ds, T, u0; Ttr=Ttr, Δt=1e-2)
 
-    pl = plot(title=titles[i],
+    pl = plot(title=titles[i],lw=lw,
         guidefontsize=guidefontsize, legendfontsize=legendfontsize,
         tickfontsize=tickfontsize, titlefontsize=titlefontsize, 
-        titlefontcolor=title_colors[i],legend=true, xlims=(Ttr, Ttr + 50),
-        xformatter=:none, yformatter=:none)
+        titlefontcolor=title_colors[i],legend=false, xlims=(Ttr, Ttr + 50),
+        xformatter=:none, yformatter=:none,showaxis=false)
         #title=L"N = %$N"*L", 1/\epsilon = %$(g), w = %$w")
 
     #plot some with gray
@@ -116,11 +116,11 @@ for (i,w) in enumerate(ws_example)
     push!(plots_ts,pl)
 end
 
-
-x_plots_limits = [(Ttrs[1],Ttrs[1]+40),
-                (Ttrs[2],Ttrs[2]+10),
-                (Ttrs[3],Ttrs[3]+20),
-                (Ttrs[4],Ttrs[4]+20)]
+xlim = 20
+x_plots_limits = [(Ttrs[1],Ttrs[1]+xlim),
+                (Ttrs[2],Ttrs[2]+xlim),
+                (Ttrs[3],Ttrs[3]+xlim),
+                (Ttrs[4],Ttrs[4]+xlim)]
                 
                 
 y_plots_limits = [(0,4),(0,30),(0,60),(0,100)]
@@ -161,7 +161,12 @@ end
 #add panel level annotations 
 #annotate!(plots[1], -5, y_plots_limits[1][end], text("(d)", :gray10, :right, 18))
 
-pl4 = plot(plots_ts...,layout=(2,2),size=(500,400), dpi = 300)
-
 figs_dir = "../../paper_figs/"
+#save ts plots individually
+fname_labels = ["A","B","C","D"]
+for (i,pl) in enumerate(plots_ts)
+    savefig(pl,figs_dir*"timeseries_delayed_LV_N$(N)_"*"labeled_threecolors_$(fname_labels[i]).png")
+end
+
+pl4 = plot(plots_ts...,layout=(2,2),size=(500,400), dpi = 300)
 savefig(pl4,figs_dir*"timeseries_delayed_LV_N$(N)_"*"labeled_threecolors_2x2.png")

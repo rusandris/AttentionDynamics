@@ -11,5 +11,5 @@ include("plot_phase_diag.jl")
 include("plot_delay_timeseries_example.jl")
 
 #combine phasediagram with time series
-l = @layout [a{0.8w} grid(4,1)]
-fig1 = plot(pl_phase_diag,plots_ts...,layout=l,size=(1000,500))
+l = @layout [grid(1,4); a{0.6h}]
+fig1 = plot(plots_ts...,pl_phase_diag,layout=l,size=(1000,800))

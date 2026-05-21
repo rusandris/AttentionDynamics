@@ -6,38 +6,56 @@ using LinearAlgebra
 cd(@__DIR__)
 
 #path to lifetimes
-data_dir_lt_root = "../../data/lyapunovs_effect_size/"
+data_dir_root = "../../data/lyapunovs_effect_size/"
 #data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws461_T_WLC1000_T_fp10_Ttr_WLC10000_Ttr_fp10_dtmax_0.001/"
 #data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws_largerN_T_WLC1000_T_fp10_Ttr_WLC1000_Ttr_fp10_dtmax_0.001/"
 #data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws_largerN_gnormalized_phasediag_sec1_T_WLC1000_T_fp10_Ttr_WLC1000_Ttr_fp10_dtmax_0.001/"
-data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws_largestN_gn6.88_T_WLC1000_T_fp10_Ttr_WLC1000_Ttr_fp10_dtmax_0.001/"
+data_dir1 = data_dir_root * "lyapunovs_parallel_effect_size_Lsys_test_cs_largestN_gn6.88_dt1e-1_T100_Ttr100_dtmax_0.01/"
+data_dir2 = data_dir_root * "lyapunovs_param_parallel_effect_size_Lsys_cs1401_largestN_gn6.88_dt1e-1_T1000_Ttr10000_dtmax_0.1/"
+data_dirs = [data_dir1,data_dir2]
 
-files = readdir(data_dir_lt)
-files_lyaps = readdir(data_dir_lt)[1:end-1][[3,5,6,1,2,4]]#[[2, 3, 4, 1]] #[[4,5,6,1,2,3]]
-Ns = Int.(readdlm(data_dir_lt * "system_sizes.txt"))
+
+K = 1.0;r=10;α0 = 0.005;
+p_L = [r, r, K, 2.4, α0, 300]
+
 
 #plot all on one fig 
-
-pl = plot(ylabel=L"\lambda", xlabel=L"w",guidefontsize=20,tickfontsize=15,
-    legendfontsize = 12,legend=:topright,legendcolumns=3,ylims=(-0.5,8.5),
+pl = plot(ylabel=L"\lambda_{L}", xlabel=L"w",guidefontsize=20,tickfontsize=15,
+    legendfontsize = 12,legend=:topright,legendcolumns=3,
     size=(1200, 400), bottom_margin=8Plots.mm, right_margin=8Plots.mm, 
-    left_margin=8Plots.mm,dpi=300,xlims = (0.0,1.0),xticks=[0.2:0.2:1.0;])
-colors = distinguishable_colors(length(Ns)+3)[3:end]
+    left_margin=8Plots.mm,dpi=300)
+colors = distinguishable_colors(length(data_dirs)*2)
+timescale_params = [6.88,4.45]
 
-wc = 1/(2000/299) #1/4
-vline!([wc], ls=:dash, lc=:gray10,lw=3, label=false)
+for (j,data_dir) in enumerate(data_dirs)
+    files = readdir(data_dir)
+    files_lyaps = readdir(data_dir)[1:end-1] #[[3,5,6,1,2,4]]#[[2, 3, 4, 1]] #[[4,5,6,1,2,3]]
+    Ns = Int.(readdlm(data_dir * "system_sizes.txt"))
+    g_rel = timescale_params[j]
+    αs =  r ./ (g_rel .* (Ns .- 1) )
+    #wc = 1/(2000/299) #1/4
+    #vline!([wc], ls=:dash, lc=:gray10,lw=3, label=false)
 
-for (i,file) in enumerate(files_lyaps)
-    N = Ns[i]
-    #read lyap exps 
-    lyap_data = readdlm(data_dir_lt * file)
-    ws = lyap_data[:,1]
-    λs =  lyap_data[:,2]
-    plot!(pl, ws, λs, lc = colors[i], lw=2, label=L"N = %$(N)")
-    vline!([(N - 1) / N], ls=:dash, lc=colors[i], label="")
+    for (i,file) in enumerate(files_lyaps)
+        N = Ns[i]
+        N == 200 && continue 
+        α = αs[i]
+        #read lyap exps 
+        lyap_data = readdlm(data_dir * file)
+        lyap_data = lyap_data[sortperm(lyap_data[:,1]),:] #sort by parameters (first column)
+        cs = lyap_data[:,1]
+        λs =  lyap_data[:,2] ./ αs[i]
 
+        params_resc = rescaled_params.(r, r, K, cs, α, N)
+        ws = [params_resc[i][1] for i in 1:length(params_resc)]
+
+        plot!(pl, ws, λs, lw=2, label=L"N = %$(N), 1/[\varepsilon(N-1)] = %$(timescale_params[j])")
+        #vline!([(N - 1) / N], ls=:dash, lc=colors[i], label="")
+    end
 end
-savefig(pl,"../../paper_figs/lyapunovs_system_size_effect_chaotic_width_Ttr1e3_tscale6.688_large_sys_test.png")
+plot(pl,ylims=(-1.1,10.06),legend=:bottomleft,legendfontsize=12,legend_columns=2)
+hline!(pl,[0.0],ls=:dash,lc=:gray10,legend=false,label="")
+#savefig(pl,"../../paper_figs/lyapunovs_system_size_effect_chaotic_width_Ttr1e3_tscale6.688_large_sys_test.png")
 
 #example timeseries 
 using OrdinaryDiffEq
@@ -45,11 +63,11 @@ using DynamicalSystems
 N_test = 300
 
 #L system
-diffeq_L = (alg=Tsit5(), dt=1e-1, dtmax=1e-1, adaptive=true, maxiters=1e15)
+diffeq_L = (alg=Tsit5(), dt=1e-2, dtmax=1e-2, adaptive=true, maxiters=1e15)
 u0_L = rand(2N_test) .* 1e-2
 #fixed params 
 K = 1.0;r=10;
-p_L = [r, r, K, 2.4, r / (2000 / 299 * (N_test - 1)), 10]
+p_L = [r, r, K, 2.4, r / (2000 / 299 * (N_test - 1)), 300]
 ds_L = create_original_ds(u0_L, p_L; diffeq=diffeq_L)
 traj_L, t = trajectory(ds_L, 1000, u0_L; Ttr=1000, Δt=1e-3)
 
