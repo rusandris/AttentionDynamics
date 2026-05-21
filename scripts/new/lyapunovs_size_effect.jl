@@ -36,8 +36,8 @@ T_WLC = 1000
 T_fp = 10
 Ttr_WLC = 1000
 Ttr_fp = 10
-Ttr = 100 #1000 #10000
-T = 100 #1000
+Ttr = 1000 #1000 #10000
+T = 500 #1000
 dtmax = 1e-2
 dt = 1e-2
 d0 = 1e-9
@@ -53,6 +53,7 @@ savedir_root = "../../data/lyapunovs_effect_size/" #"../../../../../../data/RESU
 savedir = savedir_root * "lyapunovs_parallel_effect_size_Lsys_test_cs_largestN_gn6.88_dt1e-1_T$(T)_Ttr$(Ttr)_dtmax_$(dtmax)/"
 mkpath(savedir)
 writedlm(savedir * "system_sizes.txt", Ns)
+writedlm(savedir * "gs_alphas.txt", vcat(gs,αs))
 
 for i in 1:length(Ns)
     N = Ns[i]
@@ -79,20 +80,22 @@ for i in 1:length(Ns)
     lyaps = zeros(length(w_values))
     
     Threads.@threads for j in 1:length(c_values)
-        
+        w = w_values[j]
         c = c_values[j]
         id = Threads.threadid()
         @info "w = $(c), thread id = $(id)"
         flush(stderr)
 
         #define ds for each thread
-        u0_thread = deepcopy(u0)
-        p_thread = deepcopy(p)
-        ds = create_original_ds(u0_thread, p_thread; diffeq=diffeq)
+        u0_thread = rand(2N) .* 1e-2
+        ds = create_original_ds(u0_thread, [p_L[1:end-3]..., c, α, N]; diffeq=diffeq)
+        #set_parameter!(ds, 4, c)
         
         #transient time separately
         u0_Ttr = trajectory(ds, 0, u0_thread; Ttr=Ttr)[1][1]
-        @show findfirst(x->iszero(x),u0_Ttr)
+        null_idx = findfirst(x->iszero(x),u0_Ttr)
+        @show u0_Ttr[1]
+        #@show null_idx, u0_Ttr[null_idx]
         flush(stdout)
         flush(stderr)
 
@@ -111,8 +114,6 @@ for i in 1:length(Ns)
         pds = ParallelDynamicalSystem(deepcopy(ds),[u0_Ttr,u0_Ttr .+ d0])
         #set_parameter!(pds,2,w)
 
-	    set_parameter!(pds,4,c)
-
         #select calc time and transient time based on w
         #Ttr = w_c1 < w < wc2 ? Ttr_WLC : Ttr_fp
         #T = w_c1 < w < wc2 ? T_WLC : T_fp
@@ -123,7 +124,7 @@ for i in 1:length(Ns)
 
         #save lyapunov exponents
 	    open(savedir*"lyaps_N$N"*".txt", "a") do f
-		    write(f, "$(c)\t$(lambda)\n")
+		    write(f, "$(w)\t$(c)\t$(lambda)\n")
 	    end
 
     end  
