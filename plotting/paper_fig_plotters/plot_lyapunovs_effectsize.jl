@@ -6,56 +6,85 @@ using LinearAlgebra
 cd(@__DIR__)
 
 #path to lifetimes
-data_dir_root = "../../data/lyapunovs_effect_size/"
+data_dir_root = "../../data/lyapunovs_effect_size/lyapunovs_effect_size_Lx_small_sys/"
 #data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws461_T_WLC1000_T_fp10_Ttr_WLC10000_Ttr_fp10_dtmax_0.001/"
 #data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws_largerN_T_WLC1000_T_fp10_Ttr_WLC1000_Ttr_fp10_dtmax_0.001/"
 #data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws_largerN_gnormalized_phasediag_sec1_T_WLC1000_T_fp10_Ttr_WLC1000_Ttr_fp10_dtmax_0.001/"
-data_dir1 = data_dir_root * "lyapunovs_parallel_effect_size_Lsys_test_cs_largestN_gn6.88_dt1e-1_T100_Ttr100_dtmax_0.01/"
-data_dir2 = data_dir_root * "lyapunovs_param_parallel_effect_size_Lsys_cs1401_largestN_gn6.88_dt1e-1_T1000_Ttr10000_dtmax_0.1/"
-data_dirs = [data_dir1,data_dir2]
+data_dirs = readdir(data_dir_root) .* "/"
 
-
+# L system constants
 K = 1.0;r=10;α0 = 0.005;
 p_L = [r, r, K, 2.4, α0, 300]
 
-
-#plot all on one fig 
-pl = plot(ylabel=L"\lambda_{L}", xlabel=L"w",guidefontsize=20,tickfontsize=15,
-    legendfontsize = 12,legend=:topright,legendcolumns=3,
-    size=(1200, 400), bottom_margin=8Plots.mm, right_margin=8Plots.mm, 
-    left_margin=8Plots.mm,dpi=300)
+plots = []
 colors = distinguishable_colors(length(data_dirs)*2)
-timescale_params = [6.88,4.45]
+g_rel_levels = [2.0,3.0,4.46,5.0,6.69] #timescale param levels on phase diag
+first_zero_ws = Vector{Float64}[]
 
 for (j,data_dir) in enumerate(data_dirs)
-    files = readdir(data_dir)
-    files_lyaps = readdir(data_dir)[1:end-1] #[[3,5,6,1,2,4]]#[[2, 3, 4, 1]] #[[4,5,6,1,2,3]]
-    Ns = Int.(readdlm(data_dir * "system_sizes.txt"))
-    g_rel = timescale_params[j]
-    αs =  r ./ (g_rel .* (Ns .- 1) )
-    #wc = 1/(2000/299) #1/4
-    #vline!([wc], ls=:dash, lc=:gray10,lw=3, label=false)
 
-    for (i,file) in enumerate(files_lyaps)
+    #initialize fig
+    pl = plot(ylabel=L"\lambda_{L}", xlabel=L"w",guidefontsize=20,tickfontsize=15,
+        legend=false,
+        size=(1200, 400), bottom_margin=8Plots.mm, right_margin=8Plots.mm, 
+        left_margin=8Plots.mm,dpi=300)
+    
+    #read data files 
+    files = readdir(data_dir_root * data_dir)
+    files_lyaps_L = files[2:end-6]
+    αs = readdlm(data_dir_root * data_dir * "gs_alphas.txt")[:,2]
+    Ns = Int.(readdlm(data_dir_root * data_dir * "system_sizes.txt"))
+    g_rel = g_rel_levels[j]
+    first_zero_ws_level = Float64[] #specific to this param level
+
+    for (i,file) in enumerate(files_lyaps_L)
+
         N = Ns[i]
-        N == 200 && continue 
         α = αs[i]
-        #read lyap exps 
-        lyap_data = readdlm(data_dir * file)
-        lyap_data = lyap_data[sortperm(lyap_data[:,1]),:] #sort by parameters (first column)
-        cs = lyap_data[:,1]
-        λs =  lyap_data[:,2] ./ αs[i]
+        lyaps_data = readdlm(data_dir_root * data_dir * file)
+        lyaps_data_sorted = lyaps_data[sortperm(lyaps_data[:,2]),:]
+        ws = lyaps_data_sorted[:,2]
+        cs = lyaps_data_sorted[:,3]
+        Λ_Ls = lyaps_data_sorted[:,4] 
+        
+        #replace blanks with NaNs (if there are)
+        replace!(Λ_Ls, "" => NaN)
 
-        params_resc = rescaled_params.(r, r, K, cs, α, N)
-        ws = [params_resc[i][1] for i in 1:length(params_resc)]
+        Λ_Ls = Λ_Ls ./ α
 
-        plot!(pl, ws, λs, lw=2, label=L"N = %$(N), 1/[\varepsilon(N-1)] = %$(timescale_params[j])")
-        #vline!([(N - 1) / N], ls=:dash, lc=colors[i], label="")
+        #plot 
+        plot!(ws,Λ_Ls,lw=2,label=L"N = %$(Ns[i])",title=L"\frac{1}{\varepsilon (N-1)} = %$(g_rel)")
+
+        #extract first zero points
+        #skip zeros for low w values 
+        idx_offset = 10
+        idx_first_zero = findfirst(λ -> λ < 0.01, Λ_Ls[idx_offset:end]) 
+        !(isnothing(idx_first_zero)) && push!(first_zero_ws_level,ws[idx_first_zero + idx_offset-1])
+
     end
+
+    #add common legend finally
+    if j == 5
+        plot!(pl,legendfontsize = 15,legend=:outertopright)
+    end 
+    push!(plots,pl)
+    push!(first_zero_ws,first_zero_ws_level)
 end
-plot(pl,ylims=(-1.1,10.06),legend=:bottomleft,legendfontsize=12,legend_columns=2)
-hline!(pl,[0.0],ls=:dash,lc=:gray10,legend=false,label="")
-#savefig(pl,"../../paper_figs/lyapunovs_system_size_effect_chaotic_width_Ttr1e3_tscale6.688_large_sys_test.png")
+
+#add zero ws points to plots 
+for (i,zpoints) in enumerate(first_zero_ws)
+    vline!(plots[i],zpoints,ls=:dash,lc=:gray10,label="")
+end
+
+#save first zero ws values 
+
+
+
+pl_all = plot(plots...,layout=(2,3),size=(1800,600),dpi=300)
+savefig(pl_all,"../../paper_figs/preliminary_small_systems_lyap_curves_multiple_levels.png")
+
+
+
 
 #example timeseries 
 using OrdinaryDiffEq
