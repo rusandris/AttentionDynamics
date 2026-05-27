@@ -1,12 +1,15 @@
 using Plots, LaTeXStrings
 #using AttentionDynamics
 using DelimitedFiles
+using CurveFit  
 cd(@__DIR__)
 
 #def critical curves 
 critical_curve(w, N) = (N - 1) / w
 critical_curve_adim(w) = 1 / w
-chaos_curve(w, beta) = w^(-beta)
+chaos_curve(w, beta, gamma=0.0) = w^(-beta) + gamma
+
+powerlaw(p, x) = @. x^(p[1]) + p[2] 
 
 chaos_points1 = [0.45, 0.55, 0.6, 0.52, 0.6]
 rescaled_time1 = 6.88 * ones(length(chaos_points1))
@@ -34,17 +37,35 @@ gs = [1:0.1:10.0;]
 pl = plot(guidefontsize=25, tickfontsize=18,right_margin=5Plots.mm,legendfontsize=12,dpi=300)
 plot!(pl, ws, critical_curve_adim.(ws);
     ls=ls1,lw=lw,lc=color_default, 
-    label="", xlims = xlims)
+    label="", xlims = xlims,ylims=ylims,legend=:bottomleft)
 
 #read chaos end points for different system sizes 
 chaos_end_points = readdlm("../../data/small_systems_lyap_drops_first_zeros_N_grel_w_T1e3_Ttr1e4.txt")
+nr_points = size(chaos_end_points)[1]
 
 #go through chaos points 
+g_rel_levels = unique(chaos_end_points[:,2])
+Ns = unique(chaos_end_points[:,1])
+chaos_end_points_per_size = [chaos_end_points[i:4:end,end] for i in 1:4]
+
+#fit to each N 
+param_guesses = [-1.0, 0.5]
+params_fit = []
+for (i,N) in enumerate(Ns)
+    w_chaos_ends = chaos_end_points_per_size[i]
+    prob = NonlinearCurveFitProblem(powerlaw, param_guesses, w_chaos_ends, g_rel_levels)
+    sol = solve(prob)
+    ps_fit = sol.u
+    push!(params_fit,ps_fit)
+end
+
+#plot_chaos points 
 colors = [:blue :orange :green :purple ]
-nr_points = size(chaos_end_points)[1]
-for i in 1:4:nr_points
-    points = chaos_end_points[i:i+3,2:3]
-    plot!(points[:,2]',points[:,1]',st=:scatter,ms=6,label="",mc=colors)
+for i in 1:length(chaos_end_points_per_size)
+    chaos_end_points_N = chaos_end_points_per_size[i]
+    p_fit = params_fit[i]
+    plot!(chaos_end_points_N,g_rel_levels,st=:scatter,ms=6,label="",mc=colors[i])
+    plot!(ws,powerlaw(p_fit,ws),lw=1,label="",lc=colors[i])
 end
 pl
 
@@ -53,13 +74,24 @@ vline!(pl, [(N - 1) / N],
     label="", xlims=xlims, ylims=ylims)
 
 Ns = [20,30,50,75]
-βs = [2.0,2.4,2.8,4.0]
+βs = [1.8,2.0,2.8,3.0]
+γs = [0.3,0.2,1.2,1.5]
 for (i,β) in enumerate(βs)
-    plot!(pl, ws, chaos_curve.(ws, β); 
+    plot!(pl, ws, chaos_curve.(ws, β,γs[i]); 
         ls=ls1, lw=lw, lc=colors[i],
         label=L"N = %$(Ns[i]),\beta=%$(β)")
 end
 pl
+#add manually some (test grel8)
+plot!([0.32],[8.0],ms=6,mc=colors[1],st=:scatter,label="")
+plot!([0.38],[8.0],ms=6,mc=colors[2],st=:scatter,label="")
+plot!([0.45],[8.0],ms=6,mc=colors[3],st=:scatter,label="")
+plot!([0.53],[8.0],ms=6,mc=colors[4],st=:scatter,label="")
+
+
+pl
+
+
 #------------------------add manually----------------------
 
 scatter!(pl, chaos_points1, rescaled_time1, color=:red, label="")

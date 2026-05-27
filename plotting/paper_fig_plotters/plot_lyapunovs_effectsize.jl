@@ -7,59 +7,89 @@ cd(@__DIR__)
 
 #path to lifetimes
 data_dir_root = "../../data/lyapunovs_effect_size/lyapunovs_effect_size_Lx_small_sys/"
-#data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws461_T_WLC1000_T_fp10_Ttr_WLC10000_Ttr_fp10_dtmax_0.001/"
-#data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws_largerN_T_WLC1000_T_fp10_Ttr_WLC1000_Ttr_fp10_dtmax_0.001/"
-#data_dir_lt = data_dir_lt_root * "lyapunovs_parallel_effect_size_ws_largerN_gnormalized_phasediag_sec1_T_WLC1000_T_fp10_Ttr_WLC1000_Ttr_fp10_dtmax_0.001/"
-data_dirs = readdir(data_dir_root) .* "/"
+#data_dir_root = "../../data/lyapunovs_effect_size/lyapunovs_effect_size_L_N50_N75_sys/"
+data_dirs = readdir(data_dir_root)[[[2:6;]...,1]] .* "/"
 
 # L system constants
 K = 1.0;r=10;α0 = 0.005;
 p_L = [r, r, K, 2.4, α0, 300]
 
 plots = []
-colors = distinguishable_colors(length(data_dirs)*2)
+colors = distinguishable_colors(length(data_dirs)*2)[5:8]
 g_rel_levels = [2.0,3.0,4.46,5.0,6.69] #timescale param levels on phase diag
-first_zero_ws = Vector{Float64}[]
+first_zero_ws_L = Vector{Float64}[]
+first_zero_ws_x = Vector{Float64}[]
+lyapsL_file_idxs = 2:5
+lyapsx_file_idxs = 6:9
+ylabel_x = L"\Lambda_x" 
+ylabel_L = L"\Lambda_{L} / \alpha" 
+ylims = (-0.1,3.0)
 
 for (j,data_dir) in enumerate(data_dirs)
 
     #initialize fig
-    pl = plot(ylabel=L"\lambda_{L}", xlabel=L"w",guidefontsize=20,tickfontsize=15,
-        legend=false,
+    pl = plot(ylabel=ylabel_x *", "*ylabel_L, xlabel=L"w",guidefontsize=20,tickfontsize=15,
+        legend=false,ylims=ylims,
         size=(1200, 400), bottom_margin=8Plots.mm, right_margin=8Plots.mm, 
         left_margin=8Plots.mm,dpi=300)
+
     
     #read data files 
     files = readdir(data_dir_root * data_dir)
-    files_lyaps_L = files[2:end-6]
+    files_lyaps_L = files[lyapsL_file_idxs]
+    files_lyaps_x = files[lyapsx_file_idxs]
+
+    @assert length(files_lyaps_L) == length(files_lyaps_x)
+    nr_files = length(files_lyaps_L)
+
+    #read params
     αs = readdlm(data_dir_root * data_dir * "gs_alphas.txt")[:,2]
     Ns = Int.(readdlm(data_dir_root * data_dir * "system_sizes.txt"))
     g_rel = g_rel_levels[j]
-    first_zero_ws_level = Float64[] #specific to this param level
+    first_zero_ws_level_L = Float64[] #specific to this param level
+    first_zero_ws_level_x = Float64[] #specific to this param level
 
-    for (i,file) in enumerate(files_lyaps_L)
 
+    for i in 1:nr_files
+        file_L = files_lyaps_L[i]
+        file_x = files_lyaps_x[i]
+
+        @show file_L,file_x
         N = Ns[i]
         α = αs[i]
-        lyaps_data = readdlm(data_dir_root * data_dir * file)
-        lyaps_data_sorted = lyaps_data[sortperm(lyaps_data[:,2]),:]
-        ws = lyaps_data_sorted[:,2]
-        cs = lyaps_data_sorted[:,3]
-        Λ_Ls = lyaps_data_sorted[:,4] 
-        
+
+        #read files Lsystem
+        lyaps_data_L = readdlm(data_dir_root * data_dir * file_L)
+        lyaps_data_sorted_L = lyaps_data_L[sortperm(lyaps_data_L[:,2]),:]
+        ws = lyaps_data_sorted_L[:,2]
+        cs = lyaps_data_sorted_L[:,3]
+        Λ_Ls = lyaps_data_sorted_L[:,end] 
+
         #replace blanks with NaNs (if there are)
         replace!(Λ_Ls, "" => NaN)
-
         Λ_Ls = Λ_Ls ./ α
 
-        #plot 
-        plot!(ws,Λ_Ls,lw=2,label=L"N = %$(Ns[i])",title=L"\frac{1}{\varepsilon (N-1)} = %$(g_rel)")
+        #read files xsystem 
+        lyaps_data_x = readdlm(data_dir_root * data_dir * file_x)
+        lyaps_data_sorted_x = lyaps_data_x[sortperm(lyaps_data_x[:,2]),:]
+        Λ_xs = lyaps_data_sorted_x[:,end] 
+        
+        #plot both 
+        plot!(ws,Λ_Ls,lw=2,label=L"N = %$(Ns[i])",lc=colors[i],
+            title=L"\frac{1}{\varepsilon (N-1)} = %$(g_rel)")
+        plot!(ws,Λ_xs,markerstrokewidth=0.01,ms=2,st=:scatter,label="",mc=colors[i])
 
         #extract first zero points
         #skip zeros for low w values 
         idx_offset = 10
-        idx_first_zero = findfirst(λ -> λ < 0.01, Λ_Ls[idx_offset:end]) 
-        !(isnothing(idx_first_zero)) && push!(first_zero_ws_level,ws[idx_first_zero + idx_offset-1])
+
+        #Lsystem
+        idx_first_zero_L = findfirst(λ -> λ < 0.01, Λ_Ls[idx_offset:end]) 
+        !(isnothing(idx_first_zero_L)) && push!(first_zero_ws_level_L,ws[idx_first_zero_L + idx_offset-1])
+
+        #xsystem
+        idx_first_zero_x = findfirst(λ -> λ < 0.01, Λ_xs[idx_offset:end]) 
+        !(isnothing(idx_first_zero_x)) && push!(first_zero_ws_level_x,ws[idx_first_zero_x + idx_offset-1])
 
     end
 
@@ -68,11 +98,13 @@ for (j,data_dir) in enumerate(data_dirs)
         plot!(pl,legendfontsize = 15,legend=:outertopright)
     end 
     push!(plots,pl)
-    push!(first_zero_ws,first_zero_ws_level)
+    push!(first_zero_ws_L,first_zero_ws_level_L)
+    push!(first_zero_ws_x,first_zero_ws_level_x)
+
 end
 
 #add zero ws points to plots 
-for (i,zpoints) in enumerate(first_zero_ws)
+for (i,zpoints) in enumerate(first_zero_ws_L)
     vline!(plots[i],zpoints,ls=:dash,lc=:gray10,label="")
 end
 
@@ -80,8 +112,8 @@ end
 
 
 
-pl_all = plot(plots...,layout=(2,3),size=(1800,600),dpi=300)
-savefig(pl_all,"../../paper_figs/preliminary_small_systems_lyap_curves_multiple_levels.png")
+pl_all = plot(plots...,layout=(2,3),size=(1800,600),dpi=300,left_margin=12Plots.mm)
+savefig(pl_all,"../../paper_figs/preliminary_small_systems_lyap_curves_multiple_levels_T1e3_Ttr1e4_Lxsys.png")
 
 
 
