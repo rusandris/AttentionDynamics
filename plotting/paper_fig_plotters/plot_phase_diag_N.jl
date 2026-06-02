@@ -1,6 +1,8 @@
 using Plots, LaTeXStrings
 #using AttentionDynamics
 using DelimitedFiles
+using DataFrames, CSV
+using StatsBase
 using CurveFit  
 cd(@__DIR__)
 
@@ -8,25 +10,16 @@ cd(@__DIR__)
 critical_curve(w, N) = (N - 1) / w
 critical_curve_adim(w) = 1 / w
 chaos_curve(w, beta, gamma=0.0) = w^(-beta) + gamma
-
 powerlaw(p, x) = @. x^(p[1]) + p[2] 
-
-chaos_points1 = [0.45, 0.55, 0.6, 0.52, 0.6]
-rescaled_time1 = 6.88 * ones(length(chaos_points1))
-Ns1 = [30, 50, 75, 200, 300]
-
-chaos_points2 = [0.39, 0.4, 0.45, 0.52]
-rescaled_time2 = 4.0 * ones(length(chaos_points2))
-Ns2 = [8, 10, 15, 20]
-
-
-N = 10
 
 #plot parameters 
 ls1 = :dash
 ls2 = :dot
 color_default = :gray10
-lw = 2
+colors = palette([:red, :purple], 4)
+#colors = [:blue :orange :green :purple ]
+markershapes = [:utriangle, :rect, :x, :cross ]
+lw = 4
 xlims = (0.0,1.0)
 ylims = (0.0, 10.5)
 
@@ -34,14 +27,43 @@ ws = [0.1:0.01:1.0;]
 gs = [1:0.1:10.0;]
 
 #----------------plot----------------
-pl = plot(ylabel = L"\frac{1}{\varepsilon(N-1)}",xlabel=L"w",guidefontsize=25, tickfontsize=18,
-    left_margin=5Plots.mm, right_margin=5Plots.mm, legendfontsize=12, dpi=300)
-plot!(pl, ws, critical_curve_adim.(ws);
+pl_phasediag_N = plot(ylabel = L"\frac{1}{\varepsilon(N-1)}",xlabel=L"w",guidefontsize=25, tickfontsize=18,
+    left_margin=5Plots.mm, right_margin=5Plots.mm, 
+    legendfontsize=12, dpi=300, legend=:topright)
+plot!(pl_phasediag_N, ws, critical_curve_adim.(ws);
     ls=ls1,lw=lw,lc=color_default, 
-    label="", xlims = xlims,ylims=ylims,legend=:bottomleft)
+    label="", xlims = xlims,ylims=ylims)
+
+#read phase diagram of N=10 separately
+data_dir_N10 = "../../data/phasediag_data_N10_extended5_80x80/"
+lyap_vals_N10 = reshape(readdlm(data_dir * "lyap_values_Ttr10000.txt"), (80, 80))
+params = readdlm(data_dir*"phasediag_params.txt")
+ws_N10 = params[:,1]
+gs_N10 = params[:, 2]
+
+#loop through every row on the phase diagram, search for end of chaos 
+chaos_end_idxs_N10 = zeros(Int64,length(ws_N10))
+chaos_threshold = 0.1
+periodic_threshold = 1e-2
+range_avg = 3
+for (i,g) in enumerate(gs_N10)
+    lyap_curve = lyap_vals_N10[i,:]
+
+    #search for zero exponent after a positive one
+    for j in range_avg:length(lyap_curve)-range_avg
+        avg_before = mean(lyap_curve[(j-range_avg+1):j])
+        avg_after = mean(lyap_curve[j:j+range_avg-1])
+        if  avg_before > chaos_threshold && 0 < abs(avg_after) < periodic_threshold        
+            chaos_end_idxs_N10[i] = j
+        end
+    end
+end
+#find first nonzero chaos end point 
+first_nonzero_idx = findfirst(i -> !(iszero(i)),chaos_end_idxs_N10) 
+chaos_end_points_N10 = ws_N10[chaos_end_idxs_N10[first_nonzero_idx:end]]
 
 #read chaos end points for different system sizes 
-chaos_end_points = CSV.read("../../data/chaos_endpoints_lyap_curves_multiple_levels_T1e3_Ttr5x1e4_L_logsys.csv",DataFrame)
+chaos_end_points = CSV.read("../../data/lyapunovs_effect_size/chaos_endpoints_lyap_curves_multiple_levels_T1e3_Ttr5x1e4_L_logsys.csv",DataFrame)
 nr_points = size(chaos_end_points)[1]
 
 #go through chaos points 
@@ -61,21 +83,32 @@ for (i,N) in enumerate(Ns)
 end
 
 #plot_chaos points 
-colors = [:blue :orange :green :purple ]
 for i in 1:length(Ns)
     chaos_end_points_N = chaos_end_points[:,i+1]
     p_fit = params_fit[i]
-    plot!(chaos_end_points_N,g_rel_levels,st=:scatter,ms=6,label="",mc=colors[i])
+    plot!(chaos_end_points_N,g_rel_levels,st=:scatter,ms=6,
+        label=L"N = %$(Ns[i])",mc=colors[i],markershape=markershapes[i])
     plot!(ws,powerlaw(p_fit,ws),lw=1,label="",lc=colors[i])
 end
+
+#plot N=10 separately
+plot!(pl_phasediag_N,chaos_end_points_N10,g_rel_levels_N10,
+    st=:scatter,ms=6,mc=:red,label=L"N = 10")
+
+#add N=10 fit 
+g_rel_levels_N10 = gs_N10[end-length(chaos_end_points_N10)+1:end] ./ (10-1)
+prob_N10 = NonlinearCurveFitProblem(powerlaw, param_guesses, chaos_end_points_N10, g_rel_levels_N10)
+ps_fit_N10 = solve(prob_N10).u
+plot!(ws_N10,powerlaw(ps_fit_N10,ws_N10),lw=1,label="",lc=:red)
+
 pl
 
 #hline!([1.5],ls=:dash)
-vline!(pl, [(N - 1) / N],
+vline!(pl_phasediag_N, [(N - 1) / N],
     lc=color_default,ls=ls2,lw=lw,
     label="", xlims=xlims, ylims=ylims)
 
-savefig(pl, "../../paper_figs/chaos_endpoints_lyap_curves_4system_sizes_multiple_levels_T1e3_Ttr5x1e4_L_logsys.png")
+savefig(pl_phasediag_N, "../../paper_figs/chaos_endpoints_lyap_curves_4system_sizes_multiple_levels_T1e3_Ttr5x1e4_L_logsys.png")
 
 #=
 Ns = [20,30,50,75]
