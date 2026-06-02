@@ -3,43 +3,49 @@ using Plots, LaTeXStrings
 using StatsBase
 using AttentionDynamics
 using LinearAlgebra
+using DataFrames, CSV
 cd(@__DIR__)
 
 #path to lifetimes
-data_dir_root = "../../data/lyapunovs_effect_size/lyapunovs_effect_size_Lx_small_sys/"
+#data_dir_root = "../../data/lyapunovs_effect_size/lyapunovs_effect_size_Lx_small_sys/"
 #data_dir_root = "../../data/lyapunovs_effect_size/lyapunovs_effect_size_L_N50_N75_sys/"
-data_dirs = readdir(data_dir_root)[[[2:6;]...,1]] .* "/"
+data_dir_root = "../../data/lyapunovs_effect_size/lyapunovs_effect_size_L_logsys_Ttr_5x1e4_0.2_0.95_w351/"
+#data_dir_root = "../../data/lyapunovs_effect_size/lyapunovs_effect_size_L_Ttr_5x1e4_0.2_0.95_ws351/"
+data_dirs = readdir(data_dir_root)[[1,3:11...,2]] .* "/" 
 
 # L system constants
 K = 1.0;r=10;α0 = 0.005;
 p_L = [r, r, K, 2.4, α0, 300]
 
 plots = []
-colors = distinguishable_colors(length(data_dirs)*2)[5:8]
-g_rel_levels = [2.0,3.0,4.46,5.0,6.69] #timescale param levels on phase diag
+#colors = distinguishable_colors(length(data_dirs)*2)[4:end]#[5:8]
+colors = [:blue :orange :green :purple]
+
+g_rel_levels = [1.5, 2.0, 3.0, 4.0, 4.46, 5.0, 6.0, 6.69, 8.0, 9.0, 10.0] #timescale param levels on phase diag
 first_zero_ws_L = Vector{Float64}[]
 first_zero_ws_x = Vector{Float64}[]
 lyapsL_file_idxs = 2:5
 lyapsx_file_idxs = 6:9
 ylabel_x = L"\Lambda_x" 
-ylabel_L = L"\Lambda_{L} / \alpha" 
+ylabel_L = L"\Lambda_{\log} / \alpha" 
 ylims = (-0.1,3.0)
+idx_offsets = [10,200,100,100,50,10,10,10,10,10,10]
+xlimits = (0.2,1.0)
 
 for (j,data_dir) in enumerate(data_dirs)
 
     #initialize fig
-    pl = plot(ylabel=ylabel_x *", "*ylabel_L, xlabel=L"w",guidefontsize=20,tickfontsize=15,
-        legend=false,ylims=ylims,
-        size=(1200, 400), bottom_margin=8Plots.mm, right_margin=8Plots.mm, 
-        left_margin=8Plots.mm,dpi=300)
+    pl = plot(ylabel=ylabel_L, xlabel=L"w",guidefontsize=20,tickfontsize=15,
+        legend=false,ylims=ylims,xlims=xlimits,
+        size=(1200, 400),dpi=300)
 
     
     #read data files 
     files = readdir(data_dir_root * data_dir)
     files_lyaps_L = files[lyapsL_file_idxs]
-    files_lyaps_x = files[lyapsx_file_idxs]
+    #files_lyaps_x = files[lyapsx_file_idxs]
 
-    @assert length(files_lyaps_L) == length(files_lyaps_x)
+    #@assert length(files_lyaps_L) == length(files_lyaps_x)
     nr_files = length(files_lyaps_L)
 
     #read params
@@ -47,14 +53,14 @@ for (j,data_dir) in enumerate(data_dirs)
     Ns = Int.(readdlm(data_dir_root * data_dir * "system_sizes.txt"))
     g_rel = g_rel_levels[j]
     first_zero_ws_level_L = Float64[] #specific to this param level
-    first_zero_ws_level_x = Float64[] #specific to this param level
+    #first_zero_ws_level_x = Float64[] #specific to this param level
 
 
     for i in 1:nr_files
         file_L = files_lyaps_L[i]
-        file_x = files_lyaps_x[i]
+        #file_x = files_lyaps_x[i]
 
-        @show file_L,file_x
+        @show file_L#file_x
         N = Ns[i]
         α = αs[i]
 
@@ -70,36 +76,35 @@ for (j,data_dir) in enumerate(data_dirs)
         Λ_Ls = Λ_Ls ./ α
 
         #read files xsystem 
-        lyaps_data_x = readdlm(data_dir_root * data_dir * file_x)
-        lyaps_data_sorted_x = lyaps_data_x[sortperm(lyaps_data_x[:,2]),:]
-        Λ_xs = lyaps_data_sorted_x[:,end] 
+        #lyaps_data_x = readdlm(data_dir_root * data_dir * file_x)
+        #lyaps_data_sorted_x = lyaps_data_x[sortperm(lyaps_data_x[:,2]),:]
+        #Λ_xs = lyaps_data_sorted_x[:,end] 
         
         #plot both 
         plot!(ws,Λ_Ls,lw=2,label=L"N = %$(Ns[i])",lc=colors[i],
             title=L"\frac{1}{\varepsilon (N-1)} = %$(g_rel)")
-        plot!(ws,Λ_xs,markerstrokewidth=0.01,ms=2,st=:scatter,label="",mc=colors[i])
+        #plot!(ws,Λ_xs,markerstrokewidth=0.01,ms=2,st=:scatter,label="",mc=colors[i])
 
         #extract first zero points
-        #skip zeros for low w values 
-        idx_offset = 10
-
+        #skip zeros for low w values
+        idx_offset = idx_offsets[j]
         #Lsystem
         idx_first_zero_L = findfirst(λ -> λ < 0.01, Λ_Ls[idx_offset:end]) 
         !(isnothing(idx_first_zero_L)) && push!(first_zero_ws_level_L,ws[idx_first_zero_L + idx_offset-1])
 
         #xsystem
-        idx_first_zero_x = findfirst(λ -> λ < 0.01, Λ_xs[idx_offset:end]) 
-        !(isnothing(idx_first_zero_x)) && push!(first_zero_ws_level_x,ws[idx_first_zero_x + idx_offset-1])
+        #idx_first_zero_x = findfirst(λ -> λ < 0.01, Λ_xs[idx_offset:end]) 
+        #!(isnothing(idx_first_zero_x)) && push!(first_zero_ws_level_x,ws[idx_first_zero_x + idx_offset-1])
 
     end
 
     #add common legend finally
-    if j == 5
-        plot!(pl,legendfontsize = 15,legend=:outertopright)
+    if j == 1
+        plot!(pl,legendfontsize = 15,legend=:topleft)
     end 
     push!(plots,pl)
     push!(first_zero_ws_L,first_zero_ws_level_L)
-    push!(first_zero_ws_x,first_zero_ws_level_x)
+    #push!(first_zero_ws_x,first_zero_ws_level_x)
 
 end
 
@@ -108,15 +113,21 @@ for (i,zpoints) in enumerate(first_zero_ws_L)
     vline!(plots[i],zpoints,ls=:dash,lc=:gray10,label="")
 end
 
+pl_all = plot(plots...,layout=(2,6),size=(1800,500),dpi=300,
+    left_margin=12Plots.mm,bottom_margin=12Plots.mm, right_margin=8Plots.mm)
+savefig(pl_all,"../../paper_figs/preliminary_small_systems_lyap_curves_multiple_levels11_T1e3_Ttr5x1e4_L_logsys.png")
+
+chaos_ends_N20 = [first_zero_ws_L[i][1] for i in 1:length(first_zero_ws_L)] 
+chaos_ends_N30 = [first_zero_ws_L[i][2] for i in 1:length(first_zero_ws_L)]
+chaos_ends_N50 = [first_zero_ws_L[i][3] for i in 1:length(first_zero_ws_L)]
+chaos_ends_N75 = [first_zero_ws_L[i][4] for i in 1:length(first_zero_ws_L)]
+
+
 #save first zero ws values 
+df = DataFrame(eps_rel = g_rel_levels,N20=chaos_ends_N20, N30=chaos_ends_N30, 
+    N50=chaos_ends_N50, N75=chaos_ends_N75)
 
-
-
-pl_all = plot(plots...,layout=(2,3),size=(1800,600),dpi=300,left_margin=12Plots.mm)
-savefig(pl_all,"../../paper_figs/preliminary_small_systems_lyap_curves_multiple_levels_T1e3_Ttr1e4_Lxsys.png")
-
-
-
+CSV.write("../../data/chaos_endpoints_lyap_curves_multiple_levels_T1e3_Ttr5x1e4_L_logsys.csv", df)
 
 #example timeseries 
 using OrdinaryDiffEq

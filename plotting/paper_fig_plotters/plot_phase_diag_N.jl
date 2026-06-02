@@ -28,31 +28,32 @@ ls2 = :dot
 color_default = :gray10
 lw = 2
 xlims = (0.0,1.0)
-ylims = (0.0, 10.0)
+ylims = (0.0, 10.5)
 
 ws = [0.1:0.01:1.0;]
 gs = [1:0.1:10.0;]
 
 #----------------plot----------------
-pl = plot(guidefontsize=25, tickfontsize=18,right_margin=5Plots.mm,legendfontsize=12,dpi=300)
+pl = plot(ylabel = L"\frac{1}{\varepsilon(N-1)}",xlabel=L"w",guidefontsize=25, tickfontsize=18,
+    left_margin=5Plots.mm, right_margin=5Plots.mm, legendfontsize=12, dpi=300)
 plot!(pl, ws, critical_curve_adim.(ws);
     ls=ls1,lw=lw,lc=color_default, 
     label="", xlims = xlims,ylims=ylims,legend=:bottomleft)
 
 #read chaos end points for different system sizes 
-chaos_end_points = readdlm("../../data/small_systems_lyap_drops_first_zeros_N_grel_w_T1e3_Ttr1e4.txt")
+chaos_end_points = CSV.read("../../data/chaos_endpoints_lyap_curves_multiple_levels_T1e3_Ttr5x1e4_L_logsys.csv",DataFrame)
 nr_points = size(chaos_end_points)[1]
 
 #go through chaos points 
-g_rel_levels = unique(chaos_end_points[:,2])
-Ns = unique(chaos_end_points[:,1])
-chaos_end_points_per_size = [chaos_end_points[i:4:end,end] for i in 1:4]
+g_rel_levels = chaos_end_points[:,1]
+Ns = [20,30,50,75] #unique(chaos_end_points[:,1])
+#chaos_end_points_per_size = [chaos_end_points[i:4:end,end] for i in 1:4]
 
 #fit to each N 
 param_guesses = [-1.0, 0.5]
 params_fit = []
 for (i,N) in enumerate(Ns)
-    w_chaos_ends = chaos_end_points_per_size[i]
+    w_chaos_ends = chaos_end_points[:,i+1]
     prob = NonlinearCurveFitProblem(powerlaw, param_guesses, w_chaos_ends, g_rel_levels)
     sol = solve(prob)
     ps_fit = sol.u
@@ -61,18 +62,22 @@ end
 
 #plot_chaos points 
 colors = [:blue :orange :green :purple ]
-for i in 1:length(chaos_end_points_per_size)
-    chaos_end_points_N = chaos_end_points_per_size[i]
+for i in 1:length(Ns)
+    chaos_end_points_N = chaos_end_points[:,i+1]
     p_fit = params_fit[i]
     plot!(chaos_end_points_N,g_rel_levels,st=:scatter,ms=6,label="",mc=colors[i])
     plot!(ws,powerlaw(p_fit,ws),lw=1,label="",lc=colors[i])
 end
 pl
 
+#hline!([1.5],ls=:dash)
 vline!(pl, [(N - 1) / N],
     lc=color_default,ls=ls2,lw=lw,
     label="", xlims=xlims, ylims=ylims)
 
+savefig(pl, "../../paper_figs/chaos_endpoints_lyap_curves_4system_sizes_multiple_levels_T1e3_Ttr5x1e4_L_logsys.png")
+
+#=
 Ns = [20,30,50,75]
 βs = [1.8,2.0,2.8,3.0]
 γs = [0.3,0.2,1.2,1.5]
@@ -87,7 +92,7 @@ plot!([0.32],[8.0],ms=6,mc=colors[1],st=:scatter,label="")
 plot!([0.38],[8.0],ms=6,mc=colors[2],st=:scatter,label="")
 plot!([0.45],[8.0],ms=6,mc=colors[3],st=:scatter,label="")
 plot!([0.53],[8.0],ms=6,mc=colors[4],st=:scatter,label="")
-
+=#
 
 pl
 
