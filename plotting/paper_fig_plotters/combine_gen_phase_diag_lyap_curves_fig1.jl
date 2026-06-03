@@ -10,5 +10,7 @@ include("plot_phase_diag_N.jl")
 include("plot_lyap_curves_largesys.jl")
 
 pl_fig1 = plot(pl_phasediag_N,pl_lyaps,layout=(1,2),size=(1800,600),
-    guidefontsize=25,tickfontsize=15,left_margin=18Plots.mm,bottom_margin=10Plots.mm,
+    guidefontsize=25,tickfontsize=15,left_margin=18Plots.mm,
+    bottom_margin=10Plots.mm,right_margin=5Plots.mm,
     legendfontsize=18,titlefontsize=22)
+savefig(pl_fig1,"../../paper_figs/phase_diag_N_general_with_chaos_end_points.png")

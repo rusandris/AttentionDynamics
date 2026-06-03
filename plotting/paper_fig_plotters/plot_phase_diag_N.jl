@@ -10,24 +10,32 @@ cd(@__DIR__)
 critical_curve(w, N) = (N - 1) / w
 critical_curve_adim(w) = 1 / w
 chaos_curve(w, beta, gamma=0.0) = w^(-beta) + gamma
-powerlaw(p, x) = @. x^(p[1]) + p[2] 
+powerlaw_translated(p, x) = @. x^(p[1]) + p[2] 
+powerlaw(p, x) = @. p[2]*x^(p[1])  
+
 
 #plot parameters 
 ls1 = :dash
 ls2 = :dot
 color_default = :gray10
 colors = palette([:red, :purple], 4)
+colors = fill(:red,4)
+
+opac_alphas = [1.0,1.0,1.0,1.0]
 #colors = [:blue :orange :green :purple ]
-markershapes = [:utriangle, :rect, :x, :cross ]
+markershapes = [:utriangle, :rect, :cross, :circle]
+#markershapes = [:circle, :circle, :circle, :circle ]
 lw = 4
+ms = 10
 xlims = (0.0,1.0)
 ylims = (0.0, 10.5)
 
 ws = [0.1:0.01:1.0;]
 gs = [1:0.1:10.0;]
 
-#----------------plot----------------
-pl_phasediag_N = plot(ylabel = L"\frac{1}{\varepsilon(N-1)}",xlabel=L"w",guidefontsize=25, tickfontsize=18,
+#----------------------------plot----------------------
+ylabel = L"1/(T_x(N-1))" #L"\frac{1}{\varepsilon(N-1)}"
+pl_phasediag_N = plot(ylabel = ylabel,xlabel=L"w",guidefontsize=25, tickfontsize=18,
     left_margin=5Plots.mm, right_margin=5Plots.mm, 
     legendfontsize=12, dpi=300, legend=:topright)
 plot!(pl_phasediag_N, ws, critical_curve_adim.(ws);
@@ -36,8 +44,8 @@ plot!(pl_phasediag_N, ws, critical_curve_adim.(ws);
 
 #read phase diagram of N=10 separately
 data_dir_N10 = "../../data/phasediag_data_N10_extended5_80x80/"
-lyap_vals_N10 = reshape(readdlm(data_dir * "lyap_values_Ttr10000.txt"), (80, 80))
-params = readdlm(data_dir*"phasediag_params.txt")
+lyap_vals_N10 = reshape(readdlm(data_dir_N10 * "lyap_values_Ttr10000.txt"), (80, 80))
+params = readdlm(data_dir_N10*"phasediag_params.txt")
 ws_N10 = params[:,1]
 gs_N10 = params[:, 2]
 
@@ -71,6 +79,17 @@ g_rel_levels = chaos_end_points[:,1]
 Ns = [20,30,50,75] #unique(chaos_end_points[:,1])
 #chaos_end_points_per_size = [chaos_end_points[i:4:end,end] for i in 1:4]
 
+#plot N=10 separately
+g_rel_levels_N10 = gs_N10[end-length(chaos_end_points_N10)+1:end] ./ (10-1)
+plot!(pl_phasediag_N,chaos_end_points_N10[1:5:end],g_rel_levels_N10[1:5:end],
+    st=:scatter,markershape=:xcross,markerstrokewidth=4,ms=ms,mc=:red,label=L"N = 10",alpha=1.0)
+
+#add N=10 fit 
+prob_N10 = NonlinearCurveFitProblem(powerlaw, param_guesses, chaos_end_points_N10, g_rel_levels_N10)
+ps_fit_N10 = solve(prob_N10).u
+plot!(ws_N10,powerlaw(ps_fit_N10,ws_N10),lw=lw,label="",lc=:red,alpha=1.0)
+
+
 #fit to each N 
 param_guesses = [-1.0, 0.5]
 params_fit = []
@@ -86,29 +105,23 @@ end
 for i in 1:length(Ns)
     chaos_end_points_N = chaos_end_points[:,i+1]
     p_fit = params_fit[i]
-    plot!(chaos_end_points_N,g_rel_levels,st=:scatter,ms=6,
-        label=L"N = %$(Ns[i])",mc=colors[i],markershape=markershapes[i])
-    plot!(ws,powerlaw(p_fit,ws),lw=1,label="",lc=colors[i])
+    strokewidth = i == 3 ? 4 : 0.0 
+    plot!(chaos_end_points_N,g_rel_levels,st=:scatter,ms=ms,alpha=opac_alphas[i],
+        label=L"N = %$(Ns[i])",mc=colors[i],markershape=markershapes[i],markerstrokewidth=strokewidth)
+    plot!(ws,powerlaw(p_fit,ws),lw=lw,label="",lc=colors[i],alpha=opac_alphas[i])
 end
 
-#plot N=10 separately
-plot!(pl_phasediag_N,chaos_end_points_N10,g_rel_levels_N10,
-    st=:scatter,ms=6,mc=:red,label=L"N = 10")
+#add horizontal levels 
+hline!([g_rel_levels[8]],ls=:dash,lw=3,lc=:lime,label=L"6.68")
+hline!([2.98],ls=:dash,lw=3,lc=:purple,label=L"2.98")
 
-#add N=10 fit 
-g_rel_levels_N10 = gs_N10[end-length(chaos_end_points_N10)+1:end] ./ (10-1)
-prob_N10 = NonlinearCurveFitProblem(powerlaw, param_guesses, chaos_end_points_N10, g_rel_levels_N10)
-ps_fit_N10 = solve(prob_N10).u
-plot!(ws_N10,powerlaw(ps_fit_N10,ws_N10),lw=1,label="",lc=:red)
 
-pl
+#add heteroclinic bifurcation line 
+#vline!(pl_phasediag_N, [(N - 1) / N],
+#    lc=color_default,ls=ls2,lw=lw,
+#    label="", xlims=xlims, ylims=ylims)
 
-#hline!([1.5],ls=:dash)
-vline!(pl_phasediag_N, [(N - 1) / N],
-    lc=color_default,ls=ls2,lw=lw,
-    label="", xlims=xlims, ylims=ylims)
-
-savefig(pl_phasediag_N, "../../paper_figs/chaos_endpoints_lyap_curves_4system_sizes_multiple_levels_T1e3_Ttr5x1e4_L_logsys.png")
+#savefig(pl_phasediag_N, "../../paper_figs/chaos_endpoints_lyap_curves_4system_sizes_multiple_levels_T1e3_Ttr5x1e4_L_logsys.png")
 
 #=
 Ns = [20,30,50,75]
@@ -125,7 +138,7 @@ plot!([0.32],[8.0],ms=6,mc=colors[1],st=:scatter,label="")
 plot!([0.38],[8.0],ms=6,mc=colors[2],st=:scatter,label="")
 plot!([0.45],[8.0],ms=6,mc=colors[3],st=:scatter,label="")
 plot!([0.53],[8.0],ms=6,mc=colors[4],st=:scatter,label="")
-=#
+
 
 pl
 
@@ -179,3 +192,4 @@ betas = [1.5, 1.75, 2.1, 2.4, 2.95, 3.2, 3.8]
 pl2 = plot(guidefontsize=25, tickfontsize=18,right_margin=5Plots.mm)
 scatter!(pl2, cat(Ns2,Ns1; dims=1)[1:end-2], betas, label="")
 plot!(pl2, xscale=:log, xlabel=L"N", ylabel=L"\beta")
+=#
