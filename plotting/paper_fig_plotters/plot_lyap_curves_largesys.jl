@@ -1,5 +1,5 @@
 using Plots, LaTeXStrings
-#using AttentionDynamics
+using AttentionDynamics
 using DelimitedFiles
 using DataFrames, CSV
 using StatsBase
@@ -7,9 +7,11 @@ using CurveFit
 cd(@__DIR__)
 
 data_dir_root = "../../data/lyapunovs_effect_size/lyapunovs_effect_size_L_N300_logsys_extended/"
+
 data_dirs = readdir(data_dir_root) #[[2,4]]
 data_lyaps1 = readdlm(data_dir_root * data_dirs[1] * "/lyaps_N300.txt")
 data_lyaps2 = readdlm(data_dir_root * data_dirs[3] * "/lyaps_N300.txt")
+
 #sort data
 data_sorted_lyaps1 = data_lyaps1[sortperm(data_lyaps1[:,2]),:]
 data_sorted_lyaps2 = data_lyaps2[sortperm(data_lyaps2[:,2]),:]
@@ -25,7 +27,6 @@ data_alphas1 = readdlm(data_dir_root * data_dirs[1] * "/gs_alphas.txt")
 data_alphas2 = readdlm(data_dir_root * data_dirs[3] * "/gs_alphas.txt")
 
 αs = [data_alphas1[2],data_alphas2[2]]
-
 ylabel = L"\Lambda" #L"\Lambda_{\log} / \alpha"
 label = L"\frac{1}{T_x(N-1)}"
 pl_lyaps = plot(xlabel=L"w",ylabel=ylabel,guidefontsize=18,tickfontsize=15,ylims=(0,8.0),
@@ -47,3 +48,22 @@ ms = 12
 plot!([w_B4_approx],[Λs1[w_B4_idx]/αs[1]],st=:scatter,ms=ms,mc=:purple,markershape=:rect,label=L"B_4")
 plot!([w_B2_approx],[Λs2[w_B2_idx]/αs[2]],st=:scatter,ms=ms,mc=:lime,markershape=:circle,label=L"B_2")
 
+
+#plot in function of r 
+data_dir_root_r = "../../data/lyapunovs_effect_size/lyapunovs_effect_size_L_N300_logsys_change_r/"
+data_lyaps_r = readdlm(data_dir_root_r * readdir(data_dir_root_r)[1] * "/lyaps_N300.txt")
+data_sorted_lyaps_r = data_lyaps_r[sortperm(data_lyaps_r[:,2]),:]
+r_values = data_sorted_lyaps_r[:,2]
+
+#read const params for plot in function of r
+const_params = readdlm(data_dir_root_r * readdir(data_dir_root_r)[1] * "/const_params.txt")
+K,c0,α0 = const_params
+Λs_r = data_sorted_lyaps_r[:,end] ./ α0
+
+
+wg_vals = rescaled_params.(r_values,r_values,K,c0,α0,300)
+ws_r = [wg_vals[i][1] for i in 1:length(wg_vals)]
+
+#add double axis
+
+plot(ws_r,Λs_r, st=:scatter,ylabel=L"\Lambda",xlabel=L"w")
