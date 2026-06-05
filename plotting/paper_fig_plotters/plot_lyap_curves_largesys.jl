@@ -66,4 +66,7 @@ ws_r = [wg_vals[i][1] for i in 1:length(wg_vals)]
 
 #add double axis
 
-plot(ws_r,Λs_r, st=:scatter,ylabel=L"\Lambda",xlabel=L"w")
+plot(r_values, Λs_r, lc=:gray10,mc=:gray10,markershape=:circle, 
+    ylabel=L"\Lambda", xlabel=L"r",guidefontsize=25,ylims=(1,10),label="")
+plot!(twiny(), ws_r, reverse(Λs_r), lc=:gray40, ylims=(1,10),
+    mc=:gray40, flip=true, markershape=:circle, xlabel=L"w", guidefontsize=25)
