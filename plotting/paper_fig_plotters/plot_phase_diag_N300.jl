@@ -37,4 +37,4 @@ c = cgrad(:RdBu, [0.05,0.14], rev=true)
 pl_pd300 = heatmap(ws,g_rel_levels,phase_diag, yflip=false,cmap=c,clims=extrema(phase_diag),
     dpi=300,xlabel=L"w",ylabel=L"1/(T_x(N-1))",guidefontsize=25,xticks=[0.1:0.1:0.95;])
 
-savediag(pl_pd300,"../../paper_figs/phase_diag_N300_Ttrmax_500_times_scaled.png")
+savefig(pl_pd300,"../../paper_figs/phase_diag_N300_Ttrmax_500_times_scaled.png")
