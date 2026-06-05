@@ -66,7 +66,24 @@ ws_r = [wg_vals[i][1] for i in 1:length(wg_vals)]
 
 #add double axis
 
-plot(r_values, Λs_r, lc=:gray10,mc=:gray10,markershape=:circle, 
-    ylabel=L"\Lambda", xlabel=L"r",guidefontsize=25,ylims=(1,10),label="")
-plot!(twiny(), ws_r, reverse(Λs_r), lc=:gray40, ylims=(1,10),
-    mc=:gray40, flip=true, markershape=:circle, xlabel=L"w", guidefontsize=25)
+plot(r_values, Λs_r, lc=:blue,mc=:blue,markershape=:circle, 
+    foreground_color_axis=:blue,foreground_color_border=:blue,
+    ylabel=L"\Lambda", xlabel=L"r",guidefontsize=25,ylims=(2,9),
+    label="",plot_title=L"N=300,c=2.4,α=0.005",
+    plot_titlevspan=0.1,dpi=300)
+plot!(twiny(), ws_r, Λs_r, lc=:red, ylims=(2,9), mc=:red, 
+    xflip=true, markershape=:circle, xlabel=L"w", guidefontsize=25,
+        foreground_color_axis=:red,foreground_color_border=:red,
+        label="")
+
+#=
+plot(r_values, Λs_r, lc=:blue,mc=:blue,markershape=:circle, 
+    foreground_color_axis=:blue,foreground_color_border=:blue,
+    ylabel=L"\Lambda", xlabel=L"r",guidefontsize=25,ylims=(2,9),
+    label="",plot_titlevspan=0.1,dpi=300,size=(600,400))
+
+plot(ws_r, Λs_r, lc=:red, ylims=(2,9), mc=:red, 
+    xflip=true,  ylabel=L"\Lambda", markershape=:circle, xlabel=L"w", guidefontsize=25,
+        foreground_color_axis=:red,foreground_color_border=:red,
+        label="",size=(600,400),dpi=300)
+=#
