@@ -14,7 +14,7 @@ DEFAULTS = (xguidefontsize=guide_fontsize,yguidefontsize=guide_fontsize,
     grid=true,widen=true,dpi=300)
 
 HEATMAP_DEFAULTS = (xguidefontsize=guide_fontsize,yguidefontsize=guide_fontsize,
-    c=cgrad(:seismic, rev = false), clims=(-1/2,1/2),colorbar=true,framestyle=:box,
+    c=cgrad(:RdBu, rev = true), clims=(-1/2,1/2),colorbar=true,framestyle=:box,
     lw=4,lc=:gray10,xlabel=L"$w$",ylabel=L"$g/(N-1)$",colorbar_title=L"$\lambda$",xticks=0:0.2:1,
     legendfontsize=legend_fontsize,legend=:bottomleft,colorbar_titlefontsize=guide_fontsize,tickfontsize=tick_fontsize,
     dpi=300,right_margin = 15Plots.mm)

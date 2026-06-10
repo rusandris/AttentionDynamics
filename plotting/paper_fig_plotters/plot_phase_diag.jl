@@ -32,7 +32,7 @@ pl_lyaps = plot_phase_diagram(lyap_vals, ws_phasediag, gs_phasediag, N;
     critical_curve_colors=[:gray10,:gray10],
     critical_curve_lines=[:dash, :dot],
     HEATMAP_DEFAULTS...,
-    ylabel=L"\frac{1}{\epsilon(N-1)}",clims=(-1,1),
+    ylabel=L"1/(T_x(N-1))",clims=(-1,1),
     right_margin=6Plots.mm,
     left_margin=6Plots.mm,
     plot_critical_curve=true,
