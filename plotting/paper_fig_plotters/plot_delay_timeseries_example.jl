@@ -116,12 +116,8 @@ for (i,w) in enumerate(ws_example)
     push!(plots_ts,pl)
 end
 
-xlim = 20
-x_plots_limits = [(Ttrs[1],Ttrs[1]+xlim),
-                (Ttrs[2],Ttrs[2]+xlim),
-                (Ttrs[3],Ttrs[3]+xlim),
-                (Ttrs[4],Ttrs[4]+xlim)]
-                
+t_shown = [20,7,15,10]
+x_plots_limits = [(Ttrs[i],Ttrs[i]+t_shown[i]) for i in 1:4] 
                 
 y_plots_limits = [(0,4),(0,30),(0,60),(0,100)]
 
@@ -139,34 +135,14 @@ for i in 1:length(plots_ts)
         xticks=xticks[i], yticks=yticks[i], ylims=y_plots_limits[i])
 end
 
-#=
-#adjust plots
-plot!(plots_ts[1], ylabel=L"x_i",left_margin=1Plots.mm)
-plot!(plots_ts[3], ylabel=L"x_i", left_margin=1Plots.mm)
-plot!(plots_ts[1],xlabel="")
-plot!(plots_ts[2],xlabel="",right_margin=5Plots.mm)
-=#
-
-#=
-#add annotations 
-labels = [L"A",L"B_2",L"C",L"D"]
-x_annot_offsets = [-0.5,-0.5,-0.5,-0.5]
-for (i,pl) in enumerate(plots)
-    xpos = x_plots_limits[i][1]+x_annot_offsets[i]
-    ypos = y_plots_limits[i][end]*0.9
-    annotate!(pl,xpos,ypos, text(labels[i], :gray10, :center, 18))
-end
-=#
-
-#add panel level annotations 
-#annotate!(plots[1], -5, y_plots_limits[1][end], text("(d)", :gray10, :right, 18))
 
 figs_dir = "../../paper_figs/"
 #save ts plots individually
 fname_labels = ["A","B","C","D"]
+
+#=
+#save individually
 for (i,pl) in enumerate(plots_ts)
     savefig(pl,figs_dir*"timeseries_delayed_LV_N$(N)_"*"labeled_threecolors_$(fname_labels[i]).png")
 end
-
-pl4 = plot(plots_ts...,layout=(2,2),size=(500,400), dpi = 300)
-savefig(pl4,figs_dir*"timeseries_delayed_LV_N$(N)_"*"labeled_threecolors_2x2.png")
+=#

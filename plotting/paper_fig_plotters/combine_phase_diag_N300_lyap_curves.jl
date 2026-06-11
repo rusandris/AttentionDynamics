@@ -3,18 +3,21 @@ include("plot_lyap_curves_largesys.jl")
 
 #add inset to phase diag 
 
-plot!(pl_pd300,ws_r, Λs_r, inset = (1, bbox(0.65,0.05,0.3,0.3)), subplot = 2, 
+plot!(pl_phase_diag,ws_r, Λs_r, inset = (1, bbox(0.65,0.05,0.3,0.3)), subplot = 3, 
     lc=:gray10, ylims=(2,9), xflip=true, ylabel=L"\Lambda",yticks=[3,6,9],xticks=[0.5,0.35,0.2],
         xlabel=L"w", guidefontsize=25,label="",lw=2,xlims=(0.15,0.5))
 
-plot!(pl_pd300[2],[ws_r[28]], [Λs_r[28]], ms=6, st=:scatter, mc=:lime,markershape=:circle,label="")
-plot!(pl_pd300[2],[ws_r[end]], [Λs_r[end]], ms=6, st=:scatter, mc=:orange,markershape=:utriangle,label="")
-plot!(pl_pd300[2],[ws_r[1]], [Λs_r[1]], ms=6, st=:scatter, mc=:purple,markershape=:rect,label="")
+plot!(pl_phase_diag[3],[ws_r[28]], [Λs_r[28]], ms=6, st=:scatter, mc=:lime,markershape=:circle,label="")
+plot!(pl_phase_diag[3],[ws_r[end]], [Λs_r[end]], ms=6, st=:scatter, mc=:orange,markershape=:utriangle,label="")
+plot!(pl_phase_diag[3],[ws_r[1]], [Λs_r[1]], ms=6, st=:scatter, mc=:purple,markershape=:rect,label="")
 
 
-#layout = (1,2)
-pl_fig2 = plot(pl_pd300,pl_lyaps, layput = (1,2), size=(1200,500), 
-    guidefontsize=25,tickfontsize=15,bottom_margin=5Plots.mm,left_margin=8Plots.mm,right_margin=5Plots.mm,dpi=300)
+l = @layout [a{0.5w} b{0.5w}]
+pl_fig2 = plot(pl_phase_diag,pl_lyaps, layout = l, size=(1000,400), 
+    guidefontsize=25,tickfontsize=15,bottom_margin=5Plots.mm,dpi=300)
+
+plot!(pl_fig2[3],guidefontsize=20,tickfontsize=8) #finally adjust inset fontsizes
+plot!(pl_fig2[4],right_margin=4Plots.mm) #adjust right margin
 
 
-savefig(pl_fig2,"../../paper_figs/phase_diag_N300_Ttrmax_500_times_scaled_unfinished_lyap_curves_inset.png")
+savefig(pl_fig2,"../../paper_figs/phase_diag_N300_Ttrmax_500_times_scaled_lyap_curves_inset.png")

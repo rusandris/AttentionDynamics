@@ -6,6 +6,7 @@ include("../../plotting/plot_functions/lyapunov.jl")
 
 #--------------------------------plot N300 phase diagram------------------------------
 N=300
+α0 = 0.005
 
 data_dir_root_fp = "../../data/phase_diag_N300_fp_fixed/"
 data_dir_root = "../../data/phase_diag_N300_recalc_fixed/"
@@ -13,7 +14,7 @@ data_dir_root = "../../data/phase_diag_N300_recalc_fixed/"
 
 dirs_pd300_fp = readdir(data_dir_root_fp)
 dirs_pd300 = readdir(data_dir_root)
-files_pd_levels = dirs_pd300[2:end-1] #[[2:17...,19:81...,18]]
+files_pd_levels = dirs_pd300[[2:17...,19:81...,18]] #[2:end] #
 files_pd_levels_fp = dirs_pd300_fp[[2:17..., 19:81..., 18]]
 
 fp_scale = 10
@@ -47,7 +48,7 @@ for i in 1:length(g_rel_levels)
     @show level_dir
     lyap_data = readdlm(data_dir * data_file)
     lyap_data_sorted = lyap_data[sortperm(lyap_data[:, 3]), :]
-    Λs = lyap_data_sorted[:, end] / 0.005
+    Λs = lyap_data_sorted[:, end] / α0
     Λs[Λs.<0] .= Λs[Λs.<0] * fp_scale #scale negative values
 
     ws_level = lyap_data_sorted[:, 3]
@@ -125,10 +126,14 @@ ws_B3_B4 = [w_B3:0.001:w_B4;]
 r_curve_vals = r_curve.(ws_B3_B4, K, c0)
 
 #add r curve to plot 
-plot!(ws_B3_B4, r_curve_vals, ls=:dot, lw=2, lc=:white, 
+plot!(ws_B3_B4, r_curve_vals, ls=:dot, lw=3, lc=:white, 
     ylims=(0, 10))#label=L" \propto (1/w - 1)")
 
 g_B3, g_B2, g_B4 = gs_curve
+
+annot_size = 20
+ms = 6
+msw = 1.0
 
 #add points 
 plot!([w_B2], [g_B2], ms=6, st=:scatter, mc=:lime,label=L"B_2",markershape=:circle)
@@ -149,7 +154,7 @@ annotate!(w_B4 + 0.04, g_B4 + 0.6, text(L"B_4", :purple, :center, annot_size))
 cbar_range = [-7:0.1:7;]
 pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [-5,0.0,5], 
     c=HEATMAP_DEFAULTS.c, fg_color=:gray10, colorbar=false, xaxis=false, 
-    ymirror=true, left_margin=-6Plots.mm,tickfontsize=tick_fontsize_large-5)
+    ymirror=true, left_margin=-8Plots.mm,tickfontsize=tick_fontsize_large-5)
 
 #combine heatmap with the separate colorbar
 l = @layout [a{0.95w} b]

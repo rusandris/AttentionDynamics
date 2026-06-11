@@ -70,7 +70,7 @@ pl_lyaps_filled = plot_phase_diagram(lyap_vals_filled, ws_phasediag, gs_phasedia
     critical_curve_lines=[:dash, :dot],
     critical_curve_lw = [3,3],
     HEATMAP_DEFAULTS...,
-    ylabel=L"\frac{1}{T_x(N-1)}", clims=(-1, 1),
+    ylabel=L"1/(T_x(N-1))", clims=(-1, 1),
     right_margin=6Plots.mm,
     left_margin=6Plots.mm,
     tickfontsize=tick_fontsize_large,
@@ -150,8 +150,7 @@ g_B2 = g_horizontal
 c = g_B2 / K / (1 / w_B2 - 1)
 r_curve(w_B2, K, c) #check if alpha curve passes through B3
 
-w_B3 = ws_curve[1]
-w_B4 = ws_curve[3]
+w_B3,w_B2,w_B4 = ws_curve_examples
 ws_B3_B4 = [w_B3:0.001:w_B4;]
 gs_rcurve = r_curve.(ws_B3_B4, K, c) #alpha curve
 g_B3, g_B2, g_B4 = gs_rcurve_examples
