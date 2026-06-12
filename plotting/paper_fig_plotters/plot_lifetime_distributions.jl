@@ -25,7 +25,7 @@ lifetimes_stats = []
 quadratic(a, x) = @. a[1] + a[2] * x  + a[3] * x^2
 cubic(a, x) = @. a[1] + a[2] * x^3
 
-
+#loop through lifetime files sorted by charting time
 for (i, fileset) in enumerate(files_lifetime_by_time)
 
     pls_loglog = [plot(), plot(), plot()]#init empty 3-plot
@@ -36,6 +36,8 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
     chart_time = chart_times[i]
     @show chart_time
+
+    #take every file with a given charting time
     for (j, f) in enumerate(fileset[fileset_order])
         @show f
         #read lifetimes
@@ -104,8 +106,11 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             ylabel=ylabel)
 
         n_τ = length(bins_discrete)
-        #add fits, guiding lines
-        if plot_fits && i == 3 && j == 2
+
+        #add fits, guiding lines to the largest chart times (i==3)
+
+        #linear
+        if plot_fits && i == 3 && j == linfit_idx
 
             #linear 
             n_τ = length(bins_discrete)
@@ -121,7 +126,8 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         end
 
-        if plot_fits && i == 3 && j == 4
+        #quadratic
+        if plot_fits && i == 3 && j == quadfit_idx
             #quadratic 
             interval = 1:round(Int, 0.99 * n_τ)
             param_guesses = [1.0, 1.0, -1.0]

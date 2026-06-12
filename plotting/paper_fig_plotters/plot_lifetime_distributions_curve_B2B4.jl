@@ -8,11 +8,11 @@ using CurveFit
 cd(@__DIR__)
 
 #path to lifetimes
-data_dir_lt_root = "../../data/lifetimes_precomp_orig/B24_change_r_Δt0.02_T1000_Ttr2000_k10/"
+data_dir_lt_root = "../../data/lifetimes_precomp_N300/B24_change_r_Δt0.02_T1000_Ttr2000_k10/" 
 #order_pars = [2,9,3,4,5,6,7,1,8]
 #order_pars = [1:9;]
 order_pars = [17, 1, 16:-1:6..., 18, 5:-1:2...] #reverse([1:18;])
-data_dirs = readdir(data_dir_lt_root)[order_pars]
+data_dirs = readdir(data_dir_lt_root) #[order_pars]
 #files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times] #select binary only
 
 #charting time 
@@ -103,12 +103,15 @@ figs_dir = "../../paper_figs/"
 #r_B4 = 4.456
 #r_B3 = 14.352
 #r_B2 = 10
-rs = [14.352,10.0:-1.0:7.0...,6.5:-0.25:4.75...,4.456,4.25:-0.25:3.5...]
-pl_bfit = plot(rs[1:end-1], abs.(bs)[1:end-1] ,markershape=:circle,lc=:gray10,ms=3,label="",
+#rs = [14.352,10.0:-1.0:7.0...,6.5:-0.25:4.75...,4.456,4.25:-0.25:3.5...]
+
+rs = [3.75,4.0,4.25,4.75,5.25,5.5,5.75,6.25,6.5]
+
+pl_bfit = plot(rs, abs.(bs), markershape=:circle,lc=:gray10,ms=3,label="",
     mc=:gray10, xlabel=L"r", ylabel=L"|b|")
 
 pl = plot(pl_distribs, pl_bfit, layout=(1, 2), size=(1200, 500), 
     left_margin=8Plots.mm, right_margin=8Plots.mm, 
     bottom_margin=8Plots.mm, guidefontsize=25,tickfontsize=16)
 
-savefig(pl,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_change_r_charting_time_$(Δt).png")
+#savefig(pl,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_change_r_charting_time_$(Δt).png")
