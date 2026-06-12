@@ -4,7 +4,7 @@ include("plot_lyap_curves_largesys.jl")
 #add inset to phase diag 
 
 plot!(pl_phase_diag,ws_r, Λs_r, inset = (1, bbox(0.65,0.05,0.3,0.3)), subplot = 3, 
-    lc=:gray10, ylims=(2,9), xflip=true, ylabel=L"\Lambda",yticks=[3,6,9],xticks=[0.5,0.35,0.2],
+    lc=:gray10, ls=:dot, ylims=(2,9), xflip=true, ylabel=L"\Lambda",yticks=[3,6,9],xticks=[0.5,0.35,0.2],
         xlabel=L"w", guidefontsize=25,label="",lw=2,xlims=(0.15,0.5))
 
 plot!(pl_phase_diag[3],[ws_r[28]], [Λs_r[28]], ms=6, st=:scatter, mc=:lime,markershape=:circle,label="")

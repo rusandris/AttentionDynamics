@@ -30,7 +30,7 @@ data_alphas2 = readdlm(data_dir_root * data_dirs[3] * "/gs_alphas.txt")
 ylabel = L"\Lambda" #L"\Lambda_{\log} / \alpha"
 label = L"1/(T_x(N-1))"
 pl_lyaps = plot(xlabel=L"w",ylabel=ylabel,guidefontsize=18,tickfontsize=15,ylims=(0,8.0),
-    legend=:topright,legendfontsize=12,dpi=300,xlims=(0.0,1.0))
+    legend=:topright,legendfontsize=12,dpi=300,xlims=(0.0,0.9),xticks=[0.1:0.2:0.9;])
 plot!(pl_lyaps, ws1, Λs1 ./ αs[1], label = label *  L" = 2.98",lw=2,lc=:purple)
 plot!(pl_lyaps, ws2, Λs2 ./ αs[2], label= label *  L" = 6.68",lw=2,lc=:lime)
 
@@ -49,8 +49,8 @@ plot!([w_B4_approx],[Λs1[w_B4_idx]/αs[1]],st=:scatter,ms=ms,mc=:purple,markers
 plot!([w_B2_approx],[Λs2[w_B2_idx]/αs[2]],st=:scatter,ms=ms,mc=:lime,markershape=:circle,label="")
 
 #add annotations
-annotate!(w_B2 + 0.1, Λs2[w_B2_idx]/αs[2], text(L"B_2", :lime, :center, 25))
-annotate!(w_B4 + 0.1, Λs1[w_B4_idx]/αs[1], text(L"B_4", :purple, :center, 25))
+annotate!(w_B2 + 0.05, Λs2[w_B2_idx]/αs[2] + 0.5, text(L"B_2", :lime, :center, 20))
+annotate!(w_B4 + 0.08, Λs1[w_B4_idx]/αs[1] + 0.2, text(L"B_4", :purple, :center, 20))
 
 
 #plot in function of r 
