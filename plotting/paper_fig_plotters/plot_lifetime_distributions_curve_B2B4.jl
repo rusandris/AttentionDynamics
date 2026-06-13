@@ -26,6 +26,8 @@ ms = 8
 N = 300
 k = 10
 
+ylabel = L"\log(p_{\Delta t}(\tau))"
+
 pl_distribs = plot(dpi=300, title=L"N = %$(N), k = %$(k), \Delta t = %$(Δt)", 
     xlabel=L"\log(\tau)",ylabel=ylabel,legendfontsize=12)
 #colors = [:gray10, :gray30, :gray50, :gray70, :gray90]
@@ -34,7 +36,7 @@ colors = range(colorant"lime", stop=colorant"purple", length=length(data_dirs))
 #par_labels = [data_dirs[i][5:end] for i in 1:length(data_dirs)]
 par_labels = [L"r = r_{B3} = %$(rs[1])", L"r = r_{B2} = %$(rs[2])", L"r = r_{B4} = %$(rs[end-4])"]
 
-ylabel = L"\log(p_{\Delta t}(\tau))"
+
 
 quadratic(a, x) = @. a[1] + a[2] * x + a[3] * x^2
 cutoff = 30

@@ -116,7 +116,7 @@ pl_sup = plot(plots_uniform_binning_N10..., plots_uniform_binning_N300...,
 
 N = 300
 pl_distribs_N300 = plot!(plots_uniform_binning_N300[end],legend=:topright, ylims=(-4.5,0.1),
-    bottom_margin=2Plots.mm, xlims = [0.2,1.7],xticks = [0.5,1.0,1.5],
+    bottom_margin=2Plots.mm, ylabel=L"\log(p_{\Delta t}(\tau))",  xlims = [0.2,1.7],xticks = [0.5,1.0,1.5],
     legendfontsize=12, tickfontsize=15, guidefontsize=22, dpi=300)
 
 #=
