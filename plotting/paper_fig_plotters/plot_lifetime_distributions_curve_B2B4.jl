@@ -8,26 +8,32 @@ using CurveFit
 cd(@__DIR__)
 
 #path to lifetimes
-data_dir_lt_root = "../../data/lifetimes_precomp_N300/B24_change_r_Δt0.02_T1000_Ttr2000_k10/" 
+data_dir_lt_root = "../../data/lifetimes_precomp_N300/lifetimes_rcurve_allvalues_B24_change_r_Δt0.02_T1000_Ttr2000_k10/"
 #order_pars = [2,9,3,4,5,6,7,1,8]
 #order_pars = [1:9;]
 order_pars = [17, 1, 16:-1:6..., 18, 5:-1:2...] #reverse([1:18;])
-data_dirs = readdir(data_dir_lt_root) #[order_pars]
+data_dirs = readdir(data_dir_lt_root)[order_pars]
 #files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times] #select binary only
+
+rs = [14.352, 10.0:-1.0:7.0..., 6.5:-0.25:4.75..., 4.456, 4.25:-0.25:3.5...]
+#rs = [3.75,4.0,4.25,4.75,5.25,5.5,5.75,6.25,6.5]
 
 #charting time 
 Δt = 2.0 #0.2 #0.02 
 
 #markersize
-ms = 5
+ms = 8
 N = 300
 k = 10
 
-pl_distribs = plot()
+pl_distribs = plot(dpi=300, title=L"N = %$(N), k = %$(k), \Delta t = %$(Δt)", 
+    xlabel=L"\log(\tau)",ylabel=ylabel,legendfontsize=12)
 #colors = [:gray10, :gray30, :gray50, :gray70, :gray90]
 colors = range(colorant"lime", stop=colorant"purple", length=length(data_dirs))
 #par_labels = [L"r = 14.352 = r_{B_3}", L"r = 10 = r_{B_2}", L"r=9", L"r=8", L"r=6", L"r=7", L"r=5", L"r = 4.45 = r_{B_4}", L"r=3.5"]
-par_labels = [data_dirs[i][5:end] for i in 1:length(data_dirs)]
+#par_labels = [data_dirs[i][5:end] for i in 1:length(data_dirs)]
+par_labels = [L"r = r_{B3} = %$(rs[1])", L"r = r_{B2} = %$(rs[2])", L"r = r_{B4} = %$(rs[end-4])"]
+
 ylabel = L"\log(p_{\Delta t}(\tau))"
 
 quadratic(a, x) = @. a[1] + a[2] * x + a[3] * x^2
@@ -65,18 +71,24 @@ for (i, dir) in enumerate(data_dirs)
 
     #--------------------plot uniform discrete binning-------------------------- 
     color = colors[i]
+    if i == 1
+        par_label = par_labels[1]  
+    elseif i == 2
+        par_label = par_labels[2]
+    elseif i == 14
+        par_label = par_labels[3]
+    else 
+        par_label = ""
+    end
+    
     plot!(pl_distribs, log10.(bins_discrete), log10.(counts_discrete),
         markershape=:circle, #st=:scatter,
         mc=color, markerstrokecolor=:gray10,
         markerstrokewidth=0.5,
         lc=color,
         alpha=1,
-        dpi=300,
-        title=L"N = %$(N), k = %$(k), \Delta t = %$(Δt)",
         ms=ms,
-        label=par_labels[i],
-        xlabel=L"\log(\tau)",
-        ylabel=ylabel)
+        label=par_label)
 
 
     #try to fit 
@@ -93,7 +105,7 @@ for (i, dir) in enumerate(data_dirs)
     @show ps_fit
     xs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
     plot!(xs_fit, quadratic(ps_fit, xs_fit),
-        ls=:dot, lc=:gray50, lw=2, label="")
+        ls=:dot, lc=color, lw=2, label="")
 end
 
 figs_dir = "../../paper_figs/"
@@ -103,12 +115,9 @@ figs_dir = "../../paper_figs/"
 #r_B4 = 4.456
 #r_B3 = 14.352
 #r_B2 = 10
-#rs = [14.352,10.0:-1.0:7.0...,6.5:-0.25:4.75...,4.456,4.25:-0.25:3.5...]
 
-rs = [3.75,4.0,4.25,4.75,5.25,5.5,5.75,6.25,6.5]
-
-pl_bfit = plot(rs, abs.(bs), markershape=:circle,lc=:gray10,ms=3,label="",
-    mc=:gray10, xlabel=L"r", ylabel=L"|b|")
+pl_bfit = plot(rs[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=6, label="",
+    mc=:gray10, xlabel=L"r", ylabel=L"|b|") #yaxis=:log10, xaxis=:log10)
 
 pl = plot(pl_distribs, pl_bfit, layout=(1, 2), size=(1200, 500), 
     left_margin=8Plots.mm, right_margin=8Plots.mm, 
