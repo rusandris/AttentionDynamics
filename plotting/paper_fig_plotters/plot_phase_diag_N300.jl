@@ -128,6 +128,7 @@ r_curve_vals = r_curve.(ws_B3_B4, K, c0)
 #add r curve to plot 
 plot!(ws_B3_B4, r_curve_vals, ls=:dot, lw=3, lc=:white, 
     ylims=(0, 10))#label=L" \propto (1/w - 1)")
+#writedlm("r_curve_values.txt",hcat(ws_B3_B4, r_curve_vals))
 
 g_B3, g_B2, g_B4 = gs_curve
 

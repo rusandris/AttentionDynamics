@@ -21,28 +21,32 @@ rs = [14.352, 10.0:-1.0:7.0..., 6.5:-0.25:4.75..., 4.456, 4.25:-0.25:3.5...]
 #charting time 
 Δt = 2.0 #0.2 #0.02 
 
+#-----------------------setup plot-----------------------
+
 #markersize
-ms = 8
+ms = 4
 N = 300
 k = 10
 
 ylabel = L"\log(p_{\Delta t}(\tau))"
 
 pl_distribs = plot(dpi=300, title=L"N = %$(N), k = %$(k), \Delta t = %$(Δt)", 
-    xlabel=L"\log(\tau)",ylabel=ylabel,legendfontsize=12)
+    xlabel=L"\log(\tau)",ylabel=ylabel)
 #colors = [:gray10, :gray30, :gray50, :gray70, :gray90]
-colors = range(colorant"lime", stop=colorant"purple", length=length(data_dirs))
+colors = range(colorant"lime", stop=colorant"purple", length=length(data_dirs)-1)
+pushfirst!(colors,colorant"orange")
+colors = reverse(colors)
 #par_labels = [L"r = 14.352 = r_{B_3}", L"r = 10 = r_{B_2}", L"r=9", L"r=8", L"r=6", L"r=7", L"r=5", L"r = 4.45 = r_{B_4}", L"r=3.5"]
 #par_labels = [data_dirs[i][5:end] for i in 1:length(data_dirs)]
 par_labels = [L"r = r_{B3} = %$(rs[1])", L"r = r_{B2} = %$(rs[2])", L"r = r_{B4} = %$(rs[end-4])"]
 
-
-
+#fitting function
 quadratic(a, x) = @. a[1] + a[2] * x + a[3] * x^2
 cutoff = 30
 bs = []
+
 #loop through parameters (lifetime dirs)
-for (i, dir) in enumerate(data_dirs)
+for (i, dir) in enumerate(reverse(data_dirs))
 
     #read lifetime file
     files = readdir(data_dir_lt_root*dir)
@@ -73,11 +77,11 @@ for (i, dir) in enumerate(data_dirs)
 
     #--------------------plot uniform discrete binning-------------------------- 
     color = colors[i]
-    if i == 1
+    if i == length(data_dirs)
         par_label = par_labels[1]  
-    elseif i == 2
+    elseif i == length(data_dirs) - 1
         par_label = par_labels[2]
-    elseif i == 14
+    elseif i == 5
         par_label = par_labels[3]
     else 
         par_label = ""
@@ -118,8 +122,11 @@ figs_dir = "../../paper_figs/"
 #r_B3 = 14.352
 #r_B2 = 10
 
+#plot quadratic coefficients in terms of r
+bs = reverse(bs)
 pl_bfit = plot(rs[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
     mc=:gray10, xlabel=L"r", ylabel=L"|b|",ylims=(-5,50)) #yaxis=:log10, xaxis=:log10)
+
 
 #overlay markers of B2, B3, B4 
 plot!([rs[2]], [abs.(bs[2])], st=:scatter,markershape=:circle, mc=:lime, ms=8, label=L"B_2")
@@ -127,8 +134,26 @@ plot!([rs[1]], [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, 
 plot!([rs[end-4]], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
 
 
-pl = plot(pl_distribs, pl_bfit, layout=(1, 2), size=(1200, 500), 
-    left_margin=8Plots.mm, right_margin=8Plots.mm, 
+#plot quadratic coefficients in terms of w
+
+wg_pairs = rescaled_params.(rs,rs,1.0,c0,α0,N)
+ws = [wg_pairs[i][1] for i in 1:length(wg_pairs)]
+pl_bfit = plot(ws[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, 
+    mc=:gray10, xlabel=L"w", ylabel=L"|b|", ylims=(-5,50),xticks=[0.2:0.05:0.45;],label="") #yaxis=:log10, xaxis=:log10)
+
+##overlay markers of B2, B3, B4 
+
+plot!([ws[2]], [abs.(bs[2])], st=:scatter,markershape=:circle, mc=:lime, ms=8, label=L"B_2")
+plot!([ws[1]], [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
+plot!([ws[end-4]], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
+
+
+pl_distfit_sup = plot(pl_distribs, pl_bfit, layout=(1, 2), size=(1200, 500), 
+    left_margin=8Plots.mm, right_margin=8Plots.mm, legendfontsize=12,
     bottom_margin=8Plots.mm, guidefontsize=25,tickfontsize=16)
 
-#savefig(pl,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_change_r_charting_time_$(Δt).png")
+#add fig annotations
+annotate!(pl_distfit_sup[1],0.1, 0.0, text("(a)", :gray10, :right, 15))
+annotate!(pl_distfit_sup[2],2.0, 50.0, text("(b)", :gray10, :right, 15))
+
+savefig(pl_distfit_sup,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_change_r_charting_time_$(Δt).png")
