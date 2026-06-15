@@ -118,8 +118,14 @@ figs_dir = "../../paper_figs/"
 #r_B3 = 14.352
 #r_B2 = 10
 
-pl_bfit = plot(rs[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=6, label="",
-    mc=:gray10, xlabel=L"r", ylabel=L"|b|") #yaxis=:log10, xaxis=:log10)
+pl_bfit = plot(rs[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
+    mc=:gray10, xlabel=L"r", ylabel=L"|b|",ylims=(-5,50)) #yaxis=:log10, xaxis=:log10)
+
+#overlay markers of B2, B3, B4 
+plot!([rs[2]], [abs.(bs[2])], st=:scatter,markershape=:circle, mc=:lime, ms=8, label=L"B_2")
+plot!([rs[1]], [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
+plot!([rs[end-4]], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
+
 
 pl = plot(pl_distribs, pl_bfit, layout=(1, 2), size=(1200, 500), 
     left_margin=8Plots.mm, right_margin=8Plots.mm, 

@@ -173,6 +173,9 @@ plot!([w_B4], [g_B4],st=:scatter,ms=8,markershape=:rect)
 #save figures and save processed data
 
 savefig(pl_pd300,"../../paper_figs/phase_diag_N300_Ttrmax_500_times_scaled_unfinished.png")
-writedlm("../../data/phase_diag_N300/phase_diag_N300_Ttrmax_500_times_scaled_matrix_form.txt",phase_diag)
-writedlm("../../data/phase_diag_N300/w_values_phase_diag_N300_Ttrmax_500_times_scaled.txt",ws)
-writedlm("../../data/phase_diag_N300/g_rel_levels_phase_diag_N300_Ttrmax_500_times_scaled.txt",g_rel_levels)
+savedir = "../../data/phase_diag_N300_recalc_fixed/process_results/"
+mkpath(savedir)
+
+writedlm(savedir * "phase_diag_N300_Ttrmax_500_times_scaled_matrix_form.txt",phase_diag)
+writedlm(savedir * "w_values_phase_diag_N300_Ttrmax_500_times_scaled.txt", ws)
+writedlm(savedir * "g_rel_levels_phase_diag_N300_Ttrmax_500_times_scaled.txt", g_rel_levels)
