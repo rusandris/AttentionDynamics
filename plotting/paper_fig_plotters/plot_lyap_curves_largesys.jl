@@ -49,8 +49,9 @@ plot!([w_B4_approx],[Λs1[w_B4_idx]/αs[1]],st=:scatter,ms=ms,mc=:purple,markers
 plot!([w_B2_approx],[Λs2[w_B2_idx]/αs[2]],st=:scatter,ms=ms,mc=:lime,markershape=:circle,label="")
 
 #add annotations
-annotate!(w_B2 + 0.05, Λs2[w_B2_idx]/αs[2] + 0.5, text(L"B_2", :lime, :center, 20))
-annotate!(w_B4 + 0.08, Λs1[w_B4_idx]/αs[1] + 0.2, text(L"B_4", :purple, :center, 20))
+annot_size_letters = annot_size - 3
+annotate!(w_B2 + 0.05, Λs2[w_B2_idx]/αs[2] + 0.5, text(L"B_2", :lime, :center, annot_size_letters))
+annotate!(w_B4 + 0.08, Λs1[w_B4_idx]/αs[1] + 0.2, text(L"B_4", :purple, :center, annot_size_letters))
 
 
 #plot in function of r 
@@ -64,12 +65,11 @@ const_params = readdlm(data_dir_root_r * readdir(data_dir_root_r)[1] * "/const_p
 K,c0,α0 = const_params
 Λs_r = data_sorted_lyaps_r[:,end] ./ α0
 
-
+#convert r to w using other constant parameters K,c0,α0,300
 wg_vals = rescaled_params.(r_values,r_values,K,c0,α0,300)
 ws_r = [wg_vals[i][1] for i in 1:length(wg_vals)]
 
 #add double axis
-
 plot(r_values, Λs_r, lc=:blue,mc=:blue,markershape=:circle, 
     foreground_color_axis=:blue,foreground_color_border=:blue,
     ylabel=L"\Lambda", xlabel=L"r",guidefontsize=25,ylims=(2,9),

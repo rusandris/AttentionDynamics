@@ -6,7 +6,6 @@ include("defaults.jl")
 include("../../plotting/plot_functions/lyapunov.jl")
 
 #plot settings 
-annot_size = 20
 ms = 6
 msw = 1.0
 logocolors = Colors.JULIA_LOGO_COLORS
@@ -105,6 +104,27 @@ rs_rounded = round.(rs;digits=3)
 ws_curve_examples = params_rescaled_curve[:, 1]
 gs_rcurve_examples = params_rescaled_curve[:, 2]
 
+
+#------------------r curve--------------------------
+r_curve(w, K, c) = K * c * (1 / w - 1) #g/(N-1) = 1/(ϵ*(N-1)), rp=rc
+rc = 1.8;
+K = 1.0;
+α0 = 0.1;
+
+_, w_B2, w_B4 = ws_horizontal
+g_B2 = g_horizontal
+c = g_B2 / K / (1 / w_B2 - 1)
+r_curve(w_B2, K, c) #check if alpha curve passes through B3
+
+w_B3,w_B2,w_B4 = ws_curve_examples
+ws_B2_B4 = [w_B2-0.1:0.001:w_B4+0.1;]
+gs_rcurve = r_curve.(ws_B2_B4, K, c) #alpha curve
+g_B3, g_B2, g_B4 = gs_rcurve_examples
+
+#plot rp=rc=r curve
+plot!(ws_B2_B4, gs_rcurve, ls=:dot, la=1,
+    lw=3, lc=:white, label="")
+
 #------------------------plot param values for lifetimes---------------------
 
 plot!([ws_horizontal[1]], [gs_horizontal[1]],
@@ -117,8 +137,8 @@ annotate!(ws_horizontal[1] + 0.05, g_horizontal * 0.9, text(L"B_1", :cyan, :cent
 #------------------------plot param values for time series examples-------------------------
 ws_example = [0.1, ws_horizontal[2], ws_horizontal[3], 0.95]
 color_default = :gray15
-example_colors = [:orangered :lime color_default :gray80]
-markershapes = [:circle :circle :dtriangle :circle]
+example_colors = [:orangered :lime color_default :darkblue]
+markershapes = [:circle :dtriangle :star :circle]
 
 hline!([g_horizontal], ls=:dot, la=0.5, lw=2, lc=:gray10, label="") #horizontal line
 
@@ -131,33 +151,14 @@ plot!(ws_example', fill(g_horizontal, 4)',
 
 #add annotations for example time series
 labels = [L"A", L"B_2", L"C", L"D"]
-x_annot_offsets = [0.0, 0.08, 0.0, 0.0]
-y_annot_offsets = [0.0, 0.0, 0.0, 0.0]
+x_annot_offsets = [0.0, 0.05, 0.0, 0.0]
+y_annot_offsets = [0.0, 1.4, 0.0, 0.0]
 for (i, pl) in enumerate(ws_example)
     xpos = ws_example[i] + x_annot_offsets[i]
     ypos = g_horizontal * 0.9 + y_annot_offsets[i]
     annotate!(xpos, ypos, text(labels[i], example_colors[i], :center, annot_size))
 end
 
-#------------------alpha curve--------------------------
-r_curve(w, K, c) = K * c * (1 / w - 1) #g/(N-1) = 1/(ϵ*(N-1)), rp=rc
-rc = 1.8;
-K = 1.0;
-α0 = 0.1;
-
-_, w_B2, w_B4 = ws_horizontal
-g_B2 = g_horizontal
-c = g_B2 / K / (1 / w_B2 - 1)
-r_curve(w_B2, K, c) #check if alpha curve passes through B3
-
-w_B3,w_B2,w_B4 = ws_curve_examples
-ws_B3_B4 = [w_B3:0.001:w_B4;]
-gs_rcurve = r_curve.(ws_B3_B4, K, c) #alpha curve
-g_B3, g_B2, g_B4 = gs_rcurve_examples
-
-#plot rp=rc=r curve
-plot!(ws_B3_B4, gs_rcurve, ls=:dot, la=1,
-    lw=2, lc=:lightblue, label="")
 
 plot!([w_B3 w_B4], [g_B3 g_B4],
     ms=ms, st=:scatter, mc=[:orange :purple],
@@ -171,10 +172,14 @@ annotate!(w_B4, g_B4 + 0.5, text(L"B_4", :purple, :left, annot_size))
 cbar_range = [-0.7:0.01:0.7;]
 pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [-0.5,0.0,0.5], 
     c=HEATMAP_DEFAULTS.c, fg_color=:gray10, colorbar=false, xaxis=false, 
-    ymirror=true, left_margin=-6Plots.mm,tickfontsize=tick_fontsize_large-5)
+    ymirror=true, left_margin=-6Plots.mm,tickfontsize=tick_fontsize_large-5,
+    top_margin=10Plots.mm)
 
 #combine heatmap with the separate colorbar
 l = @layout [a{0.95w} b]
-pl_phase_diag = plot!(pl_lyaps_filled, pl_cbar, layout=l, tick_direction=:out)
+pl_phase_diag = plot!(pl_lyaps_filled, pl_cbar, layout=l)
+
+#add fig level annotation 
+annotate!(pl_phase_diag,-0.15, 10.9, text(L"(c)", :gray10, :center, annot_size))
 
 savefig(pl_phase_diag, figs_dir * "N10_phasediagram_extended5_80x80_filled_Ttr_10000_" * "labeled_horizontal_alpha_curve_article_params.png")

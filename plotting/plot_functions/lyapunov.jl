@@ -75,7 +75,7 @@ function plot_phase_diagram(Λ, wvalues, gvalues, N; plot_critical_curve=true,
             ls=critical_curve_lines[1],
             lw = critical_curve_lw[1],
             lc=critical_curve_colors[1], label="") #label=L"g_c(w)")
-        plot!(pl, [(N - 1) / N-0.001, (N - 1) / N-0.001], [gvalues[1], gvalues[end]]; kwargs..., 
+        plot!(pl, [(N - 1) / N, (N - 1) / N], [gvalues[1], gvalues[end]]; kwargs..., 
             lc=critical_curve_colors[2], 
             ls=critical_curve_lines[2],
             lw=critical_curve_lw[2],

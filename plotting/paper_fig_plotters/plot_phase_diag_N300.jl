@@ -91,7 +91,7 @@ pl_pd300 = plot_phase_diagram(phase_diag, ws, g_rel_levels, N;
     colorbar_title="",
     colorbar = false,
     legend=false,
-    x_ticks = [0.0, 0.45, 0.9])
+    x_ticks = [0,0.45, 0.9])
 
 
 #add r curve 
@@ -119,15 +119,14 @@ rs_rounded = round.(rs; digits=3)
 ws_curve = params_rescaled_curve[:, 1]
 gs_curve = params_rescaled_curve[:, 2]
 
-_, w_B2, w_B3 = ws_horizontal
+w_B1, w_B2, w_B3 = ws_horizontal
 
 w_B3,w_B2,w_B4 = ws_curve
-ws_B3_B4 = [w_B3:0.001:w_B4;]
-r_curve_vals = r_curve.(ws_B3_B4, K, c0)
+ws_B2_B4 = [w_B2-0.1:0.001:w_B4+0.1;]
+r_curve_vals = r_curve.(ws_B2_B4, K, c0)
 
 #add r curve to plot 
-plot!(ws_B3_B4, r_curve_vals, ls=:dot, lw=3, lc=:white, 
-    ylims=(0, 10))#label=L" \propto (1/w - 1)")
+plot!(ws_B2_B4, r_curve_vals, ls=:dot, lw=3, lc=:white, ylims=(0, 10)) #label=L" \propto (1/w - 1)")
 #writedlm("r_curve_values.txt",hcat(ws_B3_B4, r_curve_vals))
 
 g_B3, g_B2, g_B4 = gs_curve
@@ -137,18 +136,21 @@ ms = 6
 msw = 1.0
 
 #add points 
-plot!([w_B2], [g_B2], ms=6, st=:scatter, mc=:lime,label=L"B_2",markershape=:circle)
-plot!([w_B3], [g_B3], ms=6, st=:scatter, mc=:orange, label= L"B_3",markershape=:utriangle)
-plot!([w_B4], [g_B4], ms=6, st=:scatter, mc=:purple, label = L"B_4",markershape=:rect)
+plot!([w_B1], [g_B2], ms=8, st=:scatter, mc=:cyan,label=L"B_1",markershape=:diamond)
+plot!([w_B2], [g_B2], ms=8, st=:scatter, mc=:lime,label=L"B_2",markershape=:dtriangle)
+plot!([w_B3], [g_B3], ms=8, st=:scatter, mc=:orange, label= L"B_3",markershape=:utriangle)
+plot!([w_B4], [g_B4], ms=8, st=:scatter, mc=:purple, label = L"B_4",markershape=:rect)
 
 #add two special levels 
 hline!([g_B2],ls=:dash,lw=2,lc=:lime)
 hline!([g_B4],ls=:dash,lw=2,lc=:purple)
 
 #add annotations
-annotate!(w_B3 + 0.08, g_B3 - 0.5, text(L"B_3", :orange, :center, annot_size))
-annotate!(w_B2 + 0.08, g_B2 - 0.6, text(L"B_2", :lime, :center, annot_size))
-annotate!(w_B4 + 0.04, g_B4 + 0.6, text(L"B_4", :purple, :center, annot_size))
+annot_size_letters = annot_size - 3
+annotate!(w_B1 + 0.03, g_B2 + 0.6, text(L"B_1", :cyan, :center, annot_size_letters))
+annotate!(w_B3 + 0.08, g_B3 - 0.5, text(L"B_3", :orange, :center, annot_size_letters))
+annotate!(w_B2 + 0.08, g_B2 - 0.6, text(L"B_2", :lime, :center, annot_size_letters))
+annotate!(w_B4 + 0.04, g_B4 + 0.6, text(L"B_4", :purple, :center, annot_size_letters))
 
 
 #add colorbar 
@@ -173,7 +175,7 @@ plot!([w_B4], [g_B4],st=:scatter,ms=8,markershape=:rect)
 
 #save figures and save processed data
 
-savefig(pl_pd300,"../../paper_figs/phase_diag_N300_Ttrmax_500_times_scaled_unfinished.png")
+savefig(pl_pd300,"../../paper_figs/phase_diag_N300_Ttrmax_500_scaled_times.png")
 savedir = "../../data/phase_diag_N300_recalc_fixed/process_results/"
 mkpath(savedir)
 

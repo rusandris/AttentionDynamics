@@ -64,7 +64,7 @@ x_idx_WTA = findfirst(x->x>1.0,traj_WTA[end])
 plots_ts = []
 colors = collect(Colors.JULIA_LOGO_COLORS)[[1, 2, 4]]  #use three colors
 titles = [L"A",L"B_2",L"C",L"D"]
-title_colors = [:orangered :lime :gray15 :gray80]
+title_colors = [:orangered :lime :gray15 :darkblue]
 
 guidefontsize = 24
 legendfontsize = 14
@@ -119,7 +119,7 @@ end
 t_shown = [20,7,15,10]
 x_plots_limits = [(Ttrs[i],Ttrs[i]+t_shown[i]) for i in 1:4] 
                 
-y_plots_limits = [(0,4),(0,30),(0,60),(0,100)]
+y_plots_limits = [(0,5),(0,35),(0,85),(0,150)]
 
 #adjust time lims and ticks 
 xticks = [[xlims[1], xlims[1]+(xlims[end] - xlims[1]) / 2, xlims[end]] for xlims in x_plots_limits]
@@ -134,7 +134,6 @@ for i in 1:length(plots_ts)
     plot!(plots_ts[i],xlims=x_plots_limits[i],
         xticks=xticks[i], yticks=yticks[i], ylims=y_plots_limits[i])
 end
-
 
 figs_dir = "../../paper_figs/"
 #save ts plots individually

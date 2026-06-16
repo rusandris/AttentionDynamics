@@ -10,7 +10,7 @@ files = readdir(data_dir_lt)
 files_lifetime = files[findall(f -> occursin(".dat", f), files)]#[[13,14,15,16,1:12...]] #select binary only
 files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times] #select binary only
 
-ms = 6
+ms = 5
 linealphas = [0.3,0.3,0.3,1.0] 
 plots_loglog = [] #gather plots here
 plots_linhist = [] #gather plots here
@@ -73,6 +73,13 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         bins_discrete = h_discrete.edges[1][1:end-1]
         counts_discrete = h_discrete.weights
 
+            #cutoff infs
+        cutoff = findfirst(x -> isinf(x), log10.(counts_discrete))
+        if !(isnothing(cutoff))
+            bins_discrete = bins_discrete[1:cutoff-1]
+            counts_discrete = counts_discrete[1:cutoff-1]
+        end
+
         
         #---------------exponential binning----------------
 
@@ -95,7 +102,6 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         plot!(pls_loglog[1], log10.(bins_discrete), log10.(counts_discrete), 
             markershape=markershapes[j],st=:scatter,
             mc=color, markerstrokecolor=:gray10,
-            markerstrokewidth=0.1,
             lc=color,
             alpha = 1,
             dpi=300,
@@ -109,34 +115,33 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         #add fits, guiding lines to the largest chart times (i==3)
 
-        #linear
+        #add linear fit, with offset (on the side)
         if plot_fits && i == 3 && j == linfit_idx
 
             #linear 
-            n_τ = length(bins_discrete)
-            linear_interval = round(Int, 0.05 * n_τ):round(Int, 0.6 * n_τ)
+            linear_interval = round(Int, 0.25 * n_τ):round(Int, 0.8 * n_τ)
 
-            #vline!([log10.(bins_discrete[linear_interval[1]]), log10.(bins_discrete[linear_interval[end]])],ls=:dash)
-            b, a = linreg(log10.(bins_discrete[linear_interval]), log10.(counts_discrete[linear_interval]))
+            b, a = linreg(log10.(bins_discrete[linear_interval]) .+ 0.3, log10.(counts_discrete[linear_interval]))
             @show b,a
             a_round = round(a;digits=3)
 
             plot!(log10.(bins_discrete[linear_interval]), log10.(10 .^ (b) .* bins_discrete[linear_interval] .^ (-4)),
-                ls=:dash, lc=:gray10, lw=2, label="", legendfontsize=15)
+                ls=:dash, lc=:gray10, lw=1, label="", legendfontsize=15)
 
         end
 
         #quadratic
-        if plot_fits && i == 3 && j == quadfit_idx
+        if plot_fits && i == 3 && j ∈ quadfit_idxs
             #quadratic 
-            interval = 1:round(Int, 0.99 * n_τ)
-            param_guesses = [1.0, 1.0, -1.0]
+            interval = 1:round(Int, fit_lengths[j] * n_τ)
+            param_guesses = [-10.0, 1.0, -10.0]
             prob = NonlinearCurveFitProblem(quadratic, param_guesses, log10.(bins_discrete[interval]), log10.(counts_discrete[interval]))
             sol = solve(prob)
             ps_fit = sol.u
-            xs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
+            @show ps_fit
+            xs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[end])
             plot!(xs_fit, quadratic(ps_fit, xs_fit),
-                ls=:dot, lc=:gray50, lw=2, label="", legendfontsize=15)
+                ls=:dot, lc=color, lw=2, label="", legendfontsize=15)
 
         end
 
@@ -154,7 +159,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         plot!(pls_loglin[1], bins_discrete, log10.(counts_discrete),
             markershape=markershapes[j],st=:scatter,
-            mc=color, markerstrokecolor=color,
+            mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
             title=L"N = %$(N), k = %$(k), \Delta t = %$(chart_time)", ms=ms,
@@ -164,7 +169,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         plot!(pls_linlin[1], bins_discrete, counts_discrete,
             markershape=markershapes[j],st=:scatter,
-            mc=color, markerstrokecolor=color,
+            mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
             title=L"N = %$(N), k = %$(k), \Delta t = %$(chart_time)", ms=ms,
@@ -182,7 +187,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         plot!(pls_loglog[2], log10.(bins_exp[1:end-1]), log10.(counts_exp),
             markershape=markershapes[j], #st=:scatter,
-            mc=color, markerstrokecolor=color,
+            mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=ms,
@@ -192,7 +197,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         plot!(pls_linlin[2], bins_exp[1:end-1], counts_exp,
             markershape=markershapes[j], #st=:scatter,
-            mc=color, markerstrokecolor=color,
+            mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=ms,
@@ -202,7 +207,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         plot!(pls_loglin[2], bins_exp[1:end-1], log10.(counts_exp),
             markershape=markershapes[j], #st=:scatter,
-            mc=color, markerstrokecolor=color,
+            mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=ms,
@@ -219,7 +224,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         plot!(pls_loglog[3], log10.(bins_lin), log10.(counts_lin), 
             markershape=markershapes[j], #st=:scatter,
-            mc=color, markerstrokecolor=color,
+            mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=ms,
@@ -229,7 +234,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         plot!(pls_linlin[3], bins_lin, counts_lin,
             markershape=markershapes[j], #st=:scatter,
-            mc=color, markerstrokecolor=color,
+            mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=ms,
@@ -239,7 +244,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         plot!(pls_loglin[3], bins_lin, log10.(counts_lin),
             markershape=markershapes[j], #st=:scatter,
-            mc=color, markerstrokecolor=color,
+            mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
             title=L"\Delta t = %$(chart_time)", ms=ms,

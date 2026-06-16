@@ -33,7 +33,7 @@ logocolors = Colors.JULIA_LOGO_COLORS
 #plot_order = [1, 3, 4, 2]
 #plot_order = [1:4;]
 plot_order = [1:3;]
-fileset_order = [2, 3, 4]
+fileset_order = [2,4] #[2, 3, 4] #B2,B3,B4
 #fileset_order = [3,5,6,7,1,4]
 
 #par_labels = [L"B_1", L"B_2", L"B_3", L"B_4"][plot_order]
@@ -43,13 +43,14 @@ par_labels = [L"B_1", L"B_2", L"B_3", L"B_4", L"B_{12}", L"B_{24}"][fileset_orde
 colors = [:cyan :lime :orange :purple :gray20 :gray60][fileset_order]
 #markershapes = [:diamond, :star4 ,:circle, :utriangle, :rect][plot_order]
 #markershapes = [:diamond, :circle, :utriangle, :rect][plot_order]
-markershapes = [:diamond, :circle, :utriangle, :rect, :circle, :circle][fileset_order]
+markershapes = [:diamond, :dtriangle, :utriangle, :rect, :circle, :circle][fileset_order]
 nbins = 30 #[25,10]
 
 #fit details, setting 
 plot_fits = true
 linfit_idx = 1
-quadfit_idx = 3
+quadfit_idxs = [1,2]
+fit_lengths = [1.0,1.0]
 
 
 include("../../plotting/paper_fig_plotters/plot_lifetime_distributions.jl")
