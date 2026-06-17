@@ -46,7 +46,7 @@ w_B4_approx = ws1[w_B4_idx]
 
 ms = 12
 plot!([w_B4_approx],[Λs1[w_B4_idx]/αs[1]],st=:scatter,ms=ms,mc=:purple,markershape=:rect,label="")
-plot!([w_B2_approx],[Λs2[w_B2_idx]/αs[2]],st=:scatter,ms=ms,mc=:lime,markershape=:circle,label="")
+plot!([w_B2_approx],[Λs2[w_B2_idx]/αs[2]],st=:scatter,ms=ms,mc=:lime,markershape=:dtriangle,label="")
 
 #add annotations
 annot_size_letters = annot_size - 3

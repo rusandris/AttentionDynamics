@@ -4,6 +4,7 @@ using StatsBase
 using AttentionDynamics
 using LinearAlgebra
 using CurveFit
+include("defaults.jl")
 
 cd(@__DIR__)
 
@@ -24,21 +25,26 @@ rs = [14.352, 10.0:-1.0:7.0..., 6.5:-0.25:4.75..., 4.456, 4.25:-0.25:3.5...]
 #-----------------------setup plot-----------------------
 
 #markersize
-ms = 4
+ms_default = 2
+ms_high = 8 
 N = 300
 k = 10
 
 ylabel = L"\log(p_{\Delta t}(\tau))"
 
-pl_distribs = plot(dpi=300, title=L"N = %$(N), k = %$(k), \Delta t = %$(Δt)", 
-    xlabel=L"\log(\tau)",ylabel=ylabel)
+pl_distribs = plot(dpi=300, left_margin=8Plots.mm,
+    xlabel=L"\log(\tau)",ylabel=ylabel) #title=L"N = %$(N), k = %$(k), \Delta t = %$(Δt)"
 #colors = [:gray10, :gray30, :gray50, :gray70, :gray90]
 colors = range(colorant"lime", stop=colorant"purple", length=length(data_dirs)-1)
 pushfirst!(colors,colorant"orange")
 colors = reverse(colors)
 #par_labels = [L"r = 14.352 = r_{B_3}", L"r = 10 = r_{B_2}", L"r=9", L"r=8", L"r=6", L"r=7", L"r=5", L"r = 4.45 = r_{B_4}", L"r=3.5"]
 #par_labels = [data_dirs[i][5:end] for i in 1:length(data_dirs)]
-par_labels = [L"r = r_{B3} = %$(rs[1])", L"r = r_{B2} = %$(rs[2])", L"r = r_{B4} = %$(rs[end-4])"]
+par_labels = [L"r = r_{B3} = %$(round(rs[1];digits=2))", 
+    L"r = r_{B2} = %$(rs[2])", 
+    L"r = r_{B4} = %$(round(rs[end-4];digits=2))"]
+
+markershape_default =:circle
 
 #fitting function
 quadratic(a, x) = @. a[1] + a[2] * x + a[3] * x^2
@@ -79,16 +85,24 @@ for (i, dir) in enumerate(reverse(data_dirs))
     color = colors[i]
     if i == length(data_dirs)
         par_label = par_labels[1]  
+        markershape =:utriangle
+        ms = ms_high
     elseif i == length(data_dirs) - 1
         par_label = par_labels[2]
+        markershape =:dtriangle
+        ms = ms_high
     elseif i == 5
         par_label = par_labels[3]
+        markershape =:rect
+        ms = ms_high
     else 
         par_label = ""
+        markershape = markershape_default
+        ms = ms_default
     end
     
     plot!(pl_distribs, log10.(bins_discrete), log10.(counts_discrete),
-        markershape=:circle, #st=:scatter,
+        markershape=markershape, #st=:scatter,
         mc=color, markerstrokecolor=:gray10,
         markerstrokewidth=0.5,
         lc=color,
@@ -129,8 +143,9 @@ pl_bfit = plot(rs[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, 
 
 
 #overlay markers of B2, B3, B4 
+plot_B3 = false
 plot!([rs[2]], [abs.(bs[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
-#plot!([rs[1]], [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
+plot_B3 && plot!([rs[1]], [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
 plot!([rs[end-4]], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
 
 
@@ -144,16 +159,30 @@ pl_bfit = plot(ws[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, 
 ##overlay markers of B2, B3, B4 
 
 plot!([ws[2]], [abs.(bs[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
-#plot!([ws[1]], [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
+plot_B3 && plot!([ws[1]], [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
 plot!([ws[end-4]], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
 
+#--------------plot supplimentary figure--------------------
 
-pl_distfit_sup = plot(pl_distribs, pl_bfit, layout=(1, 2), size=(1200, 500), 
-    left_margin=8Plots.mm, right_margin=8Plots.mm, legendfontsize=12,
-    bottom_margin=8Plots.mm, guidefontsize=25,tickfontsize=16)
+
+#add colorbar 
+cbar_range = reverse(rs)
+pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [3:2:15;], 
+    c=colors, fg_color=:gray10, colorbar=false, xaxis=false, 
+    ymirror=true, left_margin=-6Plots.mm,
+    tickfontsize=tick_fontsize_large-5,
+    right_margin=18Plots.mm)
+
+#combine heatmap with the separate colorbar
+l = @layout [a{0.95w} b]
+pl_distribs_cbar = plot!(pl_distribs, pl_cbar, layout=l, tick_direction=:out)
+
+pl_distfit_sup = plot(pl_distribs_cbar, pl_bfit, layout=(1, 2), size=(1000, 400), 
+    legendfontsize=12, bottom_margin=8Plots.mm, top_margin=12Plots.mm, guidefontsize=20,tickfontsize=12)
 
 #add fig annotations
-annotate!(pl_distfit_sup[1],0.1, 0.0, text("(a)", :gray10, :right, 15))
-annotate!(pl_distfit_sup[2],2.0, 50.0, text("(b)", :gray10, :right, 15))
+
+annotate!(pl_distfit_sup[1], 0.05, 0.8, text(L"(a)", :gray10, :center, annot_size))
+annotate!(pl_distfit_sup[3], 0.12, 56.0, text(L"(b)", :gray10, :center, annot_size))
 
 savefig(pl_distfit_sup,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_change_r_charting_time_$(Δt).png")
