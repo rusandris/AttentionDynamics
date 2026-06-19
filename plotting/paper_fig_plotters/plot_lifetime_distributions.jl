@@ -119,9 +119,9 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         if plot_fits && i == 3 && j == linfit_idx
 
             #linear 
-            linear_interval = round(Int, 0.25 * n_τ):round(Int, 0.8 * n_τ)
+            linear_interval = round(Int, 0.2 * n_τ):round(Int, 0.8 * n_τ)
 
-            b, a = linreg(log10.(bins_discrete[linear_interval]) .+ 0.3, log10.(counts_discrete[linear_interval]))
+            b, a = linreg(log10.(bins_discrete[linear_interval]) .+ 0.2, log10.(counts_discrete[linear_interval]))
             @show b,a
             a_round = round(a;digits=3)
 

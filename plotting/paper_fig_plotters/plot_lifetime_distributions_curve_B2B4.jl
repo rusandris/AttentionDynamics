@@ -138,12 +138,12 @@ figs_dir = "../../paper_figs/"
 
 #plot quadratic coefficients in terms of r
 bs = reverse(bs)
-pl_bfit = plot(rs[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
+pl_bfit_r = plot(rs[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
     mc=:gray10, xlabel=L"r", ylabel=L"|b|",ylims=(-5,50)) #yaxis=:log10, xaxis=:log10)
 
 
 #overlay markers of B2, B3, B4 
-plot_B3 = false
+plot_B3 = true
 plot!([rs[2]], [abs.(bs[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
 plot_B3 && plot!([rs[1]], [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
 plot!([rs[end-4]], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
@@ -153,11 +153,11 @@ plot!([rs[end-4]], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purpl
 c0 = 2.4;α0 = 0.005
 wg_pairs = rescaled_params.(rs,rs,1.0,c0,α0,N)
 ws = [wg_pairs[i][1] for i in 1:length(wg_pairs)]
-pl_bfit = plot(ws[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, 
+pl_bfit_w = plot(ws[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, 
     mc=:gray10, xlabel=L"w", ylabel=L"|b|", ylims=(-5,50),label="") #yaxis=:log10, xaxis=:log10)
 
 ##overlay markers of B2, B3, B4 
-
+plot_B3 = false
 plot!([ws[2]], [abs.(bs[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
 plot_B3 && plot!([ws[1]], [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
 plot!([ws[end-4]], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
@@ -177,7 +177,7 @@ pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [3:2:15;],
 l = @layout [a{0.95w} b]
 pl_distribs_cbar = plot!(pl_distribs, pl_cbar, layout=l, tick_direction=:out)
 
-pl_distfit_sup = plot(pl_distribs_cbar, pl_bfit, layout=(1, 2), size=(1000, 400), 
+pl_distfit_sup = plot(pl_distribs_cbar, pl_bfit_r, layout=(1, 2), size=(1000, 400), 
     legendfontsize=12, bottom_margin=8Plots.mm, top_margin=12Plots.mm, guidefontsize=20,tickfontsize=12)
 
 #add fig annotations

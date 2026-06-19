@@ -19,7 +19,9 @@ p_L = [r, r, K, 2.4, α0, 300]
 
 plots = []
 #colors = distinguishable_colors(length(data_dirs)*2)[4:end]#[5:8]
-colors = [:blue :orange :green :purple]
+#colors = [:blue :orange :green :purple]
+colors = palette(:RdBu,12)[1:6]
+
 
 g_rel_levels = [1.5, 2.0, 3.0, 4.0, 4.46, 5.0, 6.0, 6.69, 8.0, 9.0, 10.0] #timescale param levels on phase diag
 first_zero_ws_L = Vector{Float64}[]
@@ -82,7 +84,7 @@ for (j,data_dir) in enumerate(data_dirs)
         
         #plot both 
         plot!(ws,Λ_Ls,lw=2,label=L"N = %$(Ns[i])",lc=colors[i],
-            title=L"\frac{1}{\varepsilon (N-1)} = %$(g_rel)")
+            title=L"1/(T_x(N-1)) = %$(g_rel)")
         #plot!(ws,Λ_xs,markerstrokewidth=0.01,ms=2,st=:scatter,label="",mc=colors[i])
 
         #extract first zero points
@@ -113,9 +115,7 @@ for (i,zpoints) in enumerate(first_zero_ws_L)
     vline!(plots[i],zpoints,ls=:dash,lc=:gray10,label="")
 end
 
-pl_all = plot(plots...,layout=(2,6),size=(1800,500),dpi=300,
-    left_margin=12Plots.mm,bottom_margin=12Plots.mm, right_margin=8Plots.mm)
-savefig(pl_all,"../../paper_figs/preliminary_small_systems_lyap_curves_multiple_levels11_T1e3_Ttr5x1e4_L_logsys.png")
+#---------------build dataframe from chaos end points and save-------------------------
 
 chaos_ends_N20 = [first_zero_ws_L[i][1] for i in 1:length(first_zero_ws_L)] 
 chaos_ends_N30 = [first_zero_ws_L[i][2] for i in 1:length(first_zero_ws_L)]
@@ -129,6 +129,35 @@ df = DataFrame(eps_rel = g_rel_levels,N20=chaos_ends_N20, N30=chaos_ends_N30,
 
 CSV.write("../../data/chaos_endpoints_lyap_curves_multiple_levels_T1e3_Ttr5x1e4_L_logsys.csv", df)
 
+
+#plot all for checking purposes
+pl_all = plot(plots...,layout=(2,6),size=(1800,500),dpi=300,
+    left_margin=12Plots.mm,bottom_margin=12Plots.mm, right_margin=8Plots.mm)
+savefig(pl_all,"../../paper_figs/preliminary_small_systems_lyap_curves_multiple_levels11_T1e3_Ttr5x1e4_L_logsys_recolor.png")
+
+#plot only two for supplimentary fig
+plots_B2 = plots[8] #top fig, higher level 
+plots_B4 = plots[3] #top fig, higher level 
+
+#edit labels, add markers
+plot!(plots_B2,ylabel=L"\Lambda",ylims=(ylims[1],4.0))
+plot!(plots_B4,ylabel=L"\Lambda",ylims=(ylims[1],ylims[2]+0.25))
+
+#add markers 
+end_points_B2 = collect(df[8,2:end])
+end_points_B4 = collect(df[3,2:end])
+markersize = 8
+for i in 1:length(end_points_B2)
+    plot!(plots_B2,[end_points_B2[i]],[3.7],st=:scatter,ms=markersize,markershape=:circle,mc=colors[i])
+    plot!(plots_B4,[end_points_B4[i]],[3.0],st=:scatter,ms=markersize,markershape=:circle,mc=colors[i])
+end
+
+pl_lyap_curves_chaos_ends = plot(plots_B2,plots_B4,layout=(2,1),
+    size=(400,600),dpi=300,right_margin=5Plots.mm)
+
+
+
+#=
 #example timeseries 
 using OrdinaryDiffEq
 using DynamicalSystems
@@ -224,3 +253,4 @@ for Ttr in Ttrs
     end 
     @show mean_and_std(lambdas)    
 end
+=#

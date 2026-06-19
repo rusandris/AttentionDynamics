@@ -5,6 +5,7 @@ using DataFrames, CSV
 using StatsBase
 using CurveFit  
 cd(@__DIR__)
+include("defaults.jl")
 
 #def critical curves 
 critical_curve(w, N) = (N - 1) / w
@@ -18,7 +19,7 @@ powerlaw(p, x) = @. p[2]*x^(p[1])
 ls1 = :dash
 ls2 = :dot
 color_default = :gray10
-colors = palette(:RdBu,15)[1:6]
+colors = palette(:RdBu,12)[1:6]
 
 
 opac_alphas = [1.0,1.0,1.0,1.0]
@@ -26,7 +27,7 @@ opac_alphas = [1.0,1.0,1.0,1.0]
 markershapes = [:utriangle, :rect, :cross, :circle]
 #markershapes = [:circle, :circle, :circle, :circle ]
 lw = 3
-ms = 5
+ms = 4
 xlims = (0.0,1.0)
 ylims = (0.0, 10.5)
 
@@ -35,12 +36,19 @@ gs = [1:0.1:10.0;]
 
 #----------------------------plot----------------------
 ylabel = L"1/(T_x(N-1))" #L"\frac{1}{\varepsilon(N-1)}"
-pl_phasediag_N = plot(ylabel = ylabel,xlabel=L"w",guidefontsize=20, tickfontsize=12,
-    left_margin=5Plots.mm, right_margin=5Plots.mm, 
-    legendfontsize=12, dpi=300, legend=:topright)
+pl_phasediag_N = plot(ylabel = ylabel,xlabel=L"w",guidefontsize=20, 
+    tickfontsize=12,left_margin=5Plots.mm, right_margin=5Plots.mm, 
+    top_margin=8Plots.mm,legendfontsize=10, dpi=300, legend=:topright,
+    legendcolumns=2)
+
 plot!(pl_phasediag_N, ws, critical_curve_adim.(ws);
     ls=ls1,lw=lw,lc=color_default, 
     label="", xlims = xlims,ylims=ylims)
+
+#add horizontal levels 
+hline!([g_rel_levels[8]],ls=:dash,lw=3,lc=:lime,label="")#label=L"6.68")
+hline!([2.98],ls=:dash,lw=3,lc=:purple,label="")#label=L"2.98")
+
 
 #read phase diagram of N=10 separately
 data_dir_N10 = "../../data/phasediag_data_N10_extended5_80x80/"
@@ -112,9 +120,11 @@ for i in 1:length(Ns)
     plot!(ws,powerlaw(p_fit,ws),lw=lw,label="",lc=colors[i],alpha=opac_alphas[i])
 end
 
-#add horizontal levels 
-hline!([g_rel_levels[8]],ls=:dash,lw=3,lc=:lime,label=L"6.68")
-hline!([2.98],ls=:dash,lw=3,lc=:purple,label=L"2.98")
+#add annotations
+annotate!(pl_phasediag_N, 0.2, 1.2, text("coexistence", :gray10, :center, annot_size-10))
+annotate!(pl_phasediag_N, 0.32, 4.2, text("chaos", :gray10, :center, annot_size-10))
+annotate!(pl_phasediag_N, 0.3, 11.0, text("chaotic WLC boundaries", :gray10, :center, annot_size-10))
+
 
 savefig(pl_phasediag_N,"../../paper_figs/phase_diag_size_effect_chaos_endpoints.png")
 
