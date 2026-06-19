@@ -18,15 +18,15 @@ powerlaw(p, x) = @. p[2]*x^(p[1])
 ls1 = :dash
 ls2 = :dot
 color_default = :gray10
-colors = palette([:red, :purple], 4)
-colors = fill(:red,4)
+colors = palette(:RdBu,15)[1:6]
+
 
 opac_alphas = [1.0,1.0,1.0,1.0]
 #colors = [:blue :orange :green :purple ]
 markershapes = [:utriangle, :rect, :cross, :circle]
 #markershapes = [:circle, :circle, :circle, :circle ]
-lw = 4
-ms = 10
+lw = 3
+ms = 5
 xlims = (0.0,1.0)
 ylims = (0.0, 10.5)
 
@@ -35,7 +35,7 @@ gs = [1:0.1:10.0;]
 
 #----------------------------plot----------------------
 ylabel = L"1/(T_x(N-1))" #L"\frac{1}{\varepsilon(N-1)}"
-pl_phasediag_N = plot(ylabel = ylabel,xlabel=L"w",guidefontsize=25, tickfontsize=18,
+pl_phasediag_N = plot(ylabel = ylabel,xlabel=L"w",guidefontsize=20, tickfontsize=12,
     left_margin=5Plots.mm, right_margin=5Plots.mm, 
     legendfontsize=12, dpi=300, legend=:topright)
 plot!(pl_phasediag_N, ws, critical_curve_adim.(ws);
@@ -82,12 +82,13 @@ Ns = [20,30,50,75] #unique(chaos_end_points[:,1])
 #plot N=10 separately
 g_rel_levels_N10 = gs_N10[end-length(chaos_end_points_N10)+1:end] ./ (10-1)
 plot!(pl_phasediag_N,chaos_end_points_N10[1:5:end],g_rel_levels_N10[1:5:end],
-    st=:scatter,markershape=:xcross,markerstrokewidth=4,ms=ms,mc=:red,label=L"N = 10",alpha=1.0)
+    st=:scatter,markershape=:circle,ms=ms,mc=colors[1],label=L"N = 10",alpha=1.0)
 
 #add N=10 fit 
+param_guesses = [-1.0, 0.5]
 prob_N10 = NonlinearCurveFitProblem(powerlaw, param_guesses, chaos_end_points_N10, g_rel_levels_N10)
 ps_fit_N10 = solve(prob_N10).u
-plot!(ws_N10,powerlaw(ps_fit_N10,ws_N10),lw=lw,label="",lc=:red,alpha=1.0)
+plot!(ws_N10, powerlaw(ps_fit_N10, ws_N10), lw=lw, label="", lc=colors[1], alpha=1.0)
 
 
 #fit to each N 
@@ -105,9 +106,9 @@ end
 for i in 1:length(Ns)
     chaos_end_points_N = chaos_end_points[:,i+1]
     p_fit = params_fit[i]
-    strokewidth = i == 3 ? 4 : 0.0 
+    #strokewidth = i == 3 ? 4 : 0.0 
     plot!(chaos_end_points_N,g_rel_levels,st=:scatter,ms=ms,alpha=opac_alphas[i],
-        label=L"N = %$(Ns[i])",mc=colors[i],markershape=markershapes[i],markerstrokewidth=strokewidth)
+        label=L"N = %$(Ns[i])",mc=colors[i+1],markershape=:circle)
     plot!(ws,powerlaw(p_fit,ws),lw=lw,label="",lc=colors[i],alpha=opac_alphas[i])
 end
 
@@ -115,6 +116,7 @@ end
 hline!([g_rel_levels[8]],ls=:dash,lw=3,lc=:lime,label=L"6.68")
 hline!([2.98],ls=:dash,lw=3,lc=:purple,label=L"2.98")
 
+savefig(pl_phasediag_N,"../../paper_figs/phase_diag_size_effect_chaos_endpoints.png")
 
 #add heteroclinic bifurcation line 
 #vline!(pl_phasediag_N, [(N - 1) / N],
