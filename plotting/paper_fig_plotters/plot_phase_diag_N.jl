@@ -45,6 +45,14 @@ plot!(pl_phasediag_N, ws, critical_curve_adim.(ws);
     ls=ls1,lw=lw,lc=color_default, 
     label="", xlims = xlims,ylims=ylims)
 
+#read chaos end points for different system sizes 
+chaos_end_points = CSV.read("../../data/lyapunovs_effect_size/chaos_endpoints_lyap_curves_multiple_levels_T1e3_Ttr5x1e4_L_logsys.csv",DataFrame)
+nr_points = size(chaos_end_points)[1]
+
+#go through chaos points 
+g_rel_levels = chaos_end_points[:,1]
+Ns = [20,30,50,75] #unique(chaos_end_points[:,1])
+
 #add horizontal levels 
 hline!([g_rel_levels[8]],ls=:dash,lw=3,lc=:lime,label="")#label=L"6.68")
 hline!([2.98],ls=:dash,lw=3,lc=:purple,label="")#label=L"2.98")
@@ -77,15 +85,6 @@ end
 #find first nonzero chaos end point 
 first_nonzero_idx = findfirst(i -> !(iszero(i)),chaos_end_idxs_N10) 
 chaos_end_points_N10 = ws_N10[chaos_end_idxs_N10[first_nonzero_idx:end]]
-
-#read chaos end points for different system sizes 
-chaos_end_points = CSV.read("../../data/lyapunovs_effect_size/chaos_endpoints_lyap_curves_multiple_levels_T1e3_Ttr5x1e4_L_logsys.csv",DataFrame)
-nr_points = size(chaos_end_points)[1]
-
-#go through chaos points 
-g_rel_levels = chaos_end_points[:,1]
-Ns = [20,30,50,75] #unique(chaos_end_points[:,1])
-#chaos_end_points_per_size = [chaos_end_points[i:4:end,end] for i in 1:4]
 
 #plot N=10 separately
 g_rel_levels_N10 = gs_N10[end-length(chaos_end_points_N10)+1:end] ./ (10-1)

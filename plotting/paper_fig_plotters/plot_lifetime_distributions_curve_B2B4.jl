@@ -139,7 +139,7 @@ figs_dir = "../../paper_figs/"
 #plot quadratic coefficients in terms of r
 bs = reverse(bs)
 pl_bfit_r = plot(rs[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
-    mc=:gray10, xlabel=L"r", ylabel=L"|b|",ylims=(-5,50)) #yaxis=:log10, xaxis=:log10)
+    mc=:gray10, xlabel=L"r", ylabel=L"|q_2|",ylims=(-5,50)) #yaxis=:log10, xaxis=:log10)
 
 
 #overlay markers of B2, B3, B4 
@@ -154,7 +154,7 @@ c0 = 2.4;α0 = 0.005
 wg_pairs = rescaled_params.(rs,rs,1.0,c0,α0,N)
 ws = [wg_pairs[i][1] for i in 1:length(wg_pairs)]
 pl_bfit_w = plot(ws[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, 
-    mc=:gray10, xlabel=L"w", ylabel=L"|b|", ylims=(-5,50),label="") #yaxis=:log10, xaxis=:log10)
+    mc=:gray10, xlabel=L"w", ylabel=L"|q_2|", ylims=(-5,50),label="") #yaxis=:log10, xaxis=:log10)
 
 ##overlay markers of B2, B3, B4 
 plot_B3 = false
@@ -184,5 +184,6 @@ pl_distfit_sup = plot(pl_distribs_cbar, pl_bfit_r, layout=(1, 2), size=(1000, 40
 
 annotate!(pl_distfit_sup[1], 0.05, 0.8, text(L"(a)", :gray10, :center, annot_size))
 annotate!(pl_distfit_sup[3], 0.12, 56.0, text(L"(b)", :gray10, :center, annot_size))
+annotate!(pl_distfit_sup[1], 1.71, 0.5, text(L"\Lambda", :gray10, :center, annot_size)) #colorbar label
 
 savefig(pl_distfit_sup,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_change_r_charting_time_$(Δt).png")

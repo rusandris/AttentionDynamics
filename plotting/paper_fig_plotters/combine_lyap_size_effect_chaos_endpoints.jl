@@ -7,7 +7,7 @@ pl_pd_chaos_ends = plot(pl_phasediag_N,pl_lyap_curves_chaos_ends,layout=l,size=(
 
 #add fig level annotations
 annotate!(pl_pd_chaos_ends[1], -0.2, 11.2, text(L"(a)", :gray10, :center, annot_size))
-annotate!(pl_pd_chaos_ends[2], 0.02, 3.5, text(L"(b)", :gray10, :center, annot_size))
+annotate!(pl_pd_chaos_ends[2], 0.02, 4.3, text(L"(b)", :gray10, :center, annot_size))
 annotate!(pl_pd_chaos_ends[2], 0.02, -2.0, text(L"(c)", :gray10, :center, annot_size))
 
 

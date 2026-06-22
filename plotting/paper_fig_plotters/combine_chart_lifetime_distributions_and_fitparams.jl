@@ -1,4 +1,4 @@
-using Plots
+using Plots,LaTeXStrings
 include("defaults.jl")
 
 #combine distribution plots on the r-curve and quadratic fit params
