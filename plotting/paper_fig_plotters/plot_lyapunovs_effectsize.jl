@@ -38,7 +38,7 @@ for (j,data_dir) in enumerate(data_dirs)
 
     #initialize fig
     pl = plot(ylabel=ylabel_L, xlabel=L"w",guidefontsize=20,tickfontsize=15,
-        legend=false,ylims=ylims,xlims=xlimits,
+        ylims=ylims,xlims=xlimits,
         size=(1200, 400),dpi=300)
 
     
@@ -77,14 +77,22 @@ for (j,data_dir) in enumerate(data_dirs)
         replace!(Λ_Ls, "" => NaN)
         Λ_Ls = Λ_Ls ./ α
 
-        #read files xsystem 
-        #lyaps_data_x = readdlm(data_dir_root * data_dir * file_x)
-        #lyaps_data_sorted_x = lyaps_data_x[sortperm(lyaps_data_x[:,2]),:]
-        #Λ_xs = lyaps_data_sorted_x[:,end] 
+        #=
+        #select custom colors for some subplots
+        if j == 3 
+            color = :purple 
+        elseif j == 8 
+            color = :lime 
+        else 
+            color = colors[i+1]
+        end
+        =#
         
-        #plot both 
-        plot!(ws,Λ_Ls,lw=2,label=L"N = %$(Ns[i])",lc=colors[i],
-            title=L"1/(T_x(N-1)) = %$(g_rel)")
+        color = colors[i+1]
+
+        #plot 
+        plot!(ws,Λ_Ls,lw=2,lc=color,
+            title=L"1/(T_x(N-1)) = %$(g_rel)",label="")
         #plot!(ws,Λ_xs,markerstrokewidth=0.01,ms=2,st=:scatter,label="",mc=colors[i])
 
         #extract first zero points
@@ -144,12 +152,13 @@ plot!(plots_B2,ylabel=L"\Lambda",ylims=(ylims[1],4.0))
 plot!(plots_B4,ylabel=L"\Lambda",ylims=(ylims[1],ylims[2]+0.25))
 
 #add markers 
+#for N=20,N=30,N=50,N=75 (skip N = 10)
 end_points_B2 = collect(df[8,2:end])
 end_points_B4 = collect(df[3,2:end])
 markersize = 8
 for i in 1:length(end_points_B2)
-    plot!(plots_B2,[end_points_B2[i]],[3.7],st=:scatter,ms=markersize,markershape=:circle,mc=colors[i])
-    plot!(plots_B4,[end_points_B4[i]],[3.0],st=:scatter,ms=markersize,markershape=:circle,mc=colors[i])
+    plot!(plots_B2,[end_points_B2[i]],[3.7],st=:scatter,ms=markersize,markershape=:circle,mc=colors[i+1],legend=:topright,label=L"N=%$(Ns[i])")
+    plot!(plots_B4,[end_points_B4[i]],[3.0],st=:scatter,ms=markersize,markershape=:circle,mc=colors[i+1],legend=:topright,label="")
 end
 
 pl_lyap_curves_chaos_ends = plot(plots_B2,plots_B4,layout=(2,1),
