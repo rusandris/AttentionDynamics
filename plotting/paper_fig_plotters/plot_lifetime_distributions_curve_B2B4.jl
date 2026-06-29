@@ -184,6 +184,6 @@ pl_distfit_sup = plot(pl_distribs_cbar, pl_bfit_r, layout=(1, 2), size=(1000, 40
 
 annotate!(pl_distfit_sup[1], 0.05, 0.8, text(L"(a)", :gray10, :center, annot_size))
 annotate!(pl_distfit_sup[3], 0.12, 56.0, text(L"(b)", :gray10, :center, annot_size))
-annotate!(pl_distfit_sup[1], 1.71, 0.5, text(L"\Lambda", :gray10, :center, annot_size)) #colorbar label
+annotate!(pl_distfit_sup[1], 1.71, 0.5, text(L"r", :gray10, :center, annot_size)) #colorbar label
 
 savefig(pl_distfit_sup,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_change_r_charting_time_$(Δt).png")
