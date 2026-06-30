@@ -50,10 +50,10 @@ p_sets_c = [[cs[i]] for i in 1:length(cs)]
 
 #--------------------------------precompute trajectories-------------------------------------
 #settings of precomputed trajs
-T = 10 #1000 #500 #10000 #100 #5000
-Ttr = 0 #2000 #2000 #500
+T = 1000 #500 #10000 #100 #5000
+Ttr = 2000 #2000 #500
 Δt_traj = 2 * 1e-2 #5*1e-2
-nr_ics = 2 #number of initial conditions
+nr_ics = 100 #number of initial conditions
 ic_counter = 0
 
 #phasediag_ids = ["B1", "B2", "C", "B3", "B4"]

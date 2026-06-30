@@ -3,7 +3,7 @@ using Revise
 using OrdinaryDiffEq
 using DynamicalSystems
 using StatsBase
-using Plots, LaTeXStrings
+#using Plots, LaTeXStrings
 using LinearAlgebra
 using DelimitedFiles
 cd(@__DIR__)
@@ -73,9 +73,12 @@ k = 10
 chart_times = [0.02,0.1,0.2,0.5,1.0,2.0]
 
 #path
-data_dir_traj = "../../data/trajs_precomp_orig/B1B2B3B4C_Δt0.02_T1000_Ttr2000/B24-r8.0/"
-savedir_lt_root = "../../data/lifetimes_precomp_orig/"
-savedir_lt = savedir_lt_root * "B24_change_r_Δt0.02_T1000_Ttr2000_k10_Δt0.1_T5000/B24-r8.0/"
+#read command line argument
+rdir = ARGS[1]
+
+data_dir_traj = "../../../../../../../data/RESULTS/USERS/rusandris/B1B2B3B4C_Δt0.02_T1000_Ttr2000/" * rdir *"/"
+savedir_lt_root = "../../../../../../../data/RESULTS/USERS/rusandris/lifetimes_precomp_orig/"
+savedir_lt = savedir_lt_root * "B24_change_r_Δt0.02_T1000_Ttr2000_k10/" * rdir * "/"
 mkpath(savedir_lt)
 writedlm(savedir_lt * "chart_times.txt", chart_times)
 #par_names = ["B1","B2","C","B3","B4"]

@@ -1,5 +1,5 @@
 using DelimitedFiles
-using Plots,LaTeXStrings
+#using Plots,LaTeXStrings
 using AttentionDynamics
 cd(@__DIR__)
 
@@ -63,7 +63,7 @@ for (idx, chart_time) in enumerate(chart_times)
             #save traj pl
             mkpath(data_dir_traj*"figs/")
             n = Int(T_plot/Δt_traj)
-            savefig(plot(t[1:n],traj[1:n,:],legend=false,title=fname,size=(1200,300)),data_dir_traj*"figs/"*fname*".png")
+            #savefig(plot(t[1:n],traj[1:n,:],legend=false,title=fname,size=(1200,300)),data_dir_traj*"figs/"*fname*".png")
             
             #integrate activity segment to segment
             int_act, time_segments = integrate_activity(traj, t, Int(chart_time / Δt_traj))
