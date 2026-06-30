@@ -9,49 +9,65 @@ cd(@__DIR__)
 data_dir_root = "../../data/lyapunovs_effect_size/lyapunovs_effect_size_L_N300_logsys_extended/"
 
 data_dirs = readdir(data_dir_root) #[[2,4]]
-data_lyaps1 = readdlm(data_dir_root * data_dirs[1] * "/lyaps_N300.txt")
-data_lyaps2 = readdlm(data_dir_root * data_dirs[3] * "/lyaps_N300.txt")
-
+data_lyapsB4 = readdlm(data_dir_root * data_dirs[1] * "/lyaps_N300.txt")
+data_lyapsB2 = readdlm(data_dir_root * data_dirs[3] * "/lyaps_N300.txt")
+data_lyapsB3 = readdlm(data_dir_root * data_dirs[4] * "/lyaps_N300.txt")
 #sort data
-data_sorted_lyaps1 = data_lyaps1[sortperm(data_lyaps1[:,2]),:]
-data_sorted_lyaps2 = data_lyaps2[sortperm(data_lyaps2[:,2]),:]
+data_sorted_lyapsB4 = data_lyapsB4[sortperm(data_lyapsB4[:,2]),:]
+data_sorted_lyapsB2 = data_lyapsB2[sortperm(data_lyapsB2[:,2]),:]
+data_sorted_lyapsB3 = data_lyapsB3[sortperm(data_lyapsB3[:,2]),:]
 
-Λs1 = data_sorted_lyaps1[:,end]
-Λs2 = data_sorted_lyaps2[:,end]
+#extract lyapunov exponent curves
+Λs_B4 = data_sorted_lyapsB4[:,end]
+Λs_B2 = data_sorted_lyapsB2[:,end]
+Λs_B3 = data_sorted_lyapsB3[:,end]
 
-ws1 = data_sorted_lyaps1[:,2]
-ws2 = data_sorted_lyaps2[:,2]
+#w values
+ws_B4 = data_sorted_lyapsB4[:,2]
+ws_B2 = data_sorted_lyapsB2[:,2]
+ws_B3 = data_sorted_lyapsB3[:,2]
 
 #read alphas 
-data_alphas1 = readdlm(data_dir_root * data_dirs[1] * "/gs_alphas.txt")
-data_alphas2 = readdlm(data_dir_root * data_dirs[3] * "/gs_alphas.txt")
+data_alphasB4 = readdlm(data_dir_root * data_dirs[1] * "/gs_alphas.txt")
+data_alphasB2 = readdlm(data_dir_root * data_dirs[3] * "/gs_alphas.txt")
+data_alphasB3 = readdlm(data_dir_root * data_dirs[4] * "/gs_alphas.txt")
 
-αs = [data_alphas1[2],data_alphas2[2]]
+
+αs = [data_alphasB4[2],data_alphasB2[2],data_alphasB3[2]]
 ylabel = L"\Lambda" #L"\Lambda_{\log} / \alpha"
-label = L"1/(T_x(N-1))"
-pl_lyaps = plot(xlabel=L"w",ylabel=ylabel,guidefontsize=18,tickfontsize=15,ylims=(0,8.0),
-    legend=:topright,legendfontsize=12,dpi=300,xlims=(0.0,0.9),xticks=[0.1:0.2:0.9;])
-plot!(pl_lyaps, ws1, Λs1 ./ αs[1], label = label *  L" = 2.98",lw=2,lc=:purple)
-plot!(pl_lyaps, ws2, Λs2 ./ αs[2], label= label *  L" = 6.68",lw=2,lc=:lime)
+label = L"y" #L"1/(T_x(N-1))"
+pl_lyaps = plot(xlabel=L"w",ylabel=ylabel,guidefontsize=18,tickfontsize=15,ylims=(0,9.0),
+    legend=:bottomright,legend_columns=1,legendfontsize=12,dpi=300,xlims=(0.0,0.9),xticks=[0.1:0.2:0.9;])
+plot!(pl_lyaps, ws_B4, Λs_B4 ./ αs[1], label = label *  L" = 2.98",lw=2,lc=:purple)
+plot!(pl_lyaps, ws_B2, Λs_B2 ./ αs[2], label= label *  L" = 6.68",lw=2,lc=:lime)
+plot!(pl_lyaps, ws_B3, Λs_B3 ./ αs[3], label= label *  L" = 9.6",lw=2,lc=:orange)
 
-#approximate values for B2 and B4 levels 
+#approximate values for B3, B2 and B4 levels 
+w_B3 = 0.2
 w_B2 = 0.264
 w_B4 = 0.446
 w_B2_idx = 44
 w_B4_idx = 37
-w_B2_approx = ws2[w_B2_idx]
-w_B4_approx = ws1[w_B4_idx]
+w_B3_idx = 24
+w_B2_approx = ws_B2[w_B2_idx]
+w_B4_approx = ws_B4[w_B4_idx]
+w_B3_approx = ws_B3[w_B3_idx]
+
 @assert isapprox(w_B4,w_B4_approx;atol=1e-2)
 @assert isapprox(w_B2,w_B2_approx,atol=1e-2)
+@assert isapprox(w_B3,w_B3_approx,atol=1e-2)
 
 ms = 12
-plot!([w_B4_approx],[Λs1[w_B4_idx]/αs[1]],st=:scatter,ms=ms,mc=:purple,markershape=:rect,label="")
-plot!([w_B2_approx],[Λs2[w_B2_idx]/αs[2]],st=:scatter,ms=ms,mc=:lime,markershape=:dtriangle,label="")
+plot!([w_B4_approx],[Λs_B4[w_B4_idx]/αs[1]],st=:scatter,ms=ms,mc=:purple,markershape=:rect,label="")
+plot!([w_B2_approx],[Λs_B2[w_B2_idx]/αs[2]],st=:scatter,ms=ms,mc=:lime,markershape=:dtriangle,label="")
+plot!([w_B3_approx],[Λs_B3[w_B3_idx]/αs[3]],st=:scatter,ms=ms,mc=:orange,markershape=:utriangle,label="")
+
 
 #add annotations
 annot_size_letters = annot_size - 3
-annotate!(w_B2 + 0.05, Λs2[w_B2_idx]/αs[2] + 0.5, text(L"B_2", :lime, :center, annot_size_letters))
-annotate!(w_B4 + 0.08, Λs1[w_B4_idx]/αs[1] + 0.2, text(L"B_4", :purple, :center, annot_size_letters))
+annotate!(w_B2 + 0.3, Λs_B2[w_B2_idx]/αs[2] + 0.0, text(L"B_2" *" (Twitter 2014 \n power law)", :lime, :center, annot_size_letters))
+annotate!(w_B4 + 0.25, Λs_B4[w_B4_idx]/αs[1] + 0.8, text(L"B_4" * " (lognormal)", :purple, :center, annot_size_letters))
+annotate!(w_B3 + 0.3, Λs_B3[w_B3_idx]/αs[3] + 0.0, text(L"B_3" * " (power law)", :orange, :center, annot_size_letters))
 
 
 #plot in function of r 

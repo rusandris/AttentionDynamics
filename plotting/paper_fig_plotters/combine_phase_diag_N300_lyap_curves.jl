@@ -8,7 +8,7 @@ plot!(pl_phase_diag,ws_r, Λs_r, inset = (1, bbox(0.65,0.05,0.3,0.3)), subplot =
         xlabel=L"w", guidefontsize=25,label="",lw=2,xlims=(0.15,0.5))
 
 plot!(pl_phase_diag[3],[ws_r[28]], [Λs_r[28]], ms=6, st=:scatter, mc=:lime,markershape=:dtriangle,label="")
-#plot!(pl_phase_diag[3],[ws_r[end]], [Λs_r[end]], ms=6, st=:scatter, mc=:orange,markershape=:utriangle,label="")
+plot!(pl_phase_diag[3],[ws_r[end]], [Λs_r[end]], ms=6, st=:scatter, mc=:orange,markershape=:utriangle,label="")
 plot!(pl_phase_diag[3],[ws_r[1]], [Λs_r[1]], ms=6, st=:scatter, mc=:purple,markershape=:rect,label="")
 
 
@@ -23,8 +23,8 @@ plot!(pl_fig2[2],right_margin=8Plots.mm) #adjust right margin
 
 
 #add fig annotations
-annotate!(pl_fig2[1], -0.14, 11.5, text(L"(a)", :gray10, :right, annot_size))
-annotate!(pl_fig2[4], -0.1, 9.2, text(L"(b)", :gray10, :right, annot_size))
+annotate!(pl_fig2[1], -0.14, 11.4, text(L"(a)", :gray10, :right, annot_size))
+annotate!(pl_fig2[4], -0.1, 10.2, text(L"(b)", :gray10, :right, annot_size))
 
 
 savefig(pl_fig2,"../../paper_figs/phase_diag_N300_Ttrmax_500_times_scaled_lyap_curves_inset.png")
