@@ -65,9 +65,9 @@ plot!([w_B3_approx],[Λs_B3[w_B3_idx]/αs[3]],st=:scatter,ms=ms,mc=:orange,marke
 
 #add annotations
 annot_size_letters = annot_size - 3
-annotate!(w_B2 + 0.3, Λs_B2[w_B2_idx]/αs[2] + 0.0, text(L"B_2" *" (Twitter 2014 \n power law)", :lime, :center, annot_size_letters))
-annotate!(w_B4 + 0.25, Λs_B4[w_B4_idx]/αs[1] + 0.8, text(L"B_4" * " (lognormal)", :purple, :center, annot_size_letters))
-annotate!(w_B3 + 0.3, Λs_B3[w_B3_idx]/αs[3] + 0.0, text(L"B_3" * " (power law)", :orange, :center, annot_size_letters))
+annotate!(w_B2 + 0.2, Λs_B2[w_B2_idx]/αs[2] + 0.0, text(L"B_2" *" (Twitter)", :lime, :center, annot_size_letters))
+annotate!(w_B4 + 0.25, Λs_B4[w_B4_idx]/αs[1] + 0.8, text(L"B_4" * " (reference)", :purple, :center, annot_size_letters))
+annotate!(w_B3 + 0.3, Λs_B3[w_B3_idx]/αs[3] + 0.0, text(L"B_3" * " (Google Books)", :orange, :center, annot_size_letters))
 
 
 #plot in function of r 

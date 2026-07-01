@@ -124,7 +124,7 @@ end
 
 
 #add fig labels
-x_annot = 7.67
+x_annot = 7.73
 annotate!(pl_ts, x_annot, 0.24, text(L"(a)", :gray10, :center, 18))
 annotate!(pl_int_act, x_annot, 0.14, text(L"(b)", :gray10, :center, 18))
 annotate!(pl_topk, x_annot, -0.2, text(L"(c)", :gray10, :center, 18))
@@ -134,6 +134,6 @@ plot!(pl_int_act, ylims=(0.0, 0.15), yticks=[0.0, 0.05, 0.1])
 plot!(pl_topk,xticks=[10:5:tspan[end];],guidefontsize=18)
 
 
-pl = plot(pl_ts, pl_int_act, pl_topk, layout=(3, 1), size=(700, 500),dpi=300)
+pl = plot(pl_ts, pl_int_act, pl_topk, layout=(3, 1), size=(700, 400),dpi=300)
 
 savefig(pl,"../../paper_figs/chart_explanation_example_shorter.png")

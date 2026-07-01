@@ -134,8 +134,8 @@ plot!(ws_B2_B4, r_curve_vals, ls=:dot, lw=3, lc=:white, ylims=(0,10),label="") #
 #TODO: try to add some data fit curves from Suppl. Fig10 from Lorenz-Spreen
 # get parameters from captions, translate every parameter combination to (Tx,w)
 # N=100 where does that fall on the N=300 phase diag?
-colors = [:lightgreen,:cyan,:slateblue1,:orange,:royalblue1,:lightseagreen,:gray70]
-ms_data = 7
+colors = [:orange,:cyan,:slateblue1,:gray70,:royalblue1,:lightseagreen,:lime]
+ms_data = 8
 #Google Books
 rs_books = [8.0,12.0,15.0,17.0,18.0,20.0]
 N_books = 300 
@@ -264,7 +264,7 @@ plot!(ws_wiki, norm_tscale_wiki, st=:scatter,markershape=:circle, lw=1, ms=ms_da
 plot!(ws_twitter, norm_tscale_twitter, st=:scatter,markershape=:circle, ms=ms_data, lw=1, lc=colors[7], mc=colors[7], label="Twitter")
 
 plot!(legendfontsize=15, guidefontsize=25, tickfontsize=15, 
-    xlabel=L"w", ylabel=L"y",dpi=300,xlims=(-0.01,0.3))
+    xlabel=L"w", ylabel=L"y",dpi=300,xlims=(-0.01,0.3),size=(600,400))
 savefig("../../paper_figs/phase_diag_all_data_curves_SupFig10_log_yscale.png")
 
 
