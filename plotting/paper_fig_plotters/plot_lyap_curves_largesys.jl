@@ -37,7 +37,7 @@ data_alphasB3 = readdlm(data_dir_root * data_dirs[4] * "/gs_alphas.txt")
 ylabel = L"\Lambda" #L"\Lambda_{\log} / \alpha"
 label = L"y" #L"1/(T_x(N-1))"
 pl_lyaps = plot(xlabel=L"w",ylabel=ylabel,guidefontsize=18,tickfontsize=15,ylims=(0,9.0),
-    legend=:bottomright,legend_columns=1,legendfontsize=12,dpi=300,xlims=(0.0,0.9),xticks=[0.1:0.2:0.9;])
+    legend=:bottomright,legend_columns=1,legendfontsize=12,dpi=300,xlims=(0.0,0.95),xticks=[0.1:0.2:0.9;])
 plot!(pl_lyaps, ws_B4, Λs_B4 ./ αs[1], label = label *  L" = 2.98",lw=2,lc=:purple)
 plot!(pl_lyaps, ws_B2, Λs_B2 ./ αs[2], label= label *  L" = 6.68",lw=2,lc=:lime)
 plot!(pl_lyaps, ws_B3, Λs_B3 ./ αs[3], label= label *  L" = 9.6",lw=2,lc=:orange)

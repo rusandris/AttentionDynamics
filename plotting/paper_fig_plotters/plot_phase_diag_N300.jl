@@ -95,6 +95,8 @@ pl_pd300 = plot_phase_diagram(phase_diag, ws, g_rel_levels, N;
     legend_fontsize=12,
     x_ticks = [0,0.45, 0.9])
 
+#make a copy before adding stuff 
+pl_pd300_simple = deepcopy(pl_pd300)
 
 #add r curve 
 r_curve(w, K, c) = K * c * (1 / w - 1) #g/(N-1) = 1/(ϵ*(N-1)), rp=rc
@@ -135,14 +137,13 @@ plot!(ws_B2_B4, r_curve_vals, ls=:dot, lw=3, lc=:white, ylims=(0,10),label="") #
 # get parameters from captions, translate every parameter combination to (Tx,w)
 # N=100 where does that fall on the N=300 phase diag?
 colors = [:orange,:cyan,:slateblue1,:gray70,:royalblue1,:lightseagreen,:lime]
-ms_data = 8
+ms_data = 5
 #Google Books
 rs_books = [8.0,12.0,15.0,17.0,18.0,20.0]
 N_books = 300 
 resc_params_books = rescaled_params.(rs_books, rs_books, K, 2.4, 0.003, N_books)
 ws_books = [resc_params_books[i][1] for i in 1:length(resc_params_books)]
 norm_tscale_books = [resc_params_books[i][2] for i in 1:length(resc_params_books)] ./ (N_books - 1)
-#plot!(pl_pd300, ws_books, norm_tscale_books, st=:scatter,ms=ms_data, mc=colors[1],markershape=:circle, ylims=(0,10), label="Google books") #label=L" \propto (1/w - 1)")
 
 #Movies
 rs_mov = [18.0, 20.0, 22.0, 25.0, 30.0, 33.0, 35.0, 37.0]
@@ -150,7 +151,6 @@ N_mov = 100
 resc_params_mov = rescaled_params.(rs_mov, rs_mov, K, 2.4, 0.001, N_mov)
 ws_mov = [resc_params_mov[i][1] for i in 1:length(resc_params_mov)]
 norm_tscale_mov = [resc_params_mov[i][2] for i in 1:length(resc_params_mov)] ./ (N_mov - 1)
-#plot!(pl_pd300, ws_mov, norm_tscale_mov, st=:scatter,ms=ms_data, mc=colors[2], ylims=(0,10), label="Movies") #label=L" \propto (1/w - 1)")
 
 #Google Trends
 rs_trends = [15.0, 17.0, 19.0, 21.0, 22.0, 26.0, 27.0, 30.0]
@@ -158,7 +158,6 @@ N_trends = 100
 resc_params_trends = rescaled_params.(rs_trends, rs_trends, K, 2.0, 0.0005, N_trends)
 ws_trends = [resc_params_trends[i][1] for i in 1:length(resc_params_trends)]
 norm_tscale_trends = [resc_params_trends[i][2] for i in 1:length(resc_params_trends)] ./ (N_trends - 1)
-#plot!(pl_pd300, ws_trends, norm_tscale_trends, st=:scatter, ms=ms_data, mc=colors[3], ylims=(0,10), label="Google trends") #label=L" \propto (1/w - 1)")
 
 #Reddit 
 rs_reddit = [25.0, 29.0, 30.0, 33.0, 34.0, 35.0]
@@ -166,7 +165,6 @@ N_reddit = 100
 resc_params_reddit = rescaled_params.(rs_reddit, rs_reddit, K, 5.4, 0.001, N_reddit)
 ws_reddit = [resc_params_reddit[i][1] for i in 1:length(resc_params_reddit)]
 norm_tscale_reddit = [resc_params_reddit[i][2] for i in 1:length(resc_params_reddit)] ./ (N_reddit - 1)
-#plot!(pl_pd300, ws_reddit, norm_tscale_reddit, st=:scatter, ms=ms_data, mc=colors[4], ylims=(0,10), label="Reddit") #label=L" \propto (1/w - 1)")
 
 #publications 
 rs_pub = [6.0, 7.0]
@@ -174,7 +172,6 @@ N_pub = 300
 resc_params_pub = rescaled_params.(rs_pub, rs_pub, K, 2.4, 0.003, N_pub)
 ws_pub = [resc_params_pub[i][1] for i in 1:length(resc_params_pub)]
 norm_tscale_pub = [resc_params_pub[i][2] for i in 1:length(resc_params_pub)] ./ (N_pub - 1)
-#plot!(pl_pd300, ws_pub, norm_tscale_pub, st=:scatter, ms=ms_data, mc=colors[5], ylims=(0, 10), label="Publications") #label=L" \propto (1/w - 1)")
 
 #wiki 
 rs_wiki = [45.0, 48.0, 50.0]
@@ -182,7 +179,6 @@ N_wiki = 100
 resc_params_wiki = rescaled_params.(rs_wiki, rs_wiki, K, 2.4, 0.0001, N_wiki)
 ws_wiki = [resc_params_wiki[i][1] for i in 1:length(resc_params_wiki)]
 norm_tscale_wiki = [resc_params_wiki[i][2] for i in 1:length(resc_params_wiki)] ./ (N_wiki - 1)
-#plot!(pl_pd300, ws_wiki, norm_tscale_wiki, st=:scatter, ms=ms_data, mc=colors[6], ylims=(0, 10), label="Wikipedia") #label=L" \propto (1/w - 1)")
 
 #Twitter
 rs_twitter = [9.0,10.0,11.0,12.0]
@@ -190,7 +186,40 @@ N_twitter = 300
 resc_params_twitter = rescaled_params.(rs_twitter, rs_twitter, K, 2.4, 0.005, N_twitter)
 ws_twitter = [resc_params_twitter[i][1] for i in 1:length(resc_params_twitter)]
 norm_tscale_twitter = [resc_params_twitter[i][2] for i in 1:length(resc_params_twitter)] ./ (N_twitter - 1)
-#plot!(pl_pd300, ws_twitter, norm_tscale_twitter, st=:scatter, ms=ms_data, mc=colors[7], ylims=(0, 10), label="Twitter") #label=L" \propto (1/w - 1)")
+
+
+#edit simple phase diag with data points 
+msw = 3
+mshape = :x
+plot!(pl_pd300_simple,ws_B2_B4, r_curve_vals, ls=:dot, lw=3, lc=:white, ylims=(0,10),label="") #label=L" \propto (1/w - 1)")
+plot!(pl_pd300_simple, ws_books, norm_tscale_books, st=:scatter,ms=ms_data, mc=colors[1],markershape=:x,
+    markerstrokewidth=msw, ylims=(0,10), label="Google books",legend=:bottomleft,legendfontsize = legend_fontsize-5) #label=L" \propto (1/w - 1)")
+plot!(pl_pd300_simple, ws_pub, norm_tscale_pub, st=:scatter, ms=ms_data, mc=colors[5],markershape=:x,markerstrokewidth=msw, ylims=(0, 10), label="Publications") #label=L" \propto (1/w - 1)")
+plot!(pl_pd300_simple, ws_twitter, norm_tscale_twitter, st=:scatter, ms=ms_data,markershape=:x,markerstrokewidth=msw, mc=colors[7], ylims=(0, 10), label="Twitter") #label=L" \propto (1/w - 1)")
+
+annot_offset_x = 0.02
+annot_offset_y = 0.1
+annotate!(pl_pd300_simple,ws_twitter[1]+annot_offset_x, norm_tscale_twitter[1]+annot_offset_y, text(L"2013", :lime, :left, annot_size_letters-4))
+annotate!(pl_pd300_simple,ws_twitter[2]+annot_offset_x, norm_tscale_twitter[2]+annot_offset_y, text(L"2014", :lime, :left, annot_size_letters-4))
+annotate!(pl_pd300_simple,ws_twitter[3]+annot_offset_x, norm_tscale_twitter[3]+annot_offset_y, text(L"2015", :lime, :left, annot_size_letters-4))
+annotate!(pl_pd300_simple,ws_twitter[4]+annot_offset_x, norm_tscale_twitter[4]+annot_offset_y, text(L"2016", :lime, :left, annot_size_letters-4))
+
+#plot!([w_B1], [g_B2], ms=8, st=:scatter, mc=:cyan,label=L"B_1",markershape=:diamond)
+plot!(pl_pd300_simple,[w_B2], [g_B2], ms=8, st=:scatter, mc=:lime,label="",markershape=:dtriangle)
+plot!(pl_pd300_simple,[w_B3], [g_B3], ms=8, st=:scatter, mc=:orange, label= "",markershape=:utriangle)
+plot!(pl_pd300_simple,[w_B4], [g_B4], ms=8, st=:scatter, mc=:purple, label = "",markershape=:rect)
+
+annotate!(pl_pd300_simple,w_B3 - 0.01, g_B3 - 0.3, text(L"B_3", :orange, :right, annot_size_letters))
+annotate!(pl_pd300_simple,w_B2 - 0.01, g_B2 - 0.1, text(L"B_2", :lime, :right, annot_size_letters))
+
+
+#fall outside of phase diagram
+#plot!(pl_pd300, ws_wiki, norm_tscale_wiki, st=:scatter, ms=ms_data, mc=colors[6], ylims=(0, 10), label="Wikipedia") #label=L" \propto (1/w - 1)")
+#plot!(pl_pd300, ws_mov, norm_tscale_mov, st=:scatter,ms=ms_data, mc=colors[2], ylims=(0,10), label="Movies") #label=L" \propto (1/w - 1)")
+#plot!(pl_pd300, ws_trends, norm_tscale_trends, st=:scatter, ms=ms_data, mc=colors[3], ylims=(0,10), label="Google trends") #label=L" \propto (1/w - 1)")
+#plot!(pl_pd300, ws_reddit, norm_tscale_reddit, st=:scatter, ms=ms_data, mc=colors[4], ylims=(0,10), label="Reddit") #label=L" \propto (1/w - 1)")
+
+
 
 #savefig(pl_pd300, "../../paper_figs/phase_diag_lyaps_N300_data_curves_SupFig10.png")
 
@@ -199,26 +228,25 @@ g_B3, g_B2, g_B4 = gs_curve
 
 annot_size = 20
 ms = 6
-msw = 1.0
 
 #add points 
 #plot!([w_B1], [g_B2], ms=8, st=:scatter, mc=:cyan,label=L"B_1",markershape=:diamond)
-plot!([w_B2], [g_B2], ms=8, st=:scatter, mc=:lime,label="",markershape=:dtriangle)
-plot!([w_B3], [g_B3], ms=8, st=:scatter, mc=:orange, label= "",markershape=:utriangle)
-plot!([w_B4], [g_B4], ms=8, st=:scatter, mc=:purple, label = "",markershape=:rect)
+plot!(pl_pd300,[w_B2], [g_B2], ms=8, st=:scatter, mc=:lime,label="",markershape=:dtriangle)
+plot!(pl_pd300,[w_B3], [g_B3], ms=8, st=:scatter, mc=:orange, label= "",markershape=:utriangle)
+plot!(pl_pd300,[w_B4], [g_B4], ms=8, st=:scatter, mc=:purple, label = "",markershape=:rect)
 
 #add two/three special levels 
-hline!([g_B2],ls=:dash,lw=2,lc=:lime,label="")
-hline!([g_B4],ls=:dash,lw=2,lc=:purple,label="")
-hline!([g_B3],ls=:dash,lw=2,lc=:orange,label="")
+hline!(pl_pd300,[g_B2],ls=:dash,lw=2,lc=:lime,label="")
+hline!(pl_pd300,[g_B4],ls=:dash,lw=2,lc=:purple,label="")
+hline!(pl_pd300,[g_B3],ls=:dash,lw=2,lc=:orange,label="")
 
 
 #add annotations
 annot_size_letters = annot_size - 3
 #annotate!(w_B1 + 0.03, g_B2 + 0.6, text(L"B_1", :cyan, :center, annot_size_letters))
-annotate!(w_B3 + 0.05, g_B3 - 0.6, text(L"B_3", :orange, :center, annot_size_letters))
-annotate!(w_B2 + 0.05, g_B2 + 0.6, text(L"B_2", :lime, :center, annot_size_letters))
-annotate!(w_B4 + 0.04, g_B4 + 0.6, text(L"B_4", :purple, :center, annot_size_letters))
+annotate!(pl_pd300,w_B3 + 0.05, g_B3 - 0.6, text(L"B_3", :orange, :center, annot_size_letters))
+annotate!(pl_pd300,w_B2 + 0.05, g_B2 + 0.6, text(L"B_2", :lime, :center, annot_size_letters))
+annotate!(pl_pd300,w_B4 + 0.04, g_B4 + 0.6, text(L"B_4", :purple, :center, annot_size_letters))
 
 #add colorbar 
 cbar_range = [-7:0.1:7;]
@@ -227,8 +255,8 @@ pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [-5,0.0,5],
     ymirror=true, left_margin=-8Plots.mm,tickfontsize=tick_fontsize_large-5)
 
 #combine heatmap with the separate colorbar
-l = @layout [a{0.95w} b]
-pl_phase_diag = plot!(pl_pd300, pl_cbar, layout=l, tick_direction=:out)
+l_cbar = @layout [a{0.95w} b]
+pl_phase_diag = plot!(pl_pd300, pl_cbar, layout=l_cbar, tick_direction=:out)
 
 #add cbar annot
 annotate!(pl_phase_diag,1.0, 10.5, text(L"\Lambda", :gray10, :center, annot_size))
@@ -253,22 +281,35 @@ writedlm(savedir * "w_values_phase_diag_N300_Ttrmax_500_times_scaled.txt", ws)
 writedlm(savedir * "g_rel_levels_phase_diag_N300_Ttrmax_500_times_scaled.txt", g_rel_levels)
 
 #plot every data set 
-plot([1e-4:1e-4:0.5;], 1 ./ [1e-4:1e-4:0.5;], ls=:dash, lw=3, lc=:gray10, label="",yscale=:log10)
-plot!([1e-4:1e-4:0.5;], r_curve.([1e-4:1e-4:0.5;], K, c0), ls=:dot, lw=4, lc=:gray70, mc=:gray10, label="")
-plot!(ws_books, norm_tscale_books, st=:scatter,markershape=:circle, ms=ms_data, lw=1, lc=colors[1], mc=colors[1], label="Google books")
-plot!(ws_mov, norm_tscale_mov,st=:scatter ,markershape=:circle, lw=1, ms=ms_data, lc=colors[2], mc=colors[2], label="Movies")
-plot!(ws_trends, norm_tscale_trends, st=:scatter,markershape=:circle, ms=ms_data, lw=1, lc=colors[3], mc=colors[3], label="Google Trends")
-plot!(ws_reddit, norm_tscale_reddit, st=:scatter,markershape=:circle, ms=ms_data, lw=1, lc=colors[4], mc=colors[4], label="Reddit")
-plot!(ws_pub, norm_tscale_pub,st=:scatter ,markershape=:circle, lw=1, ms=ms_data, lc=colors[5], mc=colors[5], label="Publications")
-plot!(ws_wiki, norm_tscale_wiki, st=:scatter,markershape=:circle, lw=1, ms=ms_data, lc=colors[6], mc=colors[6], label="Wikipedia")
-plot!(ws_twitter, norm_tscale_twitter, st=:scatter,markershape=:circle, ms=ms_data, lw=1, lc=colors[7], mc=colors[7], label="Twitter")
+pl_every_data = plot([1e-4:1e-4:0.4;], 1 ./ [1e-4:1e-4:0.4;], ls=:dash, lw=3, lc=:gray10, label="",yscale=:log10)
+plot!([1e-4:1e-4:0.4;], r_curve.([1e-4:1e-4:0.4;], K, c0), ls=:dot, lw=3, lc=:gray70, mc=:gray10, label="")
+plot!(ws_books, norm_tscale_books, st=:scatter,markershape=mshape,markerstrokewidth=msw, ms=ms_data, lc=colors[1], mc=colors[1], label="Google books")
+plot!(ws_mov, norm_tscale_mov,st=:scatter ,markershape=mshape,markerstrokewidth=msw, ms=ms_data, lc=colors[2], mc=colors[2], label="Movies")
+plot!(ws_trends, norm_tscale_trends, st=:scatter,markershape=mshape,markerstrokewidth=msw, ms=ms_data, lc=colors[3], mc=colors[3], label="Google Trends")
+plot!(ws_reddit, norm_tscale_reddit, st=:scatter,markershape=mshape,markerstrokewidth=msw, ms=ms_data, lc=colors[4], mc=colors[4], label="Reddit")
+plot!(ws_pub, norm_tscale_pub,st=:scatter ,markershape=mshape,markerstrokewidth=msw, ms=ms_data, lc=colors[5], mc=colors[5], label="Publications")
+plot!(ws_wiki, norm_tscale_wiki, st=:scatter,markershape=mshape,markerstrokewidth=msw, ms=ms_data, lc=colors[6], mc=colors[6], label="Wikipedia")
+plot!(ws_twitter, norm_tscale_twitter, st=:scatter,markershape=mshape,markerstrokewidth=msw, ms=ms_data, lc=colors[7], mc=colors[7], label="Twitter")
 
-plot!(legendfontsize=15, guidefontsize=25, tickfontsize=15, 
-    xlabel=L"w", ylabel=L"y",dpi=300,xlims=(-0.01,0.3),size=(600,400))
-savefig("../../paper_figs/phase_diag_all_data_curves_SupFig10_log_yscale.png")
+plot!(pl_every_data,legendfontsize=legend_fontsize-5, guidefontsize=25, tickfontsize=15, 
+    xlabel=L"w", ylabel=L"y",dpi=300,xlims=(-0.01,0.4),size=(600,400),xticks=[0,0.1,0.2,0.3,0.4],yticks=[0,1e1,1e3])
+
+savefig(pl_every_data,"../../paper_figs/phase_diag_all_data_curves_SupFig10_log_yscale.png")
+
+#combine phase diag with data and log scale all data fig 
+plot!(pl_pd300_simple, xticks=[0,0.1,0.2,0.3,0.4], xlims=(0.0,0.4))
+pl_phase_diag_simple = plot(pl_pd300_simple, pl_cbar, layout=l_cbar, tick_direction=:out)
+
+pl_fig3_v1 = plot(pl_phase_diag_simple,pl_every_data,layout=(1,2),size=(1000,400),
+    bottom_margin=6Plots.mm,top_margin=10Plots.mm) 
+
+#add fig level annotation 
+annotate!(pl_fig3_v1[1],-0.08, 10.8, text(L"(a)", :gray10, :center, annot_size))
+annotate!(pl_fig3_v1[3], -0.08, 6.8*1e4, text(L"(b)", :gray10, :center, annot_size))
+plot!(pl_fig3_v1[2],right_margin=6Plots.mm) #adjust right margin
+plot!(pl_fig3_v1[3],right_margin=6Plots.mm) #adjust right margin
 
 
-
-
+savefig(pl_fig3_v1,"../../paper_figs/phase_diag_N300_Ttrmax_500_times_scaled_all_data_curves_SupFig10_log_yscale.png")
 
 

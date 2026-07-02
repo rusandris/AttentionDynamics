@@ -11,7 +11,7 @@ plot!(pl_phase_diag[3],[ws_r[28]], [Λs_r[28]], ms=6, st=:scatter, mc=:lime,mark
 plot!(pl_phase_diag[3],[ws_r[end]], [Λs_r[end]], ms=6, st=:scatter, mc=:orange,markershape=:utriangle,label="")
 plot!(pl_phase_diag[3],[ws_r[1]], [Λs_r[1]], ms=6, st=:scatter, mc=:purple,markershape=:rect,label="")
 
-
+#combine phase diag with lyap curves
 l = @layout [a{0.5w} b{0.5w}]
 pl_fig2 = plot(pl_phase_diag,pl_lyaps, layout = l, size=(1000,400), 
     guidefontsize=25,tickfontsize=15,bottom_margin=5Plots.mm,
@@ -28,3 +28,21 @@ annotate!(pl_fig2[4], -0.1, 10.2, text(L"(b)", :gray10, :right, annot_size))
 
 
 savefig(pl_fig2,"../../paper_figs/phase_diag_N300_Ttrmax_500_times_scaled_lyap_curves_inset.png")
+
+#combine phase diag with lyap curves and data sets
+l3 = (1,3) 
+pl_fig2_v2 = plot(pl_phase_diag,pl_lyaps, pl_every_data, layout = l3, size=(1500,400), 
+    guidefontsize=25,tickfontsize=15,bottom_margin=10Plots.mm,
+    top_margin=12Plots.mm,dpi=300)
+
+plot!(pl_fig2_v2[3],guidefontsize=20,tickfontsize=8) #finally adjust inset fontsizes
+plot!(pl_fig2_v2[4],right_margin=4Plots.mm) #adjust right margin
+plot!(pl_fig2_v2[2],right_margin=8Plots.mm) #adjust right margin
+plot!(pl_fig2_v2[1],left_margin=10Plots.mm) #adjust right margin
+
+#add fig annotations
+annotate!(pl_fig2_v2[1], -0.14, 11.4, text(L"(a)", :gray10, :right, annot_size))
+annotate!(pl_fig2_v2[4], -0.1, 10.2, text(L"(b)", :gray10, :right, annot_size))
+annotate!(pl_fig2_v2[5], -0.04, 1e5, text(L"(c)", :gray10, :right, annot_size))
+
+savefig(pl_fig2_v2,"../../paper_figs/phase_diag_N300_Ttrmax_500_times_scaled_lyap_curves_inset_datasets.png")
