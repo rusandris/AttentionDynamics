@@ -162,6 +162,21 @@ plot!([ws[2]], [abs.(bs[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8
 plot_B3 && plot!([ws[1]], [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
 plot!([ws[end-4]], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
 
+#plot quadratic coefficients in terms of r * \Delta t (charting time)
+c0 = 2.4;α0 = 0.005; Δt_chart = chart_times[end] #from distrib plotter script
+wg_pairs = rescaled_params.(rs,rs,1.0,c0,α0,N)
+ws = [wg_pairs[i][1] for i in 1:length(wg_pairs)]
+pl_bfit_Tx = plot(rs[1:end-1] .* Δt_chart, abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, 
+    mc=:gray10, xlabel=L"Δt / T_x", ylabel=L"|q_2|", ylims=(-5,50),label="") #yaxis=:log10, xaxis=:log10)
+
+#overlay markers of B2, B3, B4 
+plot_B3 = true
+plot!([rs[2]] * Δt_chart, [abs.(bs[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
+plot_B3 && plot!([rs[1]] * Δt_chart, [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
+plot!([rs[end-4] * Δt_chart], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
+
+
+
 #--------------plot supplimentary figure--------------------
 
 
