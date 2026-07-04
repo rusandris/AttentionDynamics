@@ -32,7 +32,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
     pls_linlin = [plot(), plot(), plot()]#init empty 3-plot
     pls_loglin = [plot(), plot(), plot()]#init empty 3-plot
 
-    ylabel = i == 1 ? L"\log(p_{\Delta t}(\tau))" : ""
+    ylabel = i == 1 ? L"\log(p(\tau))" : ""
 
     chart_time = chart_times[i]
     @show chart_time
@@ -53,7 +53,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         #plot normal linear histogram plots
         pl_hist = barhist(lifetimes; bins=100,
             label="$(par_labels[j])",
-            title=L"\Delta t = %$(chart_times[i])",
+            title=L"\Delta t_L = %$(chart_times[i])",
             color=color)
         push!(plots_linhist, pl_hist)
 
@@ -73,7 +73,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         bins_discrete = h_discrete.edges[1][1:end-1]
         counts_discrete = h_discrete.weights
 
-            #cutoff infs
+        #cutoff infs
         cutoff = findfirst(x -> isinf(x), log10.(counts_discrete))
         if !(isnothing(cutoff))
             bins_discrete = bins_discrete[1:cutoff-1]
@@ -101,11 +101,13 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         plot!(pls_loglog[1], log10.(bins_discrete), log10.(counts_discrete), 
             markershape=markershapes[j],st=:scatter,
-            mc=color, markerstrokecolor=:gray10,
+            mc=color, 
+            markerstrokecolor=:gray10,
+            markerstrokewidth=msw,
             lc=color,
             alpha = 1,
             dpi=300,
-            title=L"N = %$(N), k = %$(k), \Delta t = %$(chart_time)", 
+            title=L"N = %$(N), k = %$(k), \Delta t_L = %$(chart_time)", 
             ms=ms,
             label= par_labels[j],
             xlabel=L"\log(\tau)",
@@ -133,7 +135,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         #quadratic
         if plot_fits && i == 3 && j ∈ quadfit_idxs
             #quadratic 
-            interval = 1:round(Int, fit_lengths[j] * n_τ)
+            interval = 1:round(Int,  n_τ)
             param_guesses = [-10.0, 1.0, -10.0]
             prob = NonlinearCurveFitProblem(quadratic, param_guesses, log10.(bins_discrete[interval]), log10.(counts_discrete[interval]))
             sol = solve(prob)
@@ -162,7 +164,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
-            title=L"N = %$(N), k = %$(k), \Delta t = %$(chart_time)", ms=ms,
+            title=L"N = %$(N), k = %$(k), \Delta t_L = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\tau",
             ylabel=ylabel)
@@ -172,7 +174,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
-            title=L"N = %$(N), k = %$(k), \Delta t = %$(chart_time)", ms=ms,
+            title=L"N = %$(N), k = %$(k), \Delta t_L = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\tau",
             ylabel=ylabel)
@@ -190,7 +192,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
-            title=L"\Delta t = %$(chart_time)", ms=ms,
+            title=L"\Delta t_L = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\log(\tau)",
             ylabel=ylabel)
@@ -200,7 +202,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
-            title=L"\Delta t = %$(chart_time)", ms=ms,
+            title=L"\Delta t_L = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\tau",
             ylabel=ylabel)
@@ -210,7 +212,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
-            title=L"\Delta t = %$(chart_time)", ms=ms,
+            title=L"\Delta t_L = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\tau",
             ylabel=ylabel)
@@ -227,7 +229,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
-            title=L"\Delta t = %$(chart_time)", ms=ms,
+            title=L"\Delta t_L = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\log(\tau)",
             ylabel=ylabel)
@@ -237,7 +239,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
-            title=L"\Delta t = %$(chart_time)", ms=ms,
+            title=L"\Delta t_L = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\tau",
             ylabel=ylabel)
@@ -247,7 +249,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             mc=color, markerstrokecolor=:gray10,
             lc=color,
             dpi=300,
-            title=L"\Delta t = %$(chart_time)", ms=ms,
+            title=L"\Delta t_L = %$(chart_time)", ms=ms,
             label=par_labels[j],
             xlabel=L"\tau",
             ylabel=ylabel)

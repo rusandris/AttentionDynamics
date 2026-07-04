@@ -124,6 +124,7 @@ ws_curve = params_rescaled_curve[:, 1]
 gs_curve = params_rescaled_curve[:, 2]
 
 w_B1, w_B2, w_B3 = ws_horizontal
+g_B3, g_B2, g_B4 = gs_curve
 
 w_B3,w_B2,w_B4 = ws_curve
 ws_B2_B4 = [w_B2-0.1:0.001:w_B4+0.1;]
@@ -223,17 +224,13 @@ annotate!(pl_pd300_simple,w_B2 - 0.01, g_B2 - 0.1, text(L"B_2", :lime, :right, a
 
 #savefig(pl_pd300, "../../paper_figs/phase_diag_lyaps_N300_data_curves_SupFig10.png")
 
-
-g_B3, g_B2, g_B4 = gs_curve
-
-annot_size = 20
-ms = 6
+ms = 8
 
 #add points 
 #plot!([w_B1], [g_B2], ms=8, st=:scatter, mc=:cyan,label=L"B_1",markershape=:diamond)
-plot!(pl_pd300,[w_B2], [g_B2], ms=8, st=:scatter, mc=:lime,label="",markershape=:dtriangle)
-plot!(pl_pd300,[w_B3], [g_B3], ms=8, st=:scatter, mc=:orange, label= "",markershape=:utriangle)
-plot!(pl_pd300,[w_B4], [g_B4], ms=8, st=:scatter, mc=:purple, label = "",markershape=:rect)
+plot!(pl_pd300,[w_B2], [g_B2], ms=ms, st=:scatter, mc=:lime,label="",markershape=:dtriangle)
+plot!(pl_pd300,[w_B3], [g_B3], ms=ms, st=:scatter, mc=:orange, label= "",markershape=:utriangle)
+plot!(pl_pd300,[w_B4], [g_B4], ms=ms, st=:scatter, mc=:purple, label = "",markershape=:rect)
 
 #add two/three special levels 
 hline!(pl_pd300,[g_B2],ls=:dash,lw=2,lc=:lime,label="")
@@ -252,14 +249,14 @@ annotate!(pl_pd300,w_B4 + 0.04, g_B4 + 0.6, text(L"B_4", :purple, :center, annot
 cbar_range = [-7:0.1:7;]
 pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [-5,0.0,5], 
     c=HEATMAP_DEFAULTS.c, fg_color=:gray10, colorbar=false, xaxis=false, 
-    ymirror=true, left_margin=-8Plots.mm,tickfontsize=tick_fontsize_large-5)
+    ymirror=true, left_margin=-8Plots.mm,tickfontsize=tick_fontsize_large)
 
 #combine heatmap with the separate colorbar
 l_cbar = @layout [a{0.95w} b]
 pl_phase_diag = plot!(pl_pd300, pl_cbar, layout=l_cbar, tick_direction=:out)
 
 #add cbar annot
-annotate!(pl_phase_diag,1.0, 10.5, text(L"\Lambda", :gray10, :center, annot_size))
+annotate!(pl_phase_diag,0.4, 10.5, text(L"\Lambda", :gray10, :center, annot_size))
 
 #plot two levels of lyap curves separately
 g_B4_approx = g_rel_levels[24]
@@ -298,7 +295,9 @@ savefig(pl_every_data,"../../paper_figs/phase_diag_all_data_curves_SupFig10_log_
 
 #combine phase diag with data and log scale all data fig 
 plot!(pl_pd300_simple, xticks=[0,0.1,0.2,0.3,0.4], xlims=(0.0,0.4))
+
 pl_phase_diag_simple = plot(pl_pd300_simple, pl_cbar, layout=l_cbar, tick_direction=:out)
+annotate!(pl_phase_diag_simple, 0.418, 10.5, text(L"\Lambda", :gray10, :center, annot_size))
 
 pl_fig3_v1 = plot(pl_phase_diag_simple,pl_every_data,layout=(1,2),size=(1000,400),
     bottom_margin=6Plots.mm,top_margin=10Plots.mm) 

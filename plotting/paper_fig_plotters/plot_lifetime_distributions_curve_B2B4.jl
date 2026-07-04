@@ -30,7 +30,7 @@ ms_high = 8
 N = 300
 k = 10
 
-ylabel = L"\log(p_{\Delta t}(\tau))"
+ylabel = L"\log(p(\tau))"
 
 pl_distribs = plot(dpi=300, left_margin=8Plots.mm,
     xlabel=L"\log(\tau)",ylabel=ylabel) #title=L"N = %$(N), k = %$(k), \Delta t = %$(Δt)"

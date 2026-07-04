@@ -8,6 +8,8 @@ tick_fontsize = tick_fontsize_small
 tick_fontsize_large = 15
 legend_fontsize = 15
 annot_size = 20
+annot_size_letters = annot_size - 3
+
 fig_size = (1200,600)
 
 DEFAULTS = (xguidefontsize=guide_fontsize,yguidefontsize=guide_fontsize,
