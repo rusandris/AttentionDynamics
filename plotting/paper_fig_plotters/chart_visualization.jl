@@ -58,15 +58,19 @@ colors = distinguishable_colors(nr_colors,
     dropseed=true, lchoices=range(0, stop=80, length=15),)
 idx_to_color = Dict(zip(idxs_active,colors))
 
-#plot trajectory itself
-pl_ts = plot(t[tidxs], traj[tidxs, idxs_active], lc=colors', lw=3,
-    ylabel=L"L_i(t)", xlabel="", legend=false, xformatter=:none,
+pl_ts = plot( ylabel=L"L_i(t_L)", xlabel="", legend=false, xformatter=:none,
     tickfontsize=6, guidefontsize=18, left_margin=13Plots.mm)
 
 #add vertical lines 
 Δt_chart = 1.0
 n_Δt = Int(Δt_chart / Δt)
 vline!(pl_ts, t[tidxs[1]:n_Δt:tidxs[end]], ls=:dash, lc=:gray50, la=0.5)
+
+
+#plot trajectory itself
+pl_ts = plot!(pl_ts,t[tidxs], traj[tidxs, idxs_active], lc=colors', lw=3)
+   
+
 
 #plot inactive with gray separately
 idxs_inactive = []
@@ -76,17 +80,20 @@ for i in 1:N
 end
 
 plot!(pl_ts,t[tidxs], traj[tidxs, idxs_inactive], lc=:gray50, lw=1,
-    ylabel=L"L_i(t)", xlabel="", legend=false, xformatter=:none,
+    ylabel=L"L_i(t_L)", xlabel="", legend=false, xformatter=:none,
     tickfontsize=10, guidefontsize=18, left_margin=13Plots.mm)
 
 #plot integrated variables
-pl_int_act = plot(t_int[tint_idxs], int_act_matrix[tint_idxs, idxs_active],
-    lc=colors', mc=colors', lw=0.5,markershape=:circle,ms=6,
-    markerstrokewiΔth=0.0, markerstrokecolor=colors',ylabel=L"\tilde{L}_i(t,\Delta t)")
+pl_int_act = plot(
+  ylabel=L"\tilde{L}_i(t_L,\Delta t_L)")
 
 #ylabel = L"\int_{Δt_i}^{Δt_{i+1}} L_i(t)Δt"
 #add vertical lines 
 vline!(pl_int_act, t_int[tint_idxs], ls=:dash, lc=:gray50, la=0.5)
+
+plot!(pl_int_act,t_int[tint_idxs], int_act_matrix[tint_idxs, idxs_active], 
+    lc=colors', mc=colors', lw=0.5, markershape=:circle, ms=6,
+    markerstrokewiΔth=0.0, markerstrokecolor=colors')
 
 #plot inactive with gray separately
 plot!(t_int[tint_idxs], int_act_matrix[tint_idxs, idxs_inactive],
@@ -95,10 +102,12 @@ plot!(t_int[tint_idxs], int_act_matrix[tint_idxs, idxs_inactive],
 
 #plot charts and ranks
 pl_topk = plot(legend=false,dpi=300,
-    ylabel="ranks",xlabel=L"t",guidefontsize=10,
+    ylabel="ranks",xlabel=L"t_L",guidefontsize=10,
     left_margin=13Plots.mm,bottom_margin=4Plots.mm,
     yflip=true, yticks=[1:k;], ylims=(0, 5+0.5),
     tickfontsize=11)
+
+vline!(pl_topk, t_int[tint_idxs], ls=:dash, lc=:gray50, la=0.5)
 
 cons_occ = consecutive_occurrences(topk_idxs)
 

@@ -52,7 +52,7 @@ for (i, f) in enumerate(files_trajdata_examples[1:end-1])
 end
 
 #adjust plots 
-plot!(plots_ts_N10[end], xlabel=L"t", guidefontsize=guidefontsize)
+plot!(plots_ts_N10[end], xlabel=L"t_L", guidefontsize=guidefontsize)
 #plot!(plots_ts_N10[1],title = L"N = 10")
 
 pl_N10 = plot(plots_ts_N10..., layout=(4, 1), size=(1000, 1200), left_margin=5Plots.mm,ylims=(0, 0.32))
@@ -110,7 +110,7 @@ for (i, f) in enumerate(files_trajdata_examples[1:end-1])
 end
 
 #adjust plots 
-plot!(plots_ts_N300[end], xlabel=L"t", guidefontsize=guidefontsize)
+plot!(plots_ts_N300[end], xlabel=L"t_L", guidefontsize=guidefontsize)
 pl_N300 = plot(plots_ts_N300..., layout=(4, 1), size=(1000, 1200), ylims=(0, 0.22))
 
 #add title (annotation)
