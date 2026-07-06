@@ -49,7 +49,9 @@ markershape_default =:circle
 #fitting function
 quadratic(a, x) = @. a[1] + a[2] * x + a[3] * x^2
 cutoff = 30
-bs = []
+q2s = []
+q1s = []
+fit_params = []
 
 #loop through parameters (lifetime dirs)
 for (i, dir) in enumerate(reverse(data_dirs))
@@ -120,8 +122,9 @@ for (i, dir) in enumerate(reverse(data_dirs))
     sol = solve(prob)
     ps_fit = sol.u
 
-    push!(bs,ps_fit[end])
-
+    push!(q2s,ps_fit[end])
+    push!(q1s,ps_fit[2])
+    push!(fit_params,ps_fit)
     @show ps_fit
     xs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
     plot!(xs_fit, quadratic(ps_fit, xs_fit),
@@ -137,44 +140,52 @@ figs_dir = "../../paper_figs/"
 #r_B2 = 10
 
 #plot quadratic coefficients in terms of r
-bs = reverse(bs)
-pl_bfit_r = plot(rs[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
+q2s = reverse(q2s)
+pl_bfit_r = plot(rs[1:end-1], abs.(q2s[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
     mc=:gray10, xlabel=L"r", ylabel=L"|q_2|",ylims=(-5,50)) #yaxis=:log10, xaxis=:log10)
 
 
 #overlay markers of B2, B3, B4 
 plot_B3 = true
-plot!([rs[2]], [abs.(bs[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
-plot_B3 && plot!([rs[1]], [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
-plot!([rs[end-4]], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
+plot!([rs[2]], [abs.(q2s[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
+plot_B3 && plot!([rs[1]], [abs.(q2s[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
+plot!([rs[end-4]], [abs.(q2s[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
 
 
 #plot quadratic coefficients in terms of w
 c0 = 2.4;α0 = 0.005
 wg_pairs = rescaled_params.(rs,rs,1.0,c0,α0,N)
 ws = [wg_pairs[i][1] for i in 1:length(wg_pairs)]
-pl_bfit_w = plot(ws[1:end-1], abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, 
+pl_bfit_w = plot(ws[1:end-1], abs.(q2s[1:end-1]), markershape=:circle, lc=:gray10, ms=3, 
     mc=:gray10, xlabel=L"w", ylabel=L"|q_2|", ylims=(-5,50),label="") #yaxis=:log10, xaxis=:log10)
 
 ##overlay markers of B2, B3, B4 
 plot_B3 = false
-plot!([ws[2]], [abs.(bs[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
-plot_B3 && plot!([ws[1]], [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
-plot!([ws[end-4]], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
+plot!([ws[2]], [abs.(q2s[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
+plot_B3 && plot!([ws[1]], [abs.(q2s[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
+plot!([ws[end-4]], [abs.(q2s[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
 
 #plot quadratic coefficients in terms of r * \Delta t (charting time)
 c0 = 2.4;α0 = 0.005; Δt_chart = chart_times[end] #from distrib plotter script
 wg_pairs = rescaled_params.(rs,rs,1.0,c0,α0,N)
 ws = [wg_pairs[i][1] for i in 1:length(wg_pairs)]
-pl_bfit_Tx = plot(rs[1:end-1] .* Δt_chart, abs.(bs[1:end-1]), markershape=:circle, lc=:gray10, ms=3, 
-    mc=:gray10, xlabel=L"Δt / T_x", ylabel=L"|q_2|", ylims=(-5,50),label="") #yaxis=:log10, xaxis=:log10)
+pl_bfit_Tx = plot(rs[1:end-1] .* Δt_chart, abs.(q2s[1:end-1]), markershape=:circle, lc=:gray10, ms=3, 
+    mc=:gray10, xlabel=L"R_\Delta", ylabel=L"|q_2|", ylims=(-5,50),label="",legend=false) #xlabel=L"Δt / T_x" 
 
 #overlay markers of B2, B3, B4 
 plot_B3 = true
-plot!([rs[2]] * Δt_chart, [abs.(bs[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
-plot_B3 && plot!([rs[1]] * Δt_chart, [abs.(bs[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
-plot!([rs[end-4] * Δt_chart], [abs.(bs[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
+plot!([rs[2]] * Δt_chart, [abs.(q2s[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
+plot_B3 && plot!([rs[1]] * Δt_chart, [abs.(q2s[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
+plot!([rs[end-4] * Δt_chart], [abs.(q2s[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
 
+#add inset to left panel  
+q1s = reverse(q1s)
+plot!(pl_bfit_Tx,rs[1:end-1] .* Δt_chart, q1s[1:end-1], 
+    inset = (1, bbox(0.5,0.05,0.5,0.5)), subplot = 2, 
+    lc=:gray10, ls=:dot, ylabel=L"q_1", 
+    xlabel=L"R_\Delta", guidefontsize=25,label="",lw=2)
+#ylims=(2,9), yticks=[3,6,9],xticks=[0.5,0.35,0.2],
+#xlims=(0.15,0.5)
 
 
 #--------------plot supplimentary figure--------------------

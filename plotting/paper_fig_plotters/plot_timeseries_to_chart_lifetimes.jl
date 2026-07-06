@@ -34,7 +34,7 @@ plots_ts_N10 = []
 yticks = [[0.0, 0.05, 0.1], [0.0, 0.1, 0.2], [0.0, 0.1], [0.0, 0.1, 0.2, 0.3]]
 
 
-for (i, f) in enumerate(files_trajdata_examples[1:end-1])
+for (i, f) in enumerate(files_trajdata_examples)
     @show f
     traj = reshape(reinterpret(Float64, read(data_dir_traj * f)), data_shape)
 
@@ -60,7 +60,7 @@ pl_N10 = plot(plots_ts_N10..., layout=(4, 1), size=(1000, 1200), left_margin=5Pl
 
 #-------------------------------N=300------------------------------------
 
-datadir_traj_root = "../../data/trajs_precomp_orig/"
+datadir_traj_root = "../../data/trajs_precomp_orig_N300/"
 #data_dir_traj = datadir_traj_root * "horizontal_and_curve_article_test_Δt0.1_T5000_Ttr500/"
 data_dir_traj = datadir_traj_root * "trajs_examples_B1B2B3B4C_Δt0.02_T1000_Ttr2000/"
 

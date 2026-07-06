@@ -70,10 +70,6 @@ pl_distribs_N300 = plot!(plots_uniform_binning_N300[end],legend=:topright, ylims
     bottom_margin=2Plots.mm, ylabel=L"\log(p(\tau))",  xlims = [0.2,1.7],xticks = [0.5,1.0,1.5],
     tickfontsize=15, guidefontsize=22, dpi=300)
 
-pl_main = plot(pl_distribs_N10, pl_distribs_N300,
-    layout=(1, 2), size=(600, 300), legend=:topright, ylims=(-4.5,0.1),
-    bottom_margin=2Plots.mm, xlims = [0.2,1.7],xticks = [0.5,1.0,1.5],
-    legendfontsize=15,ms=5, tickfontsize=10, guidefontsize=18, dpi=300)
 
 
 #------------------------SUP-----big system (N300)-------------------------
@@ -129,8 +125,8 @@ k = 4
 data_dir_lt_root = "../../data/lifetimes_precomp_orig_N10/"
 dirs_lifetimes = readdir(data_dir_lt_root)
 data_dir_lt = data_dir_lt_root * "/" * "B1B2B3B4C_N10_Δt0.01_T5000_Ttr1000/"
-chart_times = readdlm(data_dir_lt*"chart_times.txt")
-chart_times = chart_times[[1,3,6]]
+#chart_times = readdlm(data_dir_lt*"chart_times.txt")
+#chart_times = chart_times[[1,3,6]]
 
 #plot params
 nbins = 30 #[25,10]
@@ -174,6 +170,12 @@ pl_distribs_N10 = plot!(plots_uniform_binning_N10[end], legend=:topright, ylims=
 pl_sup = plot(plots_uniform_binning_N10..., plots_uniform_binning_N300...,
     layout=(2,3),size=(1200,600),legend=:bottomleft,bottom_margin=8Plots.mm,
     legendfontsize=12, tickfontsize=10, guidefontsize=18, dpi=300)
+
+pl_main = plot(pl_distribs_N10, pl_distribs_N300,
+    layout=(1, 2), size=(600, 300), legend=:topright, ylims=(-4.5,0.1),
+    bottom_margin=2Plots.mm, xlims = [0.2,1.7],xticks = [0.5,1.0,1.5],
+    legendfontsize=15,ms=5, tickfontsize=10, guidefontsize=18, dpi=300)
+
 
 #----------------------------save plots---------------------------------------
 
