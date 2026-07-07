@@ -50,7 +50,16 @@ plot!(pl_B2_sbs,yticks=[0.0,0.1,0.2]) #edit ticks
 plot!(pl_B4_sbs,yticks=[0.0,0.05,0.1])
 plot!(pl_B2_sbs,ylabel=L"L_i",left_margin=10Plots.mm)
 
+#edit plot titles 
+plot!(pl_B2_sbs,title=L"B_2" *" (power law)")
+plot!(pl_B4_sbs,title=L"B_2" *" (log-normal)")
+
+#add fig level annotations
+annotate!(pl_B2_sbs, 1996.15, 0.265, text(L"(a)", :gray10, :center, annot_fontsize))
+annotate!(pl_B4_sbs,  1996, 0.125, text(L"(b)", :gray10, :center, annot_fontsize))
+
 pl_ts_B2B4_sbs = plot(pl_B2_sbs,pl_B4_sbs,layout=(1,2),size=(1400,300),
-    xlabel=L"t_L",left_margin=12Plots.mm,bottom_margin=14Plots.mm,dpi=300)
+    xlabel=L"t_L",left_margin=12Plots.mm,bottom_margin=14Plots.mm,top_margin=8Plots.mm,dpi=300)
+
 
 savefig(pl_ts_B2B4_sbs,"../../paper_figs/timeseries_B2B4_illustration_sbs.png")

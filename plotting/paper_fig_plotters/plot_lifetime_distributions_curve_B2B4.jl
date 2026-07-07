@@ -16,6 +16,11 @@ order_pars = [17, 1, 16:-1:6..., 18, 5:-1:2...] #reverse([1:18;])
 data_dirs = readdir(data_dir_lt_root)[order_pars]
 #files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times] #select binary only
 
+chart_times = readdlm(data_dir_lt_root*data_dirs[1]*"/chart_times.txt") 
+chart_times = chart_times[[1,3,6]]
+T = 1000
+
+
 rs = [14.352, 10.0:-1.0:7.0..., 6.5:-0.25:4.75..., 4.456, 4.25:-0.25:3.5...]
 #rs = [3.75,4.0,4.25,4.75,5.25,5.5,5.75,6.25,6.5]
 
@@ -33,8 +38,14 @@ k = 10
 ylabel = L"\log(p(\tau))"
 
 pl_distribs = plot(dpi=300, left_margin=8Plots.mm,
-    xlabel=L"\log(\tau)",ylabel=ylabel) #title=L"N = %$(N), k = %$(k), \Delta t = %$(Δt)"
+    xlabel=L"\log(\tau)",ylabel=ylabel)
+    
+#title=L"N = %$(N), k = %$(k), \Delta t = %$(Δt)"
 #colors = [:gray10, :gray30, :gray50, :gray70, :gray90]
+
+pl_distribs_exp = plot(dpi=300, left_margin=8Plots.mm,
+    xlabel=L"\log(\tau)",ylabel=ylabel)
+
 colors = range(colorant"lime", stop=colorant"purple", length=length(data_dirs)-1)
 pushfirst!(colors,colorant"orange")
 colors = reverse(colors)
@@ -51,7 +62,13 @@ quadratic(a, x) = @. a[1] + a[2] * x + a[3] * x^2
 cutoff = 30
 q2s = []
 q1s = []
+q2s_exp = []
+q1s_exp = []
 fit_params = []
+fit_params_exp = []
+bins = []
+bin_counts = []
+nbins_exp = 10
 
 #loop through parameters (lifetime dirs)
 for (i, dir) in enumerate(reverse(data_dirs))
@@ -70,6 +87,11 @@ for (i, dir) in enumerate(reverse(data_dirs))
     min_lt, max_lt = extrema(lifetimes)
     bin_edges = min_lt:1:max_lt
 
+    #try using exponential binning
+    #get exponential binning automatically adjusted for each
+    bins_exp, counts_exp = autohist(lifetimes; m=1, nbins=nbins_exp,mode=:pdf)
+    @show length(bins_exp), length(counts_exp)    
+
     #hist
     h_discrete = fit(Histogram, Float64.(lifetimes), bin_edges)
     h_discrete = normalize(h_discrete; mode=:pdf)
@@ -77,11 +99,27 @@ for (i, dir) in enumerate(reverse(data_dirs))
     counts_discrete = h_discrete.weights
     
     #cutoff infs
-    cutoff = findfirst(x -> isinf(x), log10.(counts_discrete))
-    if !(isnothing(cutoff))
-        bins_discrete = bins_discrete[1:cutoff-1]
-        counts_discrete = counts_discrete[1:cutoff-1]
+    cutoff_inf = findfirst(x -> isinf(x), log10.(counts_discrete))
+    if !(isnothing(cutoff_inf))
+        bins_discrete = bins_discrete[1:cutoff_inf-1]
+        counts_discrete = counts_discrete[1:cutoff_inf-1]
     end
+
+    #cutoff_small
+    cutoff_small = -3
+    cutoff_small_idx = findfirst(c -> c < cutoff_small,log10.(counts_discrete))
+    @show cutoff_small_idx, extrema(log10.(counts_discrete))
+    #log10.(counts_discrete)[cutoff_small_idx]
+    if !(isnothing(cutoff_small_idx))
+        bins_discrete = bins_discrete[1:cutoff_small_idx-1]
+        counts_discrete = counts_discrete[1:cutoff_small_idx-1]
+    end
+
+    @show length(bins_discrete), length(counts_discrete)
+
+    #question? bin spacing leads to problems?
+    push!(bins,bins_discrete)
+    push!(bin_counts,counts_discrete)
 
     #--------------------plot uniform discrete binning-------------------------- 
     color = colors[i]
@@ -102,7 +140,10 @@ for (i, dir) in enumerate(reverse(data_dirs))
         markershape = markershape_default
         ms = ms_default
     end
-    
+
+    #---------------------fit:discrete----------------
+
+    #discrete \tau values binning
     plot!(pl_distribs, log10.(bins_discrete), log10.(counts_discrete),
         markershape=markershape, #st=:scatter,
         mc=color, markerstrokecolor=:gray10,
@@ -112,8 +153,7 @@ for (i, dir) in enumerate(reverse(data_dirs))
         ms=ms,
         label=par_label)
 
-
-    #try to fit 
+    #try to fit to discrete binning 
     #quadratic 
     n_τ = length(bins_discrete)
     interval = 1:round(Int, 0.99 * n_τ)
@@ -122,25 +162,56 @@ for (i, dir) in enumerate(reverse(data_dirs))
     sol = solve(prob)
     ps_fit = sol.u
 
+    #plot fits
+    xs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
+    plot!(xs_fit, quadratic(ps_fit, xs_fit),ls=:dot, lc=color, lw=2, label="")
+
     push!(q2s,ps_fit[end])
     push!(q1s,ps_fit[2])
     push!(fit_params,ps_fit)
     @show ps_fit
-    xs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
-    plot!(xs_fit, quadratic(ps_fit, xs_fit),
-        ls=:dot, lc=color, lw=2, label="")
+
+    #---------------------fit:exp----------------
+
+    #exp binning
+    @show length(bins_exp[1:end-1]),length(counts_exp)
+    plot!(pl_distribs_exp, log10.(bins_exp[1:end-1]), log10.(counts_exp),
+        markershape=markershape, #st=:scatter,
+        mc=color, markerstrokecolor=:gray10,
+        markerstrokewidth=0.5,
+        lc=color,
+        alpha=1,
+        ms=ms,
+        label=par_label)
+
+    #try to fit to discrete binning 
+    #quadratic 
+    n_τ = length(bins_exp)
+    interval = 1:round(Int, 0.99 * n_τ)
+    param_guesses = [-1.0, 1.0, -1.0]
+    prob_exp = NonlinearCurveFitProblem(quadratic, param_guesses, log10.(bins_exp[1:end-1]), log10.(counts_exp))
+    sol_exp = solve(prob_exp)
+    ps_fit_exp = sol_exp.u
+
+    #plot fits
+    xs_fit = log10.(bins_exp[1]:0.1:bins_exp[end])
+    plot!(pl_distribs_exp,xs_fit, quadratic(ps_fit_exp, xs_fit),ls=:dot, lc=color, lw=2, label="")
+
+    push!(q2s_exp,ps_fit_exp[end])
+    push!(q1s_exp,ps_fit_exp[2])
+    push!(fit_params_exp,ps_fit_exp)
+
 end
 
 figs_dir = "../../paper_figs/"
 
-#plot b values 
-#TODO: PUT EXACT VALUES HERE
-#r_B4 = 4.456
-#r_B3 = 14.352
-#r_B2 = 10
+q2s_exp = reverse(q2s_exp)
+q1s_exp = reverse(q1s_exp)
+q2s = reverse(q2s)
+q1s = reverse(q1s)
+
 
 #plot quadratic coefficients in terms of r
-q2s = reverse(q2s)
 pl_bfit_r = plot(rs[1:end-1], abs.(q2s[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
     mc=:gray10, xlabel=L"r", ylabel=L"|q_2|",ylims=(-5,50)) #yaxis=:log10, xaxis=:log10)
 
@@ -166,7 +237,7 @@ plot_B3 && plot!([ws[1]], [abs.(q2s[1])], st=:scatter,markershape = :utriangle, 
 plot!([ws[end-4]], [abs.(q2s[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
 
 #plot quadratic coefficients in terms of r * \Delta t (charting time)
-c0 = 2.4;α0 = 0.005; Δt_chart = chart_times[end] #from distrib plotter script
+c0 = 2.4;α0 = 0.005; Δt_chart = chart_times[end] #2.0 #from distrib plotter script
 wg_pairs = rescaled_params.(rs,rs,1.0,c0,α0,N)
 ws = [wg_pairs[i][1] for i in 1:length(wg_pairs)]
 pl_bfit_Tx = plot(rs[1:end-1] .* Δt_chart, abs.(q2s[1:end-1]), markershape=:circle, lc=:gray10, ms=3, 
@@ -179,17 +250,14 @@ plot_B3 && plot!([rs[1]] * Δt_chart, [abs.(q2s[1])], st=:scatter,markershape = 
 plot!([rs[end-4] * Δt_chart], [abs.(q2s[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
 
 #add inset to left panel  
-q1s = reverse(q1s)
 plot!(pl_bfit_Tx,rs[1:end-1] .* Δt_chart, q1s[1:end-1], 
     inset = (1, bbox(0.5,0.05,0.5,0.5)), subplot = 2, 
-    lc=:gray10, ls=:dot, ylabel=L"q_1", 
-    xlabel=L"R_\Delta", guidefontsize=25,label="",lw=2)
+    lc=:gray10, markershape=:circle, mc=:gray10, ylabel=L"q_1", 
+    xlabel=L"R_\Delta", guidefontsize=25,label="",lw=1)
 #ylims=(2,9), yticks=[3,6,9],xticks=[0.5,0.35,0.2],
 #xlims=(0.15,0.5)
 
-
 #--------------plot supplimentary figure--------------------
-
 
 #add colorbar 
 cbar_range = reverse(rs)
