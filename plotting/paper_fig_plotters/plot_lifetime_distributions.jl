@@ -24,6 +24,7 @@ lifetimes_stats = []
 #fit curves
 quadratic(a, x) = @. a[1] + a[2] * x  + a[3] * x^2
 cubic(a, x) = @. a[1] + a[2] * x^3
+fitparam_dataframes = []
 
 #loop through lifetime files sorted by charting time
 for (i, fileset) in enumerate(files_lifetime_by_time)
@@ -32,14 +33,17 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
     pls_linlin = [plot(), plot(), plot()]#init empty 3-plot
     pls_loglin = [plot(), plot(), plot()]#init empty 3-plot
 
+    #dataframes 
+    df = DataFrame(parameter=String[],chart_time=Float64[],q1=Float64[],q2=Float64[],q_ratio=Float64[])
+
     ylabel = i == 1 ? L"\log(p(\tau))" : ""
 
     chart_time = chart_times[i]
-    @show chart_time
+    println("Plots for charting time: $(chart_time)")
 
     #take every file with a given charting time
     for (j, f) in enumerate(fileset[fileset_order])
-        @show f
+        println("File: " * f[1:22] * "...")
         #read lifetimes
         lifetimes = reinterpret(Int64, read(data_dir_lt * f)) 
         color = colors[j]
@@ -58,13 +62,11 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         push!(plots_linhist, pl_hist)
 
         #skip if distribution collapses into one or two bins 
-        @show length(bin_edges)
         length(bin_edges) < 2 && continue
 
         #lifetime stats
         nr_lifetimes =  length(lifetimes)
 
-        @show max_lt, nr_lifetimes
         push!(lifetimes_stats, ["$(par_labels[j])", chart_time,max_lt, nr_lifetimes])
 
         #hist
@@ -118,13 +120,14 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         #add fits, guiding lines to the largest chart times (i==3)
 
         #add linear fit, with offset (on the side)
-        if plot_fits && i == 3 && j == linfit_idx
+        #only for the largest charting time (i == 3) 
+        if plot_fits && i ∈ chart_time_fit_idx && j == linfit_idx
 
             #linear 
             linear_interval = round(Int, 0.2 * n_τ):round(Int, 0.8 * n_τ)
 
             b, a = linreg(log10.(bins_discrete[linear_interval]) .+ 0.2, log10.(counts_discrete[linear_interval]))
-            @show b,a
+            @info "Parameters from linear fit: $(b),$(a)" 
             a_round = round(a;digits=3)
 
             plot!(log10.(bins_discrete[linear_interval]), log10.(10 .^ (b) .* bins_discrete[linear_interval] .^ (-4)),
@@ -133,19 +136,21 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
         end
 
         #quadratic
-        if plot_fits && i == 3 && j ∈ quadfit_idxs
+        if plot_fits && i ∈ chart_time_fit_idx && j ∈ quadfit_idxs
             #quadratic 
             interval = 1:round(Int,  n_τ)
             param_guesses = [-10.0, 1.0, -10.0]
             prob = NonlinearCurveFitProblem(quadratic, param_guesses, log10.(bins_discrete[interval]), log10.(counts_discrete[interval]))
             sol = solve(prob)
             ps_fit = sol.u
-            @show ps_fit
+            @info "Parameters from parabolic fit (q1,q2): $(ps_fit[2]),$(ps_fit[3])"
             xs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[end])
             plot!(xs_fit, quadratic(ps_fit, xs_fit),
                 ls=:dot, lc=color, lw=2, label="", legendfontsize=15)
 
         end
+
+        push!(df,(par_labels_string[j],chart_time,ps_fit[2],ps_fit[3],ps_fit[3]/ps_fit[2]))
 
         #add higher order fit
         if plot_fits && i == 1 && j == 2
@@ -264,7 +269,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
     push!(plots_loglog,pls_loglog)
     push!(plots_linlin, pls_linlin)
     push!(plots_loglin, pls_loglin)
-
+    push!(fitparam_dataframes,df)
 end
 
 n_ct = length(chart_times)

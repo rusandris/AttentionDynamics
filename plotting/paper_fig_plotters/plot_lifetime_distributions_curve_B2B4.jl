@@ -8,6 +8,7 @@ cd(@__DIR__)
 include("defaults.jl")
 
 R_squared(resid,y) = 1 - sum(resid .^ 2) / sum( ( y .- mean(y) ) .^2)    
+R_squared_check(sol,y) = 1 - rss(sol;weighted=false)/ (var(y;corrected=false)*length(y))
 
 #path to lifetimes
 data_dir_lt_root = "../../data/lifetimes_precomp_N300/lifetimes_rcurve_allvalues_B24_change_r_Δt0.02_T1000_Ttr2000_k10/"
@@ -41,6 +42,8 @@ ylabel = L"\log(p(\tau))"
 pl_distribs = plot(dpi=300, left_margin=8Plots.mm,
     xlabel=L"\log(\tau)",ylabel=ylabel)
     
+pl_distribs_lin = deepcopy(pl_distribs)
+
 #title=L"N = %$(N), k = %$(k), \Delta t = %$(Δt)"
 #colors = [:gray10, :gray30, :gray50, :gray70, :gray90]
 
@@ -49,7 +52,6 @@ pl_distribs_exp = plot(dpi=300, left_margin=8Plots.mm,
 
 colors = range(colorant"lime", stop=colorant"purple", length=length(data_dirs)-1)
 pushfirst!(colors,colorant"orange")
-colors = reverse(colors)
 #par_labels = [L"r = 14.352 = r_{B_3}", L"r = 10 = r_{B_2}", L"r=9", L"r=8", L"r=6", L"r=7", L"r=5", L"r = 4.45 = r_{B_4}", L"r=3.5"]
 #par_labels = [data_dirs[i][5:end] for i in 1:length(data_dirs)]
 par_labels = [L"r = r_{B3} = %$(round(rs[1];digits=2))", 
@@ -60,7 +62,7 @@ markershape_default =:circle
 
 #fitting function
 quadratic(a, x) = @. a[1] + a[2] * x + a[3] * x^2
-cutoff = 30
+#linear(a, x) = @. a[1] + a[2] * x + a[3] * x^2
 q2s = []
 q1s = []
 q2s_exp = []
@@ -70,8 +72,11 @@ fit_params_exp = []
 bins = []
 bin_counts = []
 R2_vals = []
+resid_ss_vals = []
 sols = []
-nbins_exp = 10
+R2_lin_vals = []
+resid_ss_lin_vals = []
+nbins_exp = 8
 
 #loop through parameters (lifetime dirs)
 for (i, dir) in enumerate(data_dirs)
@@ -82,7 +87,6 @@ for (i, dir) in enumerate(data_dirs)
     file_lifetime = files[findfirst(f -> occursin("charting_$(Δt)", f), files)]#[[13,14,15,16,1:12...]] #select binary only
     @show file_lifetime
     lifetimes = reinterpret(Int64, read(data_dir_lt_root * dir * "/" * file_lifetime))
-
 
     #--------------------------get binning for lifetimes--------------------------
 
@@ -109,7 +113,7 @@ for (i, dir) in enumerate(data_dirs)
     end
 
     #cutoff_small
-    cutoff_small = -3
+    cutoff_small = -5
     cutoff_small_idx = findfirst(c -> c < cutoff_small,log10.(counts_discrete))
     @show cutoff_small_idx, extrema(log10.(counts_discrete))
     #log10.(counts_discrete)[cutoff_small_idx]
@@ -126,15 +130,15 @@ for (i, dir) in enumerate(data_dirs)
 
     #--------------------plot uniform discrete binning-------------------------- 
     color = colors[i]
-    if i == length(data_dirs)
+    if i == 1
         par_label = par_labels[1]  
         markershape =:utriangle
         ms = ms_high
-    elseif i == length(data_dirs) - 1
+    elseif i == 2
         par_label = par_labels[2]
         markershape =:dtriangle
         ms = ms_high
-    elseif i == 5
+    elseif i == length(data_dirs)-4
         par_label = par_labels[3]
         markershape =:rect
         ms = ms_high
@@ -168,16 +172,46 @@ for (i, dir) in enumerate(data_dirs)
     push!(sols,sol)
     ps_fit = sol.u
     R2 = R_squared(sol.resid, logps)#calc R-squared 
+    resid_ss = rss(sol;weighted=false)
 
+    #linfit 
+    interval_lin = 3:round(Int, 0.99 * n_τ)
+    logτs_lin = log10.(bins_discrete[interval_lin])
+    logps_lin = log10.(counts_discrete[interval_lin])
+    prob_lin = CurveFitProblem(logτs_lin, logps_lin)
+    sol_lin = solve(prob_lin, LinearCurveFitAlgorithm())
+    ps_fit_lin = sol_lin.u
+    R2_lin = R_squared(sol_lin.resid, logps_lin)#calc R-squared 
+    resid_ss_lin = rss(sol_lin;weighted=false)
+
+    if i == 2 || i == 14
+        plot!(pl_distribs_lin, log10.(bins_discrete), log10.(counts_discrete),
+        markershape=markershape, #st=:scatter,
+        mc=color, markerstrokecolor=:gray10,
+        markerstrokewidth=0.5,
+        lc=color,
+        alpha=1,
+        ms=ms,
+        label=par_label)
+    end
 
     #plot fits
-    xs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
-    plot!(xs_fit, quadratic(ps_fit, xs_fit),ls=:dot, lc=color, lw=2, label="")
+    τs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
+    τs_fit_lin = log10.(bins_discrete[interval_lin[1]]:0.1:bins_discrete[interval_lin[end]])
+
+    plot!(pl_distribs,τs_fit, quadratic(ps_fit, τs_fit),ls=:dot, lc=color, lw=2, label="")
+
+    if i == 2 || i == 14
+        plot!(pl_distribs_lin,τs_fit_lin, ps_fit_lin[1] .* τs_fit_lin .+ ps_fit_lin[2],ls=:dot, lc=color, lw=2, label="")
+    end
 
     push!(q2s,ps_fit[end])
     push!(q1s,ps_fit[2])
     push!(fit_params,ps_fit)
     push!(R2_vals,R2)
+    push!(resid_ss_vals,resid_ss)
+    push!(R2_lin_vals,R2_lin)
+    push!(resid_ss_lin_vals,resid_ss_lin)
     @show ps_fit
 
     #---------------------fit:exp----------------
@@ -220,7 +254,31 @@ pl_fitgood = plot(rs[1:(end-1)], R2_vals[1:(end-1)], markershape=:circle,
     ylabel=L"R^2", guidefontsize=25, left_margin=5Plots.mm, 
     xticks=[4.0:2:16;],tickfontsize=12)
 
+pl_RSS = plot(rs[1:(end-1)], resid_ss_vals[1:(end-1)], markershape=:circle, 
+    lc=:gray10, mc=:gray10, label="par", xlabel=L"r", 
+    ylabel=L"RSS", guidefontsize=25, left_margin=5Plots.mm, 
+    xticks=[4.0:2:16;],tickfontsize=12)
+
 hline!(pl_fitgood, [1.0], ls=:dash, lc=:red, lw=2, label="")
+
+
+#plot fit goodness
+pl_fitgood_lin = plot(rs[1:(end-1)], R2_lin_vals[1:(end-1)], markershape=:circle, 
+    lc=:gray10, ylims=(0.1, 1.05), mc=:gray10, label="par", xlabel=L"r", 
+    ylabel=L"R^2", guidefontsize=25, left_margin=5Plots.mm, 
+    xticks=[4.0:2:16;],tickfontsize=12)
+
+pl_RSS_lin = plot(rs[1:(end-1)], resid_ss_lin_vals[1:(end-1)], markershape=:circle, 
+    lc=:gray10, mc=:gray10, label="", xlabel=L"r", 
+    ylabel=L"RSS", guidefontsize=25, left_margin=5Plots.mm, 
+    xticks=[4.0:2:16;],tickfontsize=12)
+
+plot!(pl_RSS,rs[1:(end-1)], resid_ss_lin_vals[1:(end-1)], markershape=:circle, 
+    lc=:gray50, mc=:gray50, label="lin", xlabel=L"r", 
+    ylabel=L"RSS", guidefontsize=25, left_margin=5Plots.mm, 
+    xticks=[4.0:2:16;],tickfontsize=12)
+
+hline!(pl_fitgood_lin, [1.0], ls=:dash, lc=:red, lw=2, label="")
 
 #plot quadratic coefficients in terms of r
 pl_bfit_r = plot(rs[1:end-1], abs.(q2s[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
@@ -260,7 +318,7 @@ plot!([rs[2]] * Δt_chart, [abs.(q2s[2])], st=:scatter,markershape=:dtriangle, m
 plot_B3 && plot!([rs[1]] * Δt_chart, [abs.(q2s[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
 plot!([rs[end-4] * Δt_chart], [abs.(q2s[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
 
-#add inset to left panel  
+#add inset to left panel 
 plot!(pl_bfit_Tx,rs[1:end-1] .* Δt_chart, q1s[1:end-1], 
     inset = (1, bbox(0.5,0.05,0.5,0.5)), subplot = 2, 
     lc=:gray10, markershape=:circle, mc=:gray10, ylabel=L"q_1", 
