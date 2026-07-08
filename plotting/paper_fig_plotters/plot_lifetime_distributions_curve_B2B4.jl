@@ -4,9 +4,10 @@ using StatsBase
 using AttentionDynamics
 using LinearAlgebra
 using CurveFit
+cd(@__DIR__)
 include("defaults.jl")
 
-cd(@__DIR__)
+R_squared(resid,y) = 1 - sum(resid .^ 2) / sum( ( y .- mean(y) ) .^2)    
 
 #path to lifetimes
 data_dir_lt_root = "../../data/lifetimes_precomp_N300/lifetimes_rcurve_allvalues_B24_change_r_Δt0.02_T1000_Ttr2000_k10/"
@@ -68,10 +69,12 @@ fit_params = []
 fit_params_exp = []
 bins = []
 bin_counts = []
+R2_vals = []
+sols = []
 nbins_exp = 10
 
 #loop through parameters (lifetime dirs)
-for (i, dir) in enumerate(reverse(data_dirs))
+for (i, dir) in enumerate(data_dirs)
 
     #read lifetime file
     files = readdir(data_dir_lt_root*dir)
@@ -158,9 +161,14 @@ for (i, dir) in enumerate(reverse(data_dirs))
     n_τ = length(bins_discrete)
     interval = 1:round(Int, 0.99 * n_τ)
     param_guesses = [-1.0, 1.0, -1.0]
-    prob = NonlinearCurveFitProblem(quadratic, param_guesses, log10.(bins_discrete[interval]), log10.(counts_discrete[interval]))
+    logτs = log10.(bins_discrete[interval])
+    logps = log10.(counts_discrete[interval])
+    prob = NonlinearCurveFitProblem(quadratic, param_guesses, logτs, logps)
     sol = solve(prob)
+    push!(sols,sol)
     ps_fit = sol.u
+    R2 = R_squared(sol.resid, logps)#calc R-squared 
+
 
     #plot fits
     xs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
@@ -169,6 +177,7 @@ for (i, dir) in enumerate(reverse(data_dirs))
     push!(q2s,ps_fit[end])
     push!(q1s,ps_fit[2])
     push!(fit_params,ps_fit)
+    push!(R2_vals,R2)
     @show ps_fit
 
     #---------------------fit:exp----------------
@@ -205,11 +214,13 @@ end
 
 figs_dir = "../../paper_figs/"
 
-q2s_exp = reverse(q2s_exp)
-q1s_exp = reverse(q1s_exp)
-q2s = reverse(q2s)
-q1s = reverse(q1s)
+#plot fit goodness
+pl_fitgood = plot(rs[1:(end-1)], R2_vals[1:(end-1)], markershape=:circle, 
+    lc=:gray10, ylims=(0.5, 1.05), mc=:gray10, label="", xlabel=L"r", 
+    ylabel=L"R^2", guidefontsize=25, left_margin=5Plots.mm, 
+    xticks=[4.0:2:16;],tickfontsize=12)
 
+hline!(pl_fitgood, [1.0], ls=:dash, lc=:red, lw=2, label="")
 
 #plot quadratic coefficients in terms of r
 pl_bfit_r = plot(rs[1:end-1], abs.(q2s[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
