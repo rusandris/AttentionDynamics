@@ -4,30 +4,33 @@ using StatsBase
 using AttentionDynamics
 using LinearAlgebra
 using CurveFit
+using DataFrames
 cd(@__DIR__)
 include("defaults.jl")
 
 R_squared(resid,y) = 1 - sum(resid .^ 2) / sum( ( y .- mean(y) ) .^2)    
 R_squared_check(sol,y) = 1 - rss(sol;weighted=false)/ (var(y;corrected=false)*length(y))
+figs_dir = "../../paper_figs/"
 
 #path to lifetimes
-data_dir_lt_root = "../../data/lifetimes_precomp_N300/lifetimes_rcurve_allvalues_B24_change_r_Δt0.02_T1000_Ttr2000_k10/"
-#order_pars = [2,9,3,4,5,6,7,1,8]
-#order_pars = [1:9;]
-order_pars = [17, 1, 16:-1:6..., 18, 5:-1:2...] #reverse([1:18;])
-data_dirs = readdir(data_dir_lt_root)[order_pars]
-#files_lifetime_by_time = [files_lifetime[findall(f -> occursin("charting_$time", f), files_lifetime)] for time in chart_times] #select binary only
+#data_dir_lt_root = "../../data/lifetimes_precomp_N300/lifetimes_rcurve_allvalues_B24_change_r_Δt0.02_T1000_Ttr2000_k10/"
+data_dir_lt_root = "../../data/lifetimes_precomp_N300/lifetimes_rcurve_allvalues_B24_change_r_Δt0.02_T1000_Ttr2000_k10_large_charting_times"
 
-chart_times = readdlm(data_dir_lt_root*data_dirs[1]*"/chart_times.txt") 
-chart_times = chart_times[[1,3,6]]
-T = 1000
+order_of_pars = [17, 1, 16:-1:6..., 18, 5:-1:2...] #reverse([1:18;])
+data_dirs_all = reverse(readdir(data_dir_lt_root)[order_of_pars])
 
-
-rs = [14.352, 10.0:-1.0:7.0..., 6.5:-0.25:4.75..., 4.456, 4.25:-0.25:3.5...]
-#rs = [3.75,4.0,4.25,4.75,5.25,5.5,5.75,6.25,6.5]
+#leave out some values off the end (distributions too short)
+data_dirs = data_dirs_all[7:end]
 
 #charting time 
-Δt = 2.0 #0.2 #0.02 
+chart_times = readdlm(data_dir_lt_root*"/"*data_dirs[1]*"/chart_times.txt") 
+Δt_chart = chart_times[1]
+#Δt_chart = chart_times[end] 
+T = 1000
+
+#hardcode r values
+rs_all = [14.352, 10.0:-1.0:7.0..., 6.5:-0.25:4.75..., 4.456, 4.25:-0.25:3.5...]
+rs = reverse(rs_all[1:end-6])
 
 #-----------------------setup plot-----------------------
 
@@ -40,35 +43,35 @@ k = 10
 ylabel = L"\log(p(\tau))"
 
 pl_distribs = plot(dpi=300, left_margin=8Plots.mm,
-    xlabel=L"\log(\tau)",ylabel=ylabel)
-    
-pl_distribs_lin = deepcopy(pl_distribs)
+    xlabel=L"\log(\tau)",ylabel=ylabel);
+
+pl_distribs_part = deepcopy(pl_distribs); 
+pl_distribs_lin = deepcopy(pl_distribs);
 
 #title=L"N = %$(N), k = %$(k), \Delta t = %$(Δt)"
 #colors = [:gray10, :gray30, :gray50, :gray70, :gray90]
 
 pl_distribs_exp = plot(dpi=300, left_margin=8Plots.mm,
-    xlabel=L"\log(\tau)",ylabel=ylabel)
+    xlabel=L"\log(\tau)",ylabel=ylabel);
 
-colors = range(colorant"lime", stop=colorant"purple", length=length(data_dirs)-1)
-pushfirst!(colors,colorant"orange")
+colors = range(colorant"purple", stop=colorant"lime", length=length(data_dirs)-1);
+push!(colors,colorant"orange");
 #par_labels = [L"r = 14.352 = r_{B_3}", L"r = 10 = r_{B_2}", L"r=9", L"r=8", L"r=6", L"r=7", L"r=5", L"r = 4.45 = r_{B_4}", L"r=3.5"]
 #par_labels = [data_dirs[i][5:end] for i in 1:length(data_dirs)]
-par_labels = [L"r = r_{B3} = %$(round(rs[1];digits=2))", 
-    L"r = r_{B2} = %$(rs[2])", 
-    L"r = r_{B4} = %$(round(rs[end-4];digits=2))"]
+par_labels = [L"r = r_{B3} = %$(round(rs[end];digits=2))", 
+    L"r = r_{B2} = %$(rs[end-1])", 
+    L"r = r_{B4} = %$(round(rs[1];digits=2))"]
 
 markershape_default =:circle
 
 #fitting function
 quadratic(a, x) = @. a[1] + a[2] * x + a[3] * x^2
 #linear(a, x) = @. a[1] + a[2] * x + a[3] * x^2
-q2s = []
-q1s = []
-q2s_exp = []
-q1s_exp = []
-fit_params = []
-fit_params_exp = []
+
+fitparams_df = DataFrame(parameter=String[],chart_time=Float64[],nr_bins=Int64[],
+    min_lt = Int64[], max_lt = Int64[], tot_lts = Int64[], q1=Float64[],
+    q2=Float64[],q_ratio=Float64[])
+
 bins = []
 bin_counts = []
 R2_vals = []
@@ -82,22 +85,19 @@ nbins_exp = 8
 for (i, dir) in enumerate(data_dirs)
 
     #read lifetime file
-    files = readdir(data_dir_lt_root*dir)
-    #@show files
-    file_lifetime = files[findfirst(f -> occursin("charting_$(Δt)", f), files)]#[[13,14,15,16,1:12...]] #select binary only
-    @show file_lifetime
-    lifetimes = reinterpret(Int64, read(data_dir_lt_root * dir * "/" * file_lifetime))
+    files = readdir(data_dir_lt_root * "/" * dir)
+    @show files
+    #search for file with the given charting time 
+    file_lifetime = files[findfirst(f -> occursin("charting_$(Δt_chart)", f), files)]#[[13,14,15,16,1:12...]] #select binary only
+    println("File: " * file_lifetime[1:25] * "...")
+    lifetimes = reinterpret(Int64, read(data_dir_lt_root * "/" * dir * "/" * file_lifetime))
 
     #--------------------------get binning for lifetimes--------------------------
 
     #preset bins, one for each possible \tau value (discrete)
     min_lt, max_lt = extrema(lifetimes)
+    nr_tot_lts = length(lifetimes)
     bin_edges = min_lt:1:max_lt
-
-    #try using exponential binning
-    #get exponential binning automatically adjusted for each
-    bins_exp, counts_exp = autohist(lifetimes; m=1, nbins=nbins_exp,mode=:pdf)
-    @show length(bins_exp), length(counts_exp)    
 
     #hist
     h_discrete = fit(Histogram, Float64.(lifetimes), bin_edges)
@@ -115,14 +115,13 @@ for (i, dir) in enumerate(data_dirs)
     #cutoff_small
     cutoff_small = -5
     cutoff_small_idx = findfirst(c -> c < cutoff_small,log10.(counts_discrete))
-    @show cutoff_small_idx, extrema(log10.(counts_discrete))
     #log10.(counts_discrete)[cutoff_small_idx]
     if !(isnothing(cutoff_small_idx))
         bins_discrete = bins_discrete[1:cutoff_small_idx-1]
         counts_discrete = counts_discrete[1:cutoff_small_idx-1]
     end
 
-    @show length(bins_discrete), length(counts_discrete)
+    @info "Number of bins: $(length(bins_discrete))"
 
     #question? bin spacing leads to problems?
     push!(bins,bins_discrete)
@@ -130,15 +129,15 @@ for (i, dir) in enumerate(data_dirs)
 
     #--------------------plot uniform discrete binning-------------------------- 
     color = colors[i]
-    if i == 1
+    if i == length(data_dirs)
         par_label = par_labels[1]  
         markershape =:utriangle
         ms = ms_high
-    elseif i == 2
+    elseif i == length(data_dirs) - 1
         par_label = par_labels[2]
         markershape =:dtriangle
         ms = ms_high
-    elseif i == length(data_dirs)-4
+    elseif i == 1
         par_label = par_labels[3]
         markershape =:rect
         ms = ms_high
@@ -152,7 +151,7 @@ for (i, dir) in enumerate(data_dirs)
 
     #discrete \tau values binning
     plot!(pl_distribs, log10.(bins_discrete), log10.(counts_discrete),
-        markershape=markershape, #st=:scatter,
+        markershape=markershape, st=:scatter,
         mc=color, markerstrokecolor=:gray10,
         markerstrokewidth=0.5,
         lc=color,
@@ -160,10 +159,13 @@ for (i, dir) in enumerate(data_dirs)
         ms=ms,
         label=par_label)
 
+
+
+
     #try to fit to discrete binning 
     #quadratic 
     n_τ = length(bins_discrete)
-    interval = 1:round(Int, 0.99 * n_τ)
+    interval = 1:n_τ #1:round(Int, 0.99 * n_τ)
     param_guesses = [-1.0, 1.0, -1.0]
     logτs = log10.(bins_discrete[interval])
     logps = log10.(counts_discrete[interval])
@@ -173,6 +175,11 @@ for (i, dir) in enumerate(data_dirs)
     ps_fit = sol.u
     R2 = R_squared(sol.resid, logps)#calc R-squared 
     resid_ss = rss(sol;weighted=false)
+
+    #add fit data to dataframe 
+    q1,q2 = ps_fit[[2,3]]
+    nr_bins = length(bins_discrete)
+    push!(fitparams_df,(data_dirs[i],Δt_chart,nr_bins,min_lt,max_lt,nr_tot_lts,q1,q2,q2/q1))
 
     #linfit 
     interval_lin = 3:round(Int, 0.99 * n_τ)
@@ -197,15 +204,30 @@ for (i, dir) in enumerate(data_dirs)
 
     #plot fits
     τs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
-    τs_fit_lin = log10.(bins_discrete[interval_lin[1]]:0.1:bins_discrete[interval_lin[end]])
-
     plot!(pl_distribs,τs_fit, quadratic(ps_fit, τs_fit),ls=:dot, lc=color, lw=2, label="")
 
+
+    #plot just two fits
+    if i == 1 || i == length(data_dirs)-1
+        plot!(pl_distribs_part, log10.(bins_discrete), log10.(counts_discrete),
+            markershape=markershape, st=:scatter,
+            mc=color, markerstrokecolor=:gray10,
+            markerstrokewidth=0.5,
+            lc=color,
+            alpha=1,
+            ms=ms,
+            label=par_label)
+        
+        plot!(pl_distribs_part,τs_fit, quadratic(ps_fit, τs_fit),ls=:dot, lc=color, lw=2, label="")
+    end
+
+    #=
+    τs_fit_lin = log10.(bins_discrete[interval_lin[1]]:0.1:bins_discrete[interval_lin[end]])
     if i == 2 || i == 14
         plot!(pl_distribs_lin,τs_fit_lin, ps_fit_lin[1] .* τs_fit_lin .+ ps_fit_lin[2],ls=:dot, lc=color, lw=2, label="")
     end
 
-    push!(q2s,ps_fit[end])
+        push!(q2s,ps_fit[end])
     push!(q1s,ps_fit[2])
     push!(fit_params,ps_fit)
     push!(R2_vals,R2)
@@ -213,8 +235,16 @@ for (i, dir) in enumerate(data_dirs)
     push!(R2_lin_vals,R2_lin)
     push!(resid_ss_lin_vals,resid_ss_lin)
     @show ps_fit
+    =#
 
+
+
+    #=
     #---------------------fit:exp----------------
+
+    #try using exponential binning
+    #get exponential binning automatically adjusted for each
+    bins_exp, counts_exp = autohist(lifetimes; m=1, nbins=nbins_exp,mode=:pdf)
 
     #exp binning
     @show length(bins_exp[1:end-1]),length(counts_exp)
@@ -243,10 +273,15 @@ for (i, dir) in enumerate(data_dirs)
     push!(q2s_exp,ps_fit_exp[end])
     push!(q1s_exp,ps_fit_exp[2])
     push!(fit_params_exp,ps_fit_exp)
+    =#
 
 end
 
-figs_dir = "../../paper_figs/"
+pl_distribs 
+pl_distribs_part 
+
+savefig(pl_distribs,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_rcurve_charting_time_$(Δt_chart).png")
+savefig(pl_distribs_part,figs_dir*"lifetime_distributions_and quad_params_only_B2_and_B4_rcurve_charting_time_$(Δt_chart).png")
 
 #plot fit goodness
 pl_fitgood = plot(rs[1:(end-1)], R2_vals[1:(end-1)], markershape=:circle, 
@@ -260,7 +295,6 @@ pl_RSS = plot(rs[1:(end-1)], resid_ss_vals[1:(end-1)], markershape=:circle,
     xticks=[4.0:2:16;],tickfontsize=12)
 
 hline!(pl_fitgood, [1.0], ls=:dash, lc=:red, lw=2, label="")
-
 
 #plot fit goodness
 pl_fitgood_lin = plot(rs[1:(end-1)], R2_lin_vals[1:(end-1)], markershape=:circle, 
@@ -279,6 +313,7 @@ plot!(pl_RSS,rs[1:(end-1)], resid_ss_lin_vals[1:(end-1)], markershape=:circle,
     xticks=[4.0:2:16;],tickfontsize=12)
 
 hline!(pl_fitgood_lin, [1.0], ls=:dash, lc=:red, lw=2, label="")
+
 
 #plot quadratic coefficients in terms of r
 pl_bfit_r = plot(rs[1:end-1], abs.(q2s[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
@@ -305,24 +340,52 @@ plot!([ws[2]], [abs.(q2s[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=
 plot_B3 && plot!([ws[1]], [abs.(q2s[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
 plot!([ws[end-4]], [abs.(q2s[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
 
+#extract fitparams
+q1s = fitparams_df.q1
+q2s = fitparams_df.q2
+q_ratios = fitparams_df.q1
+
+
 #plot quadratic coefficients in terms of r * \Delta t (charting time)
-c0 = 2.4;α0 = 0.005; Δt_chart = chart_times[end] #2.0 #from distrib plotter script
-wg_pairs = rescaled_params.(rs,rs,1.0,c0,α0,N)
-ws = [wg_pairs[i][1] for i in 1:length(wg_pairs)]
-pl_bfit_Tx = plot(rs[1:end-1] .* Δt_chart, abs.(q2s[1:end-1]), markershape=:circle, lc=:gray10, ms=3, 
-    mc=:gray10, xlabel=L"R_\Delta", ylabel=L"|q_2|", ylims=(-5,50),label="",legend=false) #xlabel=L"Δt / T_x" 
+pl_bfit_Tx = plot(rs .* Δt_chart, abs.(fitparams_df.q2), markershape=:circle, lc=:gray10, ms=3, 
+    mc=:gray10, xlabel=L"R_\Delta", ylabel=L"|q_2|",label=L"|q_2|",legend=true,dpi=300) #xlabel=L"Δt / T_x" 
+
+plot!(pl_bfit_Tx,rs .* Δt_chart, q1s, 
+    lc=:red, markershape=:circle, mc=:red, ylabel=L"q_1,|q_2|", 
+    xlabel=L"R_\Delta", guidefontsize=25,label=L"q_1",lw=1,legendfontsize=15)
+
 
 #overlay markers of B2, B3, B4 
 plot_B3 = true
-plot!([rs[2]] * Δt_chart, [abs.(q2s[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
-plot_B3 && plot!([rs[1]] * Δt_chart, [abs.(q2s[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
-plot!([rs[end-4] * Δt_chart], [abs.(q2s[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
+plot!([rs[end-1]] * Δt_chart, [abs.(q2s[end-1])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label="")
+plot_B3 && plot!([rs[end]] * Δt_chart, [abs.(q2s[end])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label="")
+plot!([rs[1] * Δt_chart], [abs.(q2s[1])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label="")
 
+plot_B3 = true
+plot!([rs[end-1]] * Δt_chart, [q1s[end-1]], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label="")
+plot_B3 && plot!([rs[end]] * Δt_chart, [q1s[end]], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label="")
+plot!([rs[1] * Δt_chart], [q1s[1]], st=:scatter,markershape = :rect, mc=:purple, ms=8, label="")
+
+savefig(pl_bfit_Tx,figs_dir*"fit_parameters_q1_q2_B2_to_B4_rcurve_charting_time_$(Δt_chart).png")
+
+
+
+#=
 #add inset to left panel 
-plot!(pl_bfit_Tx,rs[1:end-1] .* Δt_chart, q1s[1:end-1], 
-    inset = (1, bbox(0.5,0.05,0.5,0.5)), subplot = 2, 
-    lc=:gray10, markershape=:circle, mc=:gray10, ylabel=L"q_1", 
+plot!(pl_bfit_Tx,rs .* Δt_chart, abs.(q2s) ./ q1s, 
+    inset = (1, bbox(0.5,0.05,0.5,0.5)), subplot = 2, #ylims=(-3,3),
+    lc=:gray10, markershape=:circle, mc=:gray10, ylabel=L"|q_2|/q_1", 
     xlabel=L"R_\Delta", guidefontsize=25,label="",lw=1)
+=#
+
+plot(rs .* Δt_chart, q_ratios, 
+    lc=:gray10, markershape=:circle, mc=:gray10, ylabel=L"q_2/q_1", 
+    xlabel=L"R_\Delta", guidefontsize=25,label="",lw=1,ylims=(-5,5))
+
+plot(rs .* Δt_chart, q1s, 
+    lc=:gray10, markershape=:circle, mc=:gray10, ylabel=L"q_1", 
+    xlabel=L"R_\Delta", guidefontsize=25,label="",lw=1,ylims=(-5,5))
+
 #ylims=(2,9), yticks=[3,6,9],xticks=[0.5,0.35,0.2],
 #xlims=(0.15,0.5)
 
