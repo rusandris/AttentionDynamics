@@ -256,16 +256,8 @@ l_cbar = @layout [a{0.95w} b]
 pl_phase_diag = plot!(pl_pd300, pl_cbar, layout=l_cbar, tick_direction=:out)
 
 #add cbar annot
-annotate!(pl_phase_diag,0.4, 10.5, text(L"\Lambda", :gray10, :center, annot_size))
+annotate!(pl_phase_diag,1.0, 10.5, text(L"\Lambda", :gray10, :center, annot_size))
 
-#plot two levels of lyap curves separately
-g_B4_approx = g_rel_levels[24]
-g_B2_approx = g_rel_levels[53]
-
-pl_curves = plot(ws,phase_diag[24,:],lc=:purple)
-plot!(ws,phase_diag[53,:],lc=:lime)
-plot!([w_B2], [g_B2],st=:scatter,ms=8,markershape=:circle)
-plot!([w_B4], [g_B4],st=:scatter,ms=8,markershape=:rect)
 
 #save figures and save processed data
 
@@ -297,7 +289,9 @@ savefig(pl_every_data,"../../paper_figs/phase_diag_all_data_curves_SupFig10_log_
 plot!(pl_pd300_simple, xticks=[0,0.1,0.2,0.3,0.4], xlims=(0.0,0.4))
 
 pl_phase_diag_simple = plot(pl_pd300_simple, pl_cbar, layout=l_cbar, tick_direction=:out)
+#add cbar annot
 annotate!(pl_phase_diag_simple, 0.418, 10.5, text(L"\Lambda", :gray10, :center, annot_size))
+
 
 pl_fig3_v1 = plot(pl_phase_diag_simple,pl_every_data,layout=(1,2),size=(1000,400),
     bottom_margin=6Plots.mm,top_margin=10Plots.mm) 

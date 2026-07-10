@@ -4,7 +4,7 @@ using StatsBase
 using AttentionDynamics
 using LinearAlgebra
 using CurveFit
-using DataFrames
+using DataFrames, CSV
 cd(@__DIR__)
 include("defaults.jl")
 
@@ -13,24 +13,24 @@ R_squared_check(sol,y) = 1 - rss(sol;weighted=false)/ (var(y;corrected=false)*le
 figs_dir = "../../paper_figs/"
 
 #path to lifetimes
-#data_dir_lt_root = "../../data/lifetimes_precomp_N300/lifetimes_rcurve_allvalues_B24_change_r_Δt0.02_T1000_Ttr2000_k10/"
-data_dir_lt_root = "../../data/lifetimes_precomp_N300/lifetimes_rcurve_allvalues_B24_change_r_Δt0.02_T1000_Ttr2000_k10_large_charting_times"
+data_dir_lt_root = "../../data/lifetimes_precomp_N300/lifetimes_rcurve_allvalues_B24_change_r_Δt0.02_T1000_Ttr2000_k10/"
+#data_dir_lt_root = "../../data/lifetimes_precomp_N300/lifetimes_rcurve_allvalues_B24_change_r_Δt0.02_T1000_Ttr2000_k10_large_charting_times"
 
 order_of_pars = [17, 1, 16:-1:6..., 18, 5:-1:2...] #reverse([1:18;])
 data_dirs_all = reverse(readdir(data_dir_lt_root)[order_of_pars])
 
 #leave out some values off the end (distributions too short)
-data_dirs = data_dirs_all[7:end]
+data_dirs = data_dirs_all[5:end] #[7:end]
 
 #charting time 
 chart_times = readdlm(data_dir_lt_root*"/"*data_dirs[1]*"/chart_times.txt") 
-Δt_chart = chart_times[1]
-#Δt_chart = chart_times[end] 
+#Δt_chart = chart_times[1]
+Δt_chart = chart_times[end] 
 T = 1000
 
 #hardcode r values
 rs_all = [14.352, 10.0:-1.0:7.0..., 6.5:-0.25:4.75..., 4.456, 4.25:-0.25:3.5...]
-rs = reverse(rs_all[1:end-6])
+rs = reverse(rs_all[1:end-4])#reverse(rs_all[1:end-6])
 
 #-----------------------setup plot-----------------------
 
@@ -72,6 +72,9 @@ fitparams_df = DataFrame(parameter=String[],chart_time=Float64[],nr_bins=Int64[]
     min_lt = Int64[], max_lt = Int64[], tot_lts = Int64[], q1=Float64[],
     q2=Float64[],q_ratio=Float64[])
 
+distr_df = DataFrame()
+df_len = 50
+
 bins = []
 bin_counts = []
 R2_vals = []
@@ -101,7 +104,7 @@ for (i, dir) in enumerate(data_dirs)
 
     #hist
     h_discrete = fit(Histogram, Float64.(lifetimes), bin_edges)
-    h_discrete = normalize(h_discrete; mode=:pdf)
+    h_discrete = normalize(h_discrete; mode=:none) #:pdf
     bins_discrete = h_discrete.edges[1][1:end-1]
     counts_discrete = h_discrete.weights
     
@@ -126,6 +129,12 @@ for (i, dir) in enumerate(data_dirs)
     #question? bin spacing leads to problems?
     push!(bins,bins_discrete)
     push!(bin_counts,counts_discrete)
+
+    #save raw bins and counts 
+    bins_df = [bins_discrete...,fill(NaN,df_len-length(bins_discrete))...]
+    counts_df = [counts_discrete...,fill(NaN,df_len - length(counts_discrete))...]
+    distr_df[:,Symbol(dir[5:end] * "_bins")] = bins_df
+    distr_df[:,Symbol(dir[5:end] * "_counts")] = counts_df
 
     #--------------------plot uniform discrete binning-------------------------- 
     color = colors[i]
@@ -158,9 +167,6 @@ for (i, dir) in enumerate(data_dirs)
         alpha=1,
         ms=ms,
         label=par_label)
-
-
-
 
     #try to fit to discrete binning 
     #quadratic 
@@ -279,6 +285,8 @@ end
 
 pl_distribs 
 pl_distribs_part 
+
+CSV.write("../../data/distrib_data_14rval_deltat2_raw_bins_counts.csv",distr_df)
 
 savefig(pl_distribs,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_rcurve_charting_time_$(Δt_chart).png")
 savefig(pl_distribs_part,figs_dir*"lifetime_distributions_and quad_params_only_B2_and_B4_rcurve_charting_time_$(Δt_chart).png")

@@ -174,14 +174,14 @@ annotate!(w_B4, g_B4 + 0.5, text(L"B_4", :purple, :left, annot_size))
 cbar_range = [-0.7:0.01:0.7;]
 pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [-0.5,0.0,0.5], 
     c=HEATMAP_DEFAULTS.c, fg_color=:gray10, colorbar=false, xaxis=false, 
-    ymirror=true, left_margin=-6Plots.mm,tickfontsize=tick_fontsize_large-5,
+    ymirror=true, left_margin=-6Plots.mm,tickfontsize=tick_fontsize_large,
     top_margin=10Plots.mm)
 
 #combine heatmap with the separate colorbar
 l = @layout [a{0.95w} b]
 pl_phase_diag = plot!(pl_lyaps_filled, pl_cbar, layout=l,size=(700,400))
 
-annotate!(pl_phase_diag,1.06, 10.5, text(L"\Lambda", :gray10, :center, annot_size))
+annotate!(pl_phase_diag,1.08, 10.5, text(L"\Lambda", :gray10, :center, annot_size))
 
 
 
