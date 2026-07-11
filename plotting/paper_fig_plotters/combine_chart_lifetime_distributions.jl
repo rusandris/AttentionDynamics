@@ -37,7 +37,8 @@ fileset_order = [2,4] #[2, 3, 4] #B2,B3,B4
 #fileset_order = [3,5,6,7,1,4]
 
 #par_labels = [L"B_1", L"B_2", L"B_3", L"B_4"][plot_order]
-par_labels = [L"B_1", L"B_2", L"B_3", L"B_4", L"B_{12}", L"B_{24}"][fileset_order]
+par_labels = [L"B_1", L"B_2", L"B_3", L"B_4"][fileset_order]
+par_labels_string = ["B1","B2", "B3", "B4"]
 #colors = [:cyan :gray60 :lime :orange :purple][plot_order]
 #colors = [:cyan :lime :orange :purple][plot_order]
 colors = [:cyan :lime :orange :purple :gray20 :gray60][fileset_order]
@@ -49,7 +50,8 @@ nbins = 30 #[25,10]
 #fit details, setting 
 plot_fits = true
 linfit_idx = 1
-quadfit_idxs = [1,2]
+quadfit_idxs = [1,2] #which parameters (B2,B4) to fit on (idx)
+chart_time_fit_idx = [3] #which chart time to fit on (idx)
 fit_lengths = [1.0,1.0]
 msw=0.5
 
@@ -98,7 +100,8 @@ nbins = 30 #[25,10]
 #fit details, setting 
 plot_fits = true
 linfit_idx = 2
-quadfit_idxs = [2, 4]
+chart_time_fit_idx = [3] #which chart time to fit on (idx)
+quadfit_idxs = [2, 4] #which parameters (B2,B4) to fit on (idx)
 fit_lengths = [1.0, 1.0]
 msw=0.3
 

@@ -22,9 +22,12 @@ lifetimes_stats = []
 #fileset_order = [1:4;]
 
 #fit curves
-quadratic(a, x) = @. a[1] + a[2] * x  + a[3] * x^2
+#quadratic(a, x) = @. a[1] + a[2] * x  + a[3] * x^2 #CurveFit
+quadratic(x,p) = @. p[1] + p[2] * x  + p[3] * x^2 #LsqFit
 cubic(a, x) = @. a[1] + a[2] * x^3
 fitparam_dataframes = []
+param_guesses_quad = [-10.0, 1.0, -10.0]
+param_guesses_lin = [1.0,-1.0]
 
 #loop through lifetime files sorted by charting time
 for (i, fileset) in enumerate(files_lifetime_by_time)
@@ -137,32 +140,43 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
 
         #quadratic
         if plot_fits && i ∈ chart_time_fit_idx && j ∈ quadfit_idxs
+            
             #quadratic 
             interval = 1:round(Int,  n_τ)
-            param_guesses = [-10.0, 1.0, -10.0]
+            
+            #=
+            #nonadaptive simple least squares fit
             prob = NonlinearCurveFitProblem(quadratic, param_guesses, log10.(bins_discrete[interval]), log10.(counts_discrete[interval]))
             sol = solve(prob)
             ps_fit = sol.u
+            =#
+
+            logτs = log10.(bins_discrete[interval])
+            logps = log10.(counts_discrete[interval])
+            ps_fit,wts_fit = fit_irls(quadratic, logτs, logps, param_guesses_quad;maxiter=maxiter,abstol=abstol)
+
             @info "Parameters from parabolic fit (q1,q2): $(ps_fit[2]),$(ps_fit[3])"
-            xs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[end])
-            plot!(xs_fit, quadratic(ps_fit, xs_fit),
+            logτs_fit = logτs[1]:0.01:logτs[end]
+            plot!(logτs_fit, quadratic(logτs_fit,ps_fit),
                 ls=:dot, lc=color, lw=2, label="", legendfontsize=15)
+
+            #save fitparams 
+            push!(df,(par_labels_string[j],chart_time,ps_fit[2],ps_fit[3],ps_fit[3]/ps_fit[2]))
 
         end
 
-        push!(df,(par_labels_string[j],chart_time,ps_fit[2],ps_fit[3],ps_fit[3]/ps_fit[2]))
-
+        #=
         #add higher order fit
         if plot_fits && i == 1 && j == 2
             interval = 1:round(Int, 0.02 * n_τ)
             #vline!([log10.(bins_discrete[quad_interval[1]]), log10.(bins_discrete[quad_interval[end]])], ls=:dash)
-            param_guesses = [1.0,-1.0]
             prob = NonlinearCurveFitProblem(cubic, param_guesses, log10.(bins_discrete[interval]), log10.(counts_discrete[interval]))
             sol = solve(prob)
             ps_fit = sol.u
             plot!(log10.(bins_discrete[interval]), cubic(ps_fit,log10.(bins_discrete[interval])),
                 ls=:dot, lc=:gray10, lw=2, label="", legendfontsize=15)
         end
+        =#
 
         plot!(pls_loglin[1], bins_discrete, log10.(counts_discrete),
             markershape=markershapes[j],st=:scatter,

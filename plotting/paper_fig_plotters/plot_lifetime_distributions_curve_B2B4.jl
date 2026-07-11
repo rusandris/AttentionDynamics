@@ -5,11 +5,45 @@ using AttentionDynamics
 using LinearAlgebra
 using CurveFit
 using DataFrames, CSV
+using LsqFit
 cd(@__DIR__)
 include("defaults.jl")
 
 R_squared(resid,y) = 1 - sum(resid .^ 2) / sum( ( y .- mean(y) ) .^2)    
 R_squared_check(sol,y) = 1 - rss(sol;weighted=false)/ (var(y;corrected=false)*length(y))
+
+function fit_irls(model, x, y, p0;abstol=1e-2,maxiter=100)
+    n = length(y)
+    w_prev = ones(length(y))
+    w = deepcopy(w_prev)
+    p_prev = deepcopy(p0)
+    p = deepcopy(p0)
+    #iterate until params, weights have converged
+    i = 0
+    while i < maxiter 
+        i += 1
+
+        fit = curve_fit(model, x, y, w, p)
+        p = fit.param
+
+        #reweight
+        w_prev .= w
+        R = fit.resid .^2
+        rss_mean = mean(R)
+        w .= [1/(R[i] + rss_mean) for i in 1:n] 
+        w .= w ./ sum(w) #normalize
+
+        if norm(p .- p_prev) < abstol && norm(w .- w_prev) < abstol
+            return p,w
+        end 
+
+        p_prev .= p
+    end
+    @warn "Did not converge after $maxiter iterations!"
+    return p,w
+end
+
+
 figs_dir = "../../paper_figs/"
 
 #path to lifetimes
@@ -65,8 +99,13 @@ par_labels = [L"r = r_{B3} = %$(round(rs[end];digits=2))",
 markershape_default =:circle
 
 #fitting function
-quadratic(a, x) = @. a[1] + a[2] * x + a[3] * x^2
-#linear(a, x) = @. a[1] + a[2] * x + a[3] * x^2
+#quadratic(a, x) = @. a[1] + a[2] * x + a[3] * x^2 #CurveFit
+quadratic(x,p) = @. p[1] + p[2] * x + p[3] * x^2 #LsqFit
+
+#fit settings 
+param_guesses = [-1.0, 1.0, -1.0]
+abstol = 1e-3
+maxiter = 300
 
 fitparams_df = DataFrame(parameter=String[],chart_time=Float64[],nr_bins=Int64[],
     min_lt = Int64[], max_lt = Int64[], tot_lts = Int64[], q1=Float64[],
@@ -172,15 +211,19 @@ for (i, dir) in enumerate(data_dirs)
     #quadratic 
     n_τ = length(bins_discrete)
     interval = 1:n_τ #1:round(Int, 0.99 * n_τ)
-    param_guesses = [-1.0, 1.0, -1.0]
     logτs = log10.(bins_discrete[interval])
     logps = log10.(counts_discrete[interval])
+    ps_fit,wts_fit = fit_irls(quadratic, logτs, logps, param_guesses;maxiter=maxiter,abstol=abstol)
+
+    #=
+    #prob from CurveFit
     prob = NonlinearCurveFitProblem(quadratic, param_guesses, logτs, logps)
     sol = solve(prob)
     push!(sols,sol)
     ps_fit = sol.u
     R2 = R_squared(sol.resid, logps)#calc R-squared 
     resid_ss = rss(sol;weighted=false)
+    =#
 
     #add fit data to dataframe 
     q1,q2 = ps_fit[[2,3]]
@@ -210,7 +253,7 @@ for (i, dir) in enumerate(data_dirs)
 
     #plot fits
     τs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
-    plot!(pl_distribs,τs_fit, quadratic(ps_fit, τs_fit),ls=:dot, lc=color, lw=2, label="")
+    plot!(pl_distribs,τs_fit, quadratic(τs_fit,ps_fit),ls=:dot, lc=color, lw=2, label="")
 
 
     #plot just two fits
@@ -224,7 +267,7 @@ for (i, dir) in enumerate(data_dirs)
             ms=ms,
             label=par_label)
         
-        plot!(pl_distribs_part,τs_fit, quadratic(ps_fit, τs_fit),ls=:dot, lc=color, lw=2, label="")
+        plot!(pl_distribs_part,τs_fit, quadratic(τs_fit,ps_fit),ls=:dot, lc=color, lw=2, label="")
     end
 
     #=
@@ -325,7 +368,7 @@ hline!(pl_fitgood_lin, [1.0], ls=:dash, lc=:red, lw=2, label="")
 
 #plot quadratic coefficients in terms of r
 pl_bfit_r = plot(rs[1:end-1], abs.(q2s[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
-    mc=:gray10, xlabel=L"r", ylabel=L"|q_2|",ylims=(-5,50)) #yaxis=:log10, xaxis=:log10)
+    mc=:gray10, xlabel=L"r", ylabel=L"|q_2|",ylims=(-5,22)) #yaxis=:log10, xaxis=:log10)
 
 
 #overlay markers of B2, B3, B4 
@@ -353,26 +396,42 @@ q1s = fitparams_df.q1
 q2s = fitparams_df.q2
 q_ratios = fitparams_df.q1
 
-
+ms_fitp = 5
 #plot quadratic coefficients in terms of r * \Delta t (charting time)
-pl_bfit_Tx = plot(rs .* Δt_chart, abs.(fitparams_df.q2), markershape=:circle, lc=:gray10, ms=3, 
-    mc=:gray10, xlabel=L"R_\Delta", ylabel=L"|q_2|",label=L"|q_2|",legend=true,dpi=300) #xlabel=L"Δt / T_x" 
+pl_bfit_Tx = plot(rs .* Δt_chart, q2s, lc=:gray10, lw=1,
+    xlabel=L"R_\Delta", ylabel=L"q_2",label="",legend=true,
+    dpi=300,xlims=(6,32)) #only line
 
-plot!(pl_bfit_Tx,rs .* Δt_chart, q1s, 
-    lc=:red, markershape=:circle, mc=:red, ylabel=L"q_1,|q_2|", 
-    xlabel=L"R_\Delta", guidefontsize=25,label=L"q_1",lw=1,legendfontsize=15)
+#lines for B2, B3, B4 
+vline!([rs[end] * Δt_chart],lc=:orange,ls=:dash,label="",lw=2)
+vline!([rs[end-1] * Δt_chart],lc=:lime,ls=:dash,label="",lw=2)
+vline!([rs[1] * Δt_chart],lc=:purple,ls=:dash,label="",lw=2)
+
+plot!(pl_bfit_Tx,rs .* Δt_chart, q2s, markershape=:circle, st=:scatter, ms=ms_fitp, 
+    mc=:gray10,label=L"q_2",) #xlabel=L"Δt / T_x" 
+
+#linear parameter 
+lincolor=:gray70
+plot!(pl_bfit_Tx,rs .* Δt_chart, q1s, lc=lincolor,label="")
+plot!(pl_bfit_Tx,rs .* Δt_chart, q1s,markerstrokecolor=:gray10, 
+    st=:scatter, markershape=:rect, mc=lincolor, ylabel=L"q_1,q_2", ms=ms_fitp,
+    xlabel=L"R_\Delta", guidefontsize=25,label=L"q_1 - 1",lw=1,legendfontsize=15)
 
 
+
+
+#=
 #overlay markers of B2, B3, B4 
 plot_B3 = true
-plot!([rs[end-1]] * Δt_chart, [abs.(q2s[end-1])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label="")
-plot_B3 && plot!([rs[end]] * Δt_chart, [abs.(q2s[end])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label="")
-plot!([rs[1] * Δt_chart], [abs.(q2s[1])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label="")
+plot!([rs[end-1]] * Δt_chart, [q2s[end-1]], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label="")
+plot_B3 && plot!([rs[end]] * Δt_chart, [q2s[end]], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label="")
+plot!([rs[1] * Δt_chart], [q2s[1]], st=:scatter,markershape = :rect, mc=:purple, ms=8, label="")
 
 plot_B3 = true
 plot!([rs[end-1]] * Δt_chart, [q1s[end-1]], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label="")
 plot_B3 && plot!([rs[end]] * Δt_chart, [q1s[end]], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label="")
 plot!([rs[1] * Δt_chart], [q1s[1]], st=:scatter,markershape = :rect, mc=:purple, ms=8, label="")
+=#
 
 savefig(pl_bfit_Tx,figs_dir*"fit_parameters_q1_q2_B2_to_B4_rcurve_charting_time_$(Δt_chart).png")
 
@@ -420,4 +479,4 @@ annotate!(pl_distfit_sup[1], 0.05, 0.8, text(L"(a)", :gray10, :center, annot_siz
 annotate!(pl_distfit_sup[3], 0.12, 56.0, text(L"(b)", :gray10, :center, annot_size))
 annotate!(pl_distfit_sup[1], 1.71, 0.5, text(L"r", :gray10, :center, annot_size)) #colorbar label
 
-savefig(pl_distfit_sup,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_change_r_charting_time_$(Δt).png")
+savefig(pl_distfit_sup,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_change_r_charting_time_$(Δt_chart).png")
