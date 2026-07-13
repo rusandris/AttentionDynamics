@@ -144,7 +144,7 @@ for (gi,g) in enumerate(gs)
     #add stability annotation 
     annotate!(0.5, 4.5, text("unstable", :gray10, :center, 12))
 
-    annotate!(-0.35, 7.2, text(plot_labels[gi] * " " * L" 1/\epsilon = %$(gs[gi])", :gray10, :left, 16))
+    annotate!(-0.35, 7.2, text(plot_labels[gi] * " " * L" 1/T_x = %$(gs[gi])", :gray10, :left, 16))
 
     #-------------------------------M = 1---------------------------------
 

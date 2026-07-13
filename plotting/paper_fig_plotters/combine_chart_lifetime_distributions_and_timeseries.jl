@@ -53,7 +53,7 @@ plot!(pl_B2_sbs,ylabel=L"L_i",left_margin=10Plots.mm)
 
 #edit plot titles 
 plot!(pl_B2_sbs,title=L"B_2" *" (power law)")
-plot!(pl_B4_sbs,title=L"B_2" *" (log-normal)")
+plot!(pl_B4_sbs,title=L"B_4" *" (log-normal)")
 
 #add fig level annotations
 annotate!(pl_B2_sbs, 1996.15, 0.265, text(L"(a)", :gray10, :center, annot_fontsize))
