@@ -3,6 +3,7 @@ using Plots, LaTeXStrings
 using StatsBase
 using AttentionDynamics
 using LinearAlgebra
+using DataFrames
 cd(@__DIR__)
 
 #read lifetime filenames

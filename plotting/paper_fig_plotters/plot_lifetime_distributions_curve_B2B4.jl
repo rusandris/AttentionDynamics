@@ -12,38 +12,6 @@ include("defaults.jl")
 R_squared(resid,y) = 1 - sum(resid .^ 2) / sum( ( y .- mean(y) ) .^2)    
 R_squared_check(sol,y) = 1 - rss(sol;weighted=false)/ (var(y;corrected=false)*length(y))
 
-function fit_irls(model, x, y, p0;abstol=1e-2,maxiter=100)
-    n = length(y)
-    w_prev = ones(length(y))
-    w = deepcopy(w_prev)
-    p_prev = deepcopy(p0)
-    p = deepcopy(p0)
-    #iterate until params, weights have converged
-    i = 0
-    while i < maxiter 
-        i += 1
-
-        fit = curve_fit(model, x, y, w, p)
-        p = fit.param
-
-        #reweight
-        w_prev .= w
-        R = fit.resid .^2
-        rss_mean = mean(R)
-        w .= [1/(R[i] + rss_mean) for i in 1:n] 
-        w .= w ./ sum(w) #normalize
-
-        if norm(p .- p_prev) < abstol && norm(w .- w_prev) < abstol
-            return p,w
-        end 
-
-        p_prev .= p
-    end
-    @warn "Did not converge after $maxiter iterations!"
-    return p,w
-end
-
-
 figs_dir = "../../paper_figs/"
 
 #path to lifetimes
@@ -70,7 +38,7 @@ rs = reverse(rs_all[1:end-4])#reverse(rs_all[1:end-6])
 
 #markersize
 ms_default = 2
-ms_high = 8 
+ms_high = 6
 N = 300
 k = 10
 
@@ -142,25 +110,41 @@ for (i, dir) in enumerate(data_dirs)
     bin_edges = min_lt:1:max_lt
 
     #hist
-    h_discrete = fit(Histogram, Float64.(lifetimes), bin_edges)
-    h_discrete = normalize(h_discrete; mode=:none) #:pdf
+    h_discrete_raw = fit(Histogram, Float64.(lifetimes), bin_edges)
+    h_discrete = normalize(h_discrete_raw; mode=:pdf) #:none
     bins_discrete = h_discrete.edges[1][1:end-1]
     counts_discrete = h_discrete.weights
     
+    #save raw bins and counts 
+    bins_discrete_raw = h_discrete_raw.edges[1][1:end-1]
+    counts_discrete_raw = h_discrete_raw.weights
+    
     #cutoff infs
     cutoff_inf = findfirst(x -> isinf(x), log10.(counts_discrete))
+    cutoff_inf_raw = findfirst(x -> isinf(x), log10.(counts_discrete_raw))
     if !(isnothing(cutoff_inf))
         bins_discrete = bins_discrete[1:cutoff_inf-1]
         counts_discrete = counts_discrete[1:cutoff_inf-1]
     end
 
+    if !(isnothing(cutoff_inf_raw))
+        bins_discrete_raw = bins_discrete_raw[1:cutoff_inf-1]
+        counts_discrete_raw = counts_discrete_raw[1:cutoff_inf-1]
+    end
+
     #cutoff_small
     cutoff_small = -5
     cutoff_small_idx = findfirst(c -> c < cutoff_small,log10.(counts_discrete))
+    cutoff_small_idx_raw = findfirst(c -> c < cutoff_small,log10.(counts_discrete_raw))
     #log10.(counts_discrete)[cutoff_small_idx]
     if !(isnothing(cutoff_small_idx))
         bins_discrete = bins_discrete[1:cutoff_small_idx-1]
         counts_discrete = counts_discrete[1:cutoff_small_idx-1]
+    end
+
+    if !(isnothing(cutoff_small_idx_raw))
+        bins_discrete_raw = bins_discrete_raw[1:cutoff_small_idx_raw-1]
+        counts_discrete_raw = counts_discrete_raw[1:cutoff_small_idx_raw-1]
     end
 
     @info "Number of bins: $(length(bins_discrete))"
@@ -169,9 +153,8 @@ for (i, dir) in enumerate(data_dirs)
     push!(bins,bins_discrete)
     push!(bin_counts,counts_discrete)
 
-    #save raw bins and counts 
-    bins_df = [bins_discrete...,fill(NaN,df_len-length(bins_discrete))...]
-    counts_df = [counts_discrete...,fill(NaN,df_len - length(counts_discrete))...]
+    bins_df = [bins_discrete_raw...,fill(NaN,df_len-length(bins_discrete_raw))...]
+    counts_df = [counts_discrete_raw...,fill(NaN,df_len - length(counts_discrete_raw))...]
     distr_df[:,Symbol(dir[5:end] * "_bins")] = bins_df
     distr_df[:,Symbol(dir[5:end] * "_counts")] = counts_df
 
@@ -255,7 +238,6 @@ for (i, dir) in enumerate(data_dirs)
     τs_fit = log10.(bins_discrete[interval[1]]:0.1:bins_discrete[interval[end]])
     plot!(pl_distribs,τs_fit, quadratic(τs_fit,ps_fit),ls=:dot, lc=color, lw=2, label="")
 
-
     #plot just two fits
     if i == 1 || i == length(data_dirs)-1
         plot!(pl_distribs_part, log10.(bins_discrete), log10.(counts_discrete),
@@ -331,8 +313,8 @@ pl_distribs_part
 
 CSV.write("../../data/distrib_data_14rval_deltat2_raw_bins_counts.csv",distr_df)
 
-savefig(pl_distribs,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_rcurve_charting_time_$(Δt_chart).png")
-savefig(pl_distribs_part,figs_dir*"lifetime_distributions_and quad_params_only_B2_and_B4_rcurve_charting_time_$(Δt_chart).png")
+savefig(pl_distribs,figs_dir*"lifetime_distributions_and_quad_params_B2_to_B4_rcurve_charting_time_$(Δt_chart).png")
+savefig(pl_distribs_part,figs_dir*"lifetime_distributions_and_quad_params_only_B2_and_B4_rcurve_charting_time_$(Δt_chart).png")
 
 #plot fit goodness
 pl_fitgood = plot(rs[1:(end-1)], R2_vals[1:(end-1)], markershape=:circle, 
@@ -366,37 +348,12 @@ plot!(pl_RSS,rs[1:(end-1)], resid_ss_lin_vals[1:(end-1)], markershape=:circle,
 hline!(pl_fitgood_lin, [1.0], ls=:dash, lc=:red, lw=2, label="")
 
 
-#plot quadratic coefficients in terms of r
-pl_bfit_r = plot(rs[1:end-1], abs.(q2s[1:end-1]), markershape=:circle, lc=:gray10, ms=3, label="",
-    mc=:gray10, xlabel=L"r", ylabel=L"|q_2|",ylims=(-5,22)) #yaxis=:log10, xaxis=:log10)
-
-
-#overlay markers of B2, B3, B4 
-plot_B3 = true
-plot!([rs[2]], [abs.(q2s[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
-plot_B3 && plot!([rs[1]], [abs.(q2s[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
-plot!([rs[end-4]], [abs.(q2s[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
-
-
-#plot quadratic coefficients in terms of w
-c0 = 2.4;α0 = 0.005
-wg_pairs = rescaled_params.(rs,rs,1.0,c0,α0,N)
-ws = [wg_pairs[i][1] for i in 1:length(wg_pairs)]
-pl_bfit_w = plot(ws[1:end-1], abs.(q2s[1:end-1]), markershape=:circle, lc=:gray10, ms=3, 
-    mc=:gray10, xlabel=L"w", ylabel=L"|q_2|", ylims=(-5,50),label="") #yaxis=:log10, xaxis=:log10)
-
-##overlay markers of B2, B3, B4 
-plot_B3 = false
-plot!([ws[2]], [abs.(q2s[2])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
-plot_B3 && plot!([ws[1]], [abs.(q2s[1])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
-plot!([ws[end-4]], [abs.(q2s[end-4])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
-
 #extract fitparams
 q1s = fitparams_df.q1
 q2s = fitparams_df.q2
 q_ratios = fitparams_df.q1
 
-ms_fitp = 5
+ms_fitp = 2
 #plot quadratic coefficients in terms of r * \Delta t (charting time)
 pl_bfit_Tx = plot(rs .* Δt_chart, q2s, lc=:gray10, lw=1,
     xlabel=L"R_\Delta", ylabel=L"q_2",label="",legend=true,
@@ -417,25 +374,20 @@ plot!(pl_bfit_Tx,rs .* Δt_chart, q1s,markerstrokecolor=:gray10,
     st=:scatter, markershape=:rect, mc=lincolor, ylabel=L"q_1,q_2", ms=ms_fitp,
     xlabel=L"R_\Delta", guidefontsize=25,label=L"q_1 - 1",lw=1,legendfontsize=15)
 
-
-
-
-#=
 #overlay markers of B2, B3, B4 
+ms_over = 6
 plot_B3 = true
-plot!([rs[end-1]] * Δt_chart, [q2s[end-1]], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label="")
-plot_B3 && plot!([rs[end]] * Δt_chart, [q2s[end]], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label="")
-plot!([rs[1] * Δt_chart], [q2s[1]], st=:scatter,markershape = :rect, mc=:purple, ms=8, label="")
+plot!([rs[end-1]] * Δt_chart, [q2s[end-1]], st=:scatter,markershape=:dtriangle, mc=:lime, ms=ms_over, label="")
+plot_B3 && plot!([rs[end]] * Δt_chart, [q2s[end]], st=:scatter,markershape = :utriangle, mc=:orange, ms=ms_over, label="")
+plot!([rs[1] * Δt_chart], [q2s[1]], st=:scatter,markershape = :rect, mc=:purple, ms=ms_over, label="")
 
 plot_B3 = true
-plot!([rs[end-1]] * Δt_chart, [q1s[end-1]], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label="")
-plot_B3 && plot!([rs[end]] * Δt_chart, [q1s[end]], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label="")
-plot!([rs[1] * Δt_chart], [q1s[1]], st=:scatter,markershape = :rect, mc=:purple, ms=8, label="")
-=#
+plot!([rs[end-1]] * Δt_chart, [q1s[end-1]], st=:scatter,markershape=:dtriangle, mc=:lime, ms=ms_over, label="")
+plot_B3 && plot!([rs[end]] * Δt_chart, [q1s[end]], st=:scatter,markershape = :utriangle, mc=:orange, ms=ms_over, label="")
+plot!([rs[1] * Δt_chart], [q1s[1]], st=:scatter,markershape = :rect, mc=:purple, ms=ms_over, label="")
+
 
 savefig(pl_bfit_Tx,figs_dir*"fit_parameters_q1_q2_B2_to_B4_rcurve_charting_time_$(Δt_chart).png")
-
-
 
 #=
 #add inset to left panel 
@@ -458,8 +410,19 @@ plot(rs .* Δt_chart, q1s,
 
 #--------------plot supplimentary figure--------------------
 
+#plot quadratic coefficients in terms of r
+pl_bfit_r = plot(rs, abs.(q2s), markershape=:circle, lc=:gray10, ms=3, label="",
+    mc=:gray10, xlabel=L"r", ylabel=L"|q_2|",ylims=(-0.5,22)) #yaxis=:log10, xaxis=:log10)
+
+#overlay markers of B2, B3, B4 
+plot_B3 = true
+plot!([rs[end-1]], [abs.(q2s[end-1])], st=:scatter,markershape=:dtriangle, mc=:lime, ms=8, label=L"B_2")
+plot_B3 && plot!([rs[end]], [abs.(q2s[end])], st=:scatter,markershape = :utriangle, mc=:orange, ms=8, label=L"B_3")
+plot!([rs[1]], [abs.(q2s[1])], st=:scatter,markershape = :rect, mc=:purple, ms=8, label=L"B_4")
+
+
 #add colorbar 
-cbar_range = reverse(rs)
+cbar_range = rs
 pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [3:2:15;], 
     c=colors, fg_color=:gray10, colorbar=false, xaxis=false, 
     ymirror=true, left_margin=-6Plots.mm,
@@ -476,7 +439,7 @@ pl_distfit_sup = plot(pl_distribs_cbar, pl_bfit_r, layout=(1, 2), size=(1000, 40
 #add fig annotations
 
 annotate!(pl_distfit_sup[1], 0.05, 0.8, text(L"(a)", :gray10, :center, annot_size))
-annotate!(pl_distfit_sup[3], 0.12, 56.0, text(L"(b)", :gray10, :center, annot_size))
-annotate!(pl_distfit_sup[1], 1.71, 0.5, text(L"r", :gray10, :center, annot_size)) #colorbar label
+annotate!(pl_distfit_sup[3], 2.0, 24.5, text(L"(b)", :gray10, :center, annot_size))
+annotate!(pl_distfit_sup[1], 1.68, 0.5, text(L"r", :gray10, :center, annot_size)) #colorbar label
 
-savefig(pl_distfit_sup,figs_dir*"lifetime_distributions_and quad_params_B2_to_B4_change_r_charting_time_$(Δt_chart).png")
+savefig(pl_distfit_sup,figs_dir*"lifetime_distributions_and_quad_params_B2_to_B4_change_r_charting_time_$(Δt_chart).png")

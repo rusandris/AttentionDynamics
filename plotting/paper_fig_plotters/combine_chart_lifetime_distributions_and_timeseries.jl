@@ -5,6 +5,7 @@ using AttentionDynamics
 import FractalDimensions: linreg
 using LinearAlgebra
 using CurveFit
+using LsqFit
 cd(@__DIR__)
 
 #-------------------------combine chart lifetime distributions---------------------------------

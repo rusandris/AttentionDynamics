@@ -12,6 +12,6 @@ pl_distribs_bfit = plot(pl_distribs_N300, pl_bfit_Tx,layout=(1,2),size=(700,300)
 
 #add fig annotations
 annotate!(pl_distribs_bfit[1],0.03, 0.07, text(L"(a)", :gray10, :right, annot_size))
-annotate!(pl_distribs_bfit[2], 3, 49.3, text(L"(b)", :gray10, :right, annot_size))
+annotate!(pl_distribs_bfit[2], 3, 18.5, text(L"(b)", :gray10, :right, annot_size))
 
 savefig(pl_distribs_bfit,"../../paper_figs/lifetime_chart_distribs_quad_fitparams_Tx.png")

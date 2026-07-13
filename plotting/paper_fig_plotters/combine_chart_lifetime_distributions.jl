@@ -55,6 +55,11 @@ chart_time_fit_idx = [3] #which chart time to fit on (idx)
 fit_lengths = [1.0,1.0]
 msw=0.5
 
+#fit settings 
+param_guesses = [-1.0, 1.0, -1.0]
+abstol = 1e-3
+maxiter = 300
+
 include("../../plotting/paper_fig_plotters/plot_lifetime_distributions.jl")
 
 pl_loglog_N300 = pl_loglog_all

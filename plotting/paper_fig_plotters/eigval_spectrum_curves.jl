@@ -124,7 +124,7 @@ for (gi,g) in enumerate(gs)
         yticks=yticks, xticks=xticks)
 
     #add title to top row figues 
-    gi == 1 && plot!(pl0, title=L"^{0}\mathbf{u}^{*}", titlefontsize=16)
+    gi == 1 && plot!(pl0, title=L"\mathbf{u}^{*}(0)", titlefontsize=16)
 
     bool_mask = S_a .< 0
     linestyle_mask = similar(bool_mask,Symbol)
@@ -189,7 +189,7 @@ for (gi,g) in enumerate(gs)
         yticks=yticks2,xticks=xticks)
 
     #add title to top row figues 
-    gi == 1 && plot!(pl1, title=L"^{1}\mathbf{u}^{*}", titlefontsize=16)
+    gi == 1 && plot!(pl1, title=L"\mathbf{u}^{*}(1)", titlefontsize=16)
 
     bool_mask = S_a .< 0
     linestyle_mask = similar(bool_mask,Symbol)
@@ -262,7 +262,7 @@ for (gi,g) in enumerate(gs)
         yticks=yticks2,xticks=xticks)
 
     #add title to top row figues 
-    gi == 1 && plot!(pl2, title=L"^{2}\mathbf{u}^{*}", titlefontsize=16)
+    gi == 1 && plot!(pl2, title=L"\mathbf{u}^{*}(2)", titlefontsize=16)
 
     plot!(ws[1:samp:end],S_a[1:samp:end,1:end],ls=linestyle_mask[1:samp:end,1:end], lw=lw, lc=colors, label = labels)
     #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
@@ -318,7 +318,7 @@ for (gi,g) in enumerate(gs)
         yticks=yticks2,xticks=xticks,legend=:bottomleft)
 
     #add title to top row figues 
-    gi == 1 && plot!(pl3, title=L"^{N}\mathbf{u}^{*}", titlefontsize=16)
+    gi == 1 && plot!(pl3, title=L"\mathbf{u}^{*}(3)", titlefontsize=16)
 
     plot!(ws[1:samp:end],S_a[1:samp:end,1:end],ls=linestyle_mask[1:samp:end,1:end], lw=lw, lc=colors, label = labels)
     #plot!(ws, S_n, st=:scatter, ms=4, mc=colors,
