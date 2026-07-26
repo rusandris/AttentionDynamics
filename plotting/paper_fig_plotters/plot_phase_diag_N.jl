@@ -35,7 +35,7 @@ ws = [0.1:0.01:1.0;]
 gs = [1:0.1:10.0;]
 
 #----------------------------plot----------------------
-ylabel = L"1/(T_x(N-1))" #L"\frac{1}{\varepsilon(N-1)}"
+ylabel = L"y" #L"1/(T_x(N-1))" #L"\frac{1}{\varepsilon(N-1)}"
 pl_phasediag_N = plot(ylabel = ylabel,xlabel=L"w",guidefontsize=20, 
     tickfontsize=12,left_margin=5Plots.mm, right_margin=5Plots.mm, 
     top_margin=8Plots.mm,legendfontsize=10, dpi=300, legend=:topright,
@@ -95,6 +95,8 @@ plot!(pl_phasediag_N,chaos_end_points_N10[1:5:end],g_rel_levels_N10[1:5:end],
 param_guesses = [-1.0, 0.5]
 prob_N10 = NonlinearCurveFitProblem(powerlaw, param_guesses, chaos_end_points_N10, g_rel_levels_N10)
 ps_fit_N10 = solve(prob_N10).u
+β_N10, a_N10 = ps_fit_N10
+println("Fit params, N = 10, beta = $(β_N10), a = $(a_N10)")
 plot!(ws_N10, powerlaw(ps_fit_N10, ws_N10), lw=lw, label="", lc=colors[1], alpha=1.0)
 
 
@@ -106,6 +108,8 @@ for (i,N) in enumerate(Ns)
     prob = NonlinearCurveFitProblem(powerlaw, param_guesses, w_chaos_ends, g_rel_levels)
     sol = solve(prob)
     ps_fit = sol.u
+    β,a = ps_fit   
+    println("Fit params, N = $(N), beta = $(β), a = $(a)")
     push!(params_fit,ps_fit)
 end
 

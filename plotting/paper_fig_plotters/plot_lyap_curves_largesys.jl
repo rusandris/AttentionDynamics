@@ -36,8 +36,8 @@ data_alphasB3 = readdlm(data_dir_root * data_dirs[4] * "/gs_alphas.txt")
 αs = [data_alphasB4[2],data_alphasB2[2],data_alphasB3[2]]
 ylabel = L"\Lambda" #L"\Lambda_{\log} / \alpha"
 label = L"y" #L"1/(T_x(N-1))"
-pl_lyaps = plot(xlabel=L"w",ylabel=ylabel,guidefontsize=18,tickfontsize=15,ylims=(0,9.0),
-    legend=:bottomright,legend_columns=1,legendfontsize=12,dpi=300,xlims=(0.0,0.95),xticks=[0.1:0.2:0.9;])
+pl_lyaps = plot(xlabel=L"w",ylabel=ylabel,guidefontsize=18,tickfontsize=15,ylims=(0,9.0), size=(500,500),
+    legend=:bottomright,legend_columns=1,legendfontsize=12,dpi=300,xlims=(0.0,0.95),xticks=[0.0:0.45:0.9;])
 plot!(pl_lyaps, ws_B4, Λs_B4 ./ αs[1], label = label *  L" = 2.98",lw=2,lc=:purple)
 plot!(pl_lyaps, ws_B2, Λs_B2 ./ αs[2], label= label *  L" = 6.68",lw=2,lc=:lime)
 plot!(pl_lyaps, ws_B3, Λs_B3 ./ αs[3], label= label *  L" = 9.6",lw=2,lc=:orange)
@@ -64,9 +64,9 @@ plot!([w_B3_approx],[Λs_B3[w_B3_idx]/αs[3]],st=:scatter,ms=ms,mc=:orange,marke
 
 
 #add annotations
-annotate!(w_B2 + 0.2, Λs_B2[w_B2_idx]/αs[2] + 0.0, text(L"B_2" *" (Twitter)", :lime, :center, annot_size_letters))
-annotate!(w_B4 + 0.25, Λs_B4[w_B4_idx]/αs[1] + 0.8, text(L"B_4" * " (reference)", :purple, :center, annot_size_letters))
-annotate!(w_B3 + 0.3, Λs_B3[w_B3_idx]/αs[3] + 0.0, text(L"B_3" * " (Google Books)", :orange, :center, annot_size_letters))
+annotate!(w_B2 + 0.05, Λs_B2[w_B2_idx]/αs[2] + 0.0, text(L"B_2" *" (Twitter)", :lime, :left, annot_size_letters))
+annotate!(w_B4 + 0.05, Λs_B4[w_B4_idx]/αs[1] + 0.1, text(L"B_4" * " (reference)", :purple, :left, annot_size_letters))
+annotate!(w_B3 + 0.05, Λs_B3[w_B3_idx]/αs[3] + 0.0, text(L"B_3" * " (Google Books)", :orange, :left, annot_size_letters))
 
 
 #plot in function of r 

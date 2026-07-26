@@ -9,7 +9,8 @@ cd(@__DIR__)
 #-------------------------read transient time files-------------------------------
 
 data_dir_root = "../../data/transient_lifetimes/"
-data_dir = data_dir_root * "transient_lifetimes_from_ensembles_logdiffparams_N10_g45_nens1000_Tmax1e5_merged_recalc_end_Tmax1e6/"
+#data_dir = data_dir_root * "transient_lifetimes_from_ensembles_logdiffparams_N10_g45_nens1000_Tmax1e5_merged_recalc_end_Tmax1e6/"
+#data_dir = "../../data/transient_lifetimes_from_ensembles/"
 escape_time_files_all = readdir(data_dir)
 escape_time_files = escape_time_files_all[2:end-2]
 

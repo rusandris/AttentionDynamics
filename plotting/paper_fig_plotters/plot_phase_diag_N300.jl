@@ -200,10 +200,10 @@ plot!(pl_pd300_simple, ws_twitter, norm_tscale_twitter, st=:scatter, ms=ms_data,
 
 annot_offset_x = 0.02
 annot_offset_y = 0.1
-annotate!(pl_pd300_simple,ws_twitter[1]+annot_offset_x, norm_tscale_twitter[1]+annot_offset_y, text(L"2013", :lime, :left, annot_size_letters-4))
-annotate!(pl_pd300_simple,ws_twitter[2]+annot_offset_x, norm_tscale_twitter[2]+annot_offset_y, text(L"2014", :lime, :left, annot_size_letters-4))
-annotate!(pl_pd300_simple,ws_twitter[3]+annot_offset_x, norm_tscale_twitter[3]+annot_offset_y, text(L"2015", :lime, :left, annot_size_letters-4))
-annotate!(pl_pd300_simple,ws_twitter[4]+annot_offset_x, norm_tscale_twitter[4]+annot_offset_y, text(L"2016", :lime, :left, annot_size_letters-4))
+annotate!(pl_pd300_simple,ws_twitter[1]+annot_offset_x, norm_tscale_twitter[1]+annot_offset_y, text(L"2013", :lime, :left, annot_size_letters-2))
+annotate!(pl_pd300_simple,ws_twitter[2]+annot_offset_x, norm_tscale_twitter[2]+annot_offset_y, text(L"2014", :lime, :left, annot_size_letters-2))
+annotate!(pl_pd300_simple,ws_twitter[3]+annot_offset_x, norm_tscale_twitter[3]+annot_offset_y, text(L"2015", :lime, :left, annot_size_letters-2))
+annotate!(pl_pd300_simple,ws_twitter[4]+annot_offset_x, norm_tscale_twitter[4]+annot_offset_y, text(L"2016", :lime, :left, annot_size_letters-2))
 
 #plot!([w_B1], [g_B2], ms=8, st=:scatter, mc=:cyan,label=L"B_1",markershape=:diamond)
 plot!(pl_pd300_simple,[w_B2], [g_B2], ms=8, st=:scatter, mc=:lime,label="",markershape=:dtriangle)

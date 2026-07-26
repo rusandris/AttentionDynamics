@@ -92,7 +92,7 @@ for (j,data_dir) in enumerate(data_dirs)
 
         #plot 
         plot!(ws,Λ_Ls,lw=2,lc=color,
-            title=L"1/(T_x(N-1)) = %$(g_rel)",label="")
+            title=L"y = %$(g_rel)",label="") #y = 1/(T_x(N-1))
         #plot!(ws,Λ_xs,markerstrokewidth=0.01,ms=2,st=:scatter,label="",mc=colors[i])
 
         #extract first zero points

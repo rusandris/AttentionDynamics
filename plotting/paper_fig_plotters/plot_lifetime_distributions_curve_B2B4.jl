@@ -1,3 +1,4 @@
+using Revise
 using DelimitedFiles
 using Plots, LaTeXStrings
 using StatsBase
