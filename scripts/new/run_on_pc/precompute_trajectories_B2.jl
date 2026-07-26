@@ -47,17 +47,17 @@ p_sets_c = [[cs[i]] for i in 1:length(cs)]
 
 #--------------------------------precompute trajectories-------------------------------------
 #settings of precomputed trajs
-T = 5 #500 #10000 #100 #5000
-Ttr = 0 #500
+T = 1000 #10000 #100 #5000
+Ttr = 2000 #500
 Δt_traj = 2 * 1e-2 #5*1e-2
-nr_ics = 20 #number of initial conditions
+nr_ics = 100 #number of initial conditions
 ic_counter = 0
 
 #phasediag_ids = ["B1", "B2", "C", "B3", "B4"]
 phasediag_ids = ["B2"]
 
 #paths
-savedir_traj_root = "../../../data/trajs_precomp_orig/B1B2B3B4C_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
+savedir_traj_root = "../../../data/trajs_precomp_orig/B1B2B3B4C_RKNONA_Δt$(Δt_traj)_T$(T)_Ttr$(Ttr)/"
 savedir_traj = savedir_traj_root * "B2/"
 mkpath(savedir_traj)
 
@@ -66,8 +66,9 @@ mkpath(savedir_traj)
 N = 300
 
 #------------------------------solver settings----------------------------------
-dtmax = 1e-2 #5*1e-2
-diffeq = (alg=Tsit5(), dt=1e-3, dtmax=dtmax, adaptive=true, maxiters=1e8)
+dtmax = 1e-3 #5*1e-2
+#diffeq = (alg=Tsit5(), dt=1e-2, dtmax=dtmax, adaptive=true, maxiters=1e15)
+diffeq = (alg=RK4(), dt=1e-3, dtmax=dtmax, adaptive=false, maxiters=1e15)
 #diffeq = (alg=Rodas5(), dt=1e-3, dtmax=1e-2, adaptive=true, maxiters=1e8)
 #diffeq = (alg=Tsit5(), dt=1e-3, dtmax=5*1e-3, adaptive=true, maxiters=1e8)
 
