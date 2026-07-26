@@ -11,6 +11,7 @@ module AttentionDynamics
 	using LinearAlgebra
 	using DelimitedFiles
     using Integrals
+    using LsqFit
 
 	include("map.jl")
 	include("produce_od.jl")

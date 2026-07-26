@@ -1,6 +1,6 @@
 export get_lifetimes,get_lifetimes_integ, get_distrib, integrate_activity,probability_first_entry
 export chart_stats, consecutive_occurrences,activity_periods, active_period_lengths
-export autohist, parabolic, linear #plot_distrib,plot_distrib!
+export autohist, parabolic, linear, fit_irls #plot_distrib,plot_distrib!
 
 
 #generate top charts from symbolic timeseries
@@ -455,4 +455,35 @@ function active_period_lengths(a)
     end
     l != 0 && push!(lengths,l) 
     return lengths
+end
+
+function fit_irls(model, x, y, p0;abstol=1e-2,abstol_weights=1e-1,maxiter=100)
+    n = length(y)
+    w_prev = ones(length(y))
+    w = deepcopy(w_prev)
+    p_prev = deepcopy(p0)
+    p = deepcopy(p0)
+    #iterate until params, weights have converged
+    i = 0
+    while i < maxiter 
+        i += 1
+
+        fit = curve_fit(model, x, y, w, p)
+        p = fit.param
+
+        #reweight
+        w_prev .= w
+        R = fit.resid .^2
+        rss_mean = mean(R)
+        w .= [1/(R[i] + rss_mean) for i in 1:n] 
+        w .= w ./ sum(w) #normalize
+
+        if norm(p .- p_prev) < abstol && norm(w .- w_prev) < abstol_weights
+            return p,w
+        end 
+
+        p_prev .= p
+    end
+    @warn "Did not converge after $maxiter iterations!"
+    return p,w
 end
