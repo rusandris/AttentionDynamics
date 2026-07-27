@@ -33,10 +33,12 @@ g = 45.0
 nr_ens = 1000
 
 pl_lyap = plot(;dpi=300,xlabel=L"w",ylabel=L"\langle \Lambda \rangle, \Lambda",
-           #title = L"N=%$N"*L" ,1/{\epsilon}=%$g"* L", T_\lambda = 10" * L", n_{ens} = %$nr_ens",
-           guidefontsize=20,legendfontsize=9,
-           legend_columns=2,legend=:bottomleft,
-    ylims=(-0.1, 1.0), tickfontsize=10);
+        #title = L"N=%$N"*L" ,1/{\epsilon}=%$g"* L", T_\lambda = 10" * L", n_{ens} = %$nr_ens",
+        guidefontsize=20,legendfontsize=9,
+        legend_columns=2,legend=:bottomleft,
+        ylims=(-0.2, 1.0), tickfontsize=10,
+        xticks=[0.1:0.1:0.4;],
+        xlims=(0.2,0.42));
 
 #plot ensemble avg lyap curves
 color = :gray10

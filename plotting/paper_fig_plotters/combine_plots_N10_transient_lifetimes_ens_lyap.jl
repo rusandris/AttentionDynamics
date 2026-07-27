@@ -6,7 +6,7 @@ include("plot_N10_escape_lifetimes.jl")
 include("plot_ensemble_average_lyapunov.jl")
 
 plot!(pl_lyap,left_margins=12Plots.mm)
-annotate!(pl_lyap, 0.17, 0.95, text(L"(a)", :gray10, :center, 25))
+annotate!(pl_lyap, 0.16, 0.95, text(L"(a)", :gray10, :center, 25))
 annotate!(pl_esc[1], 0.0004, 2*1e5, text(L"(b)", :gray10, :center, 25))
 
 

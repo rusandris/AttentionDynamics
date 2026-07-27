@@ -134,6 +134,7 @@ for (i, fileset) in enumerate(files_lifetime_by_time)
             @info "Parameters from linear fit: $(b),$(a)" 
             a_round = round(a;digits=3)
 
+            #add a line with slope of -4 (don't actually use a here, which should be close)
             plot!(log10.(bins_discrete[linear_interval]), log10.(10 .^ (b) .* bins_discrete[linear_interval] .^ (-4)),
                 ls=:dash, lc=:gray10, lw=1, label="", legendfontsize=15)
 
