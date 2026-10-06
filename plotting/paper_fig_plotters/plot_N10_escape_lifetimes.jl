@@ -4,6 +4,7 @@ using AttentionDynamics
 using DelimitedFiles
 using DynamicalSystems
 using OrdinaryDiffEq
+using LinearAlgebra, StatsBase
 cd(@__DIR__)
 
 #-------------------------read transient time files-------------------------------
@@ -151,3 +152,70 @@ plot!(pl_esc[3], t, trajm, legend=false, lw=0.5, xlims=(τ_tr-120, τ_tr+10), yl
 
 #add annotation
 annotate!(pl_esc[3], τ_tr - 155, 20, text(L"x_i", :gray10, :center, 18))
+
+
+#test ftle vs. bennettin for Ap.3
+ws_test = w_vals[1:5:end]
+lyaps_ftle_avgs = []
+lyaps_ben_avgs = []
+Δt_ftle = 10.0
+d0 = 1e-9
+Ttr = 1000
+
+u0 = rand(20)
+set_parameter!(ds, 2, 0.3)
+traj_init, t = trajectory(ds, 1000, ; Ttr=Ttr, Δt=1e-2) #trajectory to sample from
+
+for w in ws_test 
+    @show w
+    set_parameter!(ds,2,w)
+
+    lyaps_ftle = []
+    lyaps_ben = []
+
+    #loop over ensemble 
+    for i in 1:50
+        
+        u0_init = traj_init[rand(1:length(traj_init))]
+        pds = ParallelDynamicalSystem(deepcopy(ds), [u0_init, u0_init .+ d0 .* rand(20)])
+
+        for _ in 1:Ttr
+            step!(pds,1.0,true)
+            
+            u1 = current_states(pds)[1]
+            u2 = current_states(pds)[2]
+            d = norm(u2 .- u1)
+            reinit!(pds, [u1, u1 .+ (u2 .- u1) .* d0/d]) #reorient 
+        end
+
+
+        @show current_time(pds)
+        #ftle for a single traj pair
+        d_t0 = norm(current_states(pds)[2] .- current_states(pds)[1])
+        @show d_t0
+        step!(pds, Δt_ftle, true)
+        @show current_time(pds)
+        d_Δt = norm(current_states(pds)[2] .- current_states(pds)[1])
+        @show d_Δt
+        Λ_ftle = 1/Δt_ftle * log(d_Δt/d_t0)
+        @show Λ_ftle
+        push!(lyaps_ftle, Λ_ftle)
+
+        #benettin (short)
+        Λ_ben = lyapunov(ds, Δt_ftle, u0=u0_init, Ttr = Ttr, Δt=1.0)
+        push!(lyaps_ben, Λ_ben)
+    end
+    lyap_ftle_avg =  mean(lyaps_ftle)
+    lyap_ben_avg = mean(lyaps_ben)
+    @show lyap_ftle_avg, lyap_ben_avg
+    push!(lyaps_ftle_avgs, lyap_ftle_avg)
+    push!(lyaps_ben_avgs, lyap_ben_avg)
+end
+
+plot(ws_test, lyaps_ftle_avgs, lc=:red,
+    markershape=:circle,mc=:red,
+    label="FTLE, " * L"\Delta t = %$(Δt_ftle)", xlabel=L"w",
+    ylabel=L"\Lambda_{FTLE}, \Lambda_b",
+    legendfontsize=12, guidefontsize=15, tickfontsize=10)
+plot!(ws_test, lyaps_ben_avgs, lc=:gray10, label="Benettin, " * L"T = %$(Δt_ftle)",
+    markershape=:circle, mc=:gray10)
