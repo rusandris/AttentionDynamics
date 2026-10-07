@@ -1,9 +1,10 @@
 export att_din!, att_din_original!, skipsum, create_original_ds, att_din_original_noisy!, create_original_mod_ds
-export create_ds, generate_initial_condition, rescaled_params, rescaling_factors
+export create_ds, generate_initial_condition, rescaled_params, rescaling_factors,c_convert
 export create_ds_noisy, create_ds_prop_noisy, create_ds_alle, create_ds_symLV, create_original_ds_noisy,
     create_original_varied_delay, create_original_varied_rate, 
     create_original_varied_rate_delay, create_original_varied_params,
-    create_original_asymmetric_interaction, create_original_asymmetric_interaction_varied_delay
+    create_original_asymmetric_interaction, create_original_asymmetric_interaction_varied_delay,
+    create_logtransform_ds
 
 #sum skipping the i-th element
 function skipsum(u,i;step=2)
@@ -83,6 +84,29 @@ function att_din_original!(du, u, p, t)
         du[i+1] = u[i] - α * u[i+1]
     end
 end
+
+#original LY system with logarithmic transformation of L
+function att_din_log!(du, u, p, t)
+    rp, rc, K, c, α, N = p
+    l = @view u[1:N]
+    Y = @view u[N+1:2*N]
+    
+    du_l = @view du[1:N]
+    du_Y = @view du[N+1:2*N]
+    
+    total_attention = 0.0
+    @inbounds for j in 1:N
+        total_attention += exp(l[j])
+    end
+    
+    @inbounds for i in 1:N
+        sum_competitors = total_attention - exp(l[i])
+        du_l[i] = rp * (1.0 - (rc / K) * Y[i] - c * sum_competitors)
+        du_Y[i] = exp(l[i]) - α * Y[i]
+    end
+    return nothing
+end
+
 
 #system definition (in-place) with varied delay
 function att_din_original_varied_delay!(du, u, p, t)
@@ -189,6 +213,7 @@ diffeq_default =  (abstol = 1.0e-6, reltol = 1.0e-6)
 function create_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din!,u0,p;diffeq=diffeq) end
 function create_integrator(ds,diffeq) integrator(ds;diffeq) end
 function create_original_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din_original!,u0,p;diffeq=diffeq) end
+function create_logtransform_ds(u0,p;diffeq=diffeq_default) CoupledODEs(att_din_log!,u0,p;diffeq=diffeq) end
 function create_original_ds_noisy(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_original_noisy!, u0, p; diffeq=diffeq) end
 function create_original_varied_delay(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_original_varied_delay!, u0, p; diffeq=diffeq) end
 function create_original_varied_rate(u0, p; diffeq=diffeq_default) CoupledODEs(att_din_original_varied_rate!, u0, p; diffeq=diffeq) end
@@ -206,6 +231,7 @@ function create_ds_symLV(u0, p; diffeq=diffeq_default) CoupledODEs(symmetricLV!,
 #convert original params to rescaled
 rescaled_params(rp,rc,K,c,α,N) = ( 1/(1 + rc/(α*K*c*(N-1))), rp/α )
 rescaling_factors(rp, rc, K, c, α, N) = ( α*K/(rc+α*K*c*(N-1)), K/(rc + α*K*c*(N-1)) )
+c_convert(w,rc,K,α,N) = (rc/(α*K*(N-1))) / (1/w - 1) #convert w values to corresponding c values
 #-----------initial conditions-----------------
 #define well-controlled initial condition for each system size
 

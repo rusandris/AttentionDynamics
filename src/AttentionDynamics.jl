@@ -20,6 +20,7 @@ module AttentionDynamics
     include("chart_functions.jl")
     include("transient_functions.jl")
 	include("count_limitcycles.jl")
+	include("lyapunov_old.jl")
 	include("lyapunov.jl")
 	#include("find_periodic_orbit.jl")
 	include("jacobian.jl")

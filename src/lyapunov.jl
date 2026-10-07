@@ -1,350 +1,177 @@
-export lyapunov_curve,lyapunov_curves,lyapunov_diagram,lyapunov_diagram!
-export calc_lyapunov_curves,calc_lyapunov_curves_reinit,ensemble_average_lyapunov
+export lyapcurve,phasediag_lyapcurves
+#TODO:start organizing here reusable functions from unorganized scripts
 
-#calculate lyapunov curves for `ws` values of w 
-#using several different Ttr transient times 
-#for the same g 
-#without reinit 
-function calc_lyapunov_curves(ds,ws,Ttrs,T;u0=current_state(u0),save_dir="./")
+#get lyap curve for a given vertical level on phase diagram
+function lyapcurve(p,nr_ws;skip=:none,savedir,T_WLC=1e3,Ttr_WLC=1e4,Ttr_fp=1e2,T_fp=10,log_sys=false,diffeq=diffeq)
 
-    lyap_curves = [] #save lyaps here
+    r,_,K,c_ref,α,N = p
+    N = Int.(N)
 
-    for Ttr in Ttrs
-        g,_,N = current_parameters(ds)
-        N = Int(N)
-        #create pds 
-        pds = ParallelDynamicalSystem(ds,[u0,u0 .+ 1e-9 .* randn(2N)])
-        file_name = "lyapunovs_g_$g"*"_N_$N"*"_Ttr_$Ttr"*".txt"
+    w_ref,g = rescaled_params(p...)
+    g_rel = g/(N-1) #same as y
 
-        for (i,w) in enumerate(ws)
-            println("Ttr: $Ttr" * " w = $w")
-            set_parameter!(pds,2,w)
-            λ = lyapunov(pds,T;Ttr=Ttr)
-            
-            open(save_dir*file_name, "a") do f
-                write(f, "$w \t $λ \n")
-            end
+    #calc critical params
+    w_c1 = 1/g_rel #HOPF 
+    w_c2 = (N - 1) / N #heteroclinic
 
+    #take w values around w_ref
+    w_values = range(w_c1,w_c2;length=nr_ws)
+
+    #set param sweep intervals
+    c_start = c_convert.(w_c1,r,K,α,N)
+    c_stop = c_convert.(w_values[end],r,K,α,N)
+    c_values = c_convert.(w_values,r,K,α,N) #same for all system sizes
+
+    mkpath(savedir)
+    
+    
+    Threads.@threads for j in 1:length(c_values) 
+        w = w_values[j] 
+        c = c_values[j] 
+        
+        id = Threads.threadid() 
+        @show c,id
+
+        #define ds for each thread 
+        u0_thread = rand(2N) .* 1e-2 #without the scaling, IT DOESN'T WORK
+        p_new = [r, r, K, c, α, N]
+        if log_sys
+            u0_log = [log.(u0_thread)[1:2:end]...,u0_thread[2:2:end]...] #take log of Ls and reorder
+            p_new_log = Union{Int64,Float64}[p_new[1:end-1]...,Int(N)]
+            ds = create_logtransform_ds(u0_log, p_new_log;diffeq=diffeq)
+        else
+            ds = create_original_ds(u0_thread,p_new; diffeq=diffeq) 
         end
-    end
-end
 
-#calculate lyapunov curves for `ws` values of w 
-#using several different Ttr transient times 
-#for the same g 
-#with reinit
-#paralellized version 
-function calc_lyapunov_curves_reinit(ds,ws,Ttrs,T;
-        generate_u0 = dim -> generate_initial_condition(dim ÷ 2),d0=1e-9)
-
-    dim = dimension(ds)
-    lyap_curves = [] #save lyaps here
-
-    for Ttr in Ttrs
-        #save lyapunov exps for a transient time  
-        lyaps = zeros(length(ws))
-
-        #distribute parameter loop over threads
-        Threads.@threads for i in 1:length(ws)
-            
-            w = ws[i]
-            id = Threads.threadid()
-            println("Id: $id" * " Ttr: $Ttr" * " w = $w")
-
-            #make a pds for every param value
-            #to avoid races
-            #generate new initial condition 
-            u0 = generate_u0(dim)
-            pds = ParallelDynamicalSystem(deepcopy(ds),[u0,u0 .+ d0 .* rand(dim)])
-            set_parameter!(pds,2,w)
-            lyaps[i] = lyapunov(pds,T;Ttr=Ttr)
-        end
-        push!(lyap_curves,lyaps)
-    end
-
-    return lyap_curves
-end
-
-#initialize ensemble from the chaotic attractor?
-#for each parameter, take the average LLE  
-function ensemble_average_lyapunov(ds,ws,T,Ttr,nr_ens;u0=current_state(ds),
-        ensemble_init_param,T_init_traj = T,Ttr_init_traj = Ttr,d0=1e-9,Δt = 0.01,
-        filename="all_lyaps.txt")
-
-    lyap_avgs = zeros(length(ws)) #save lyap avgs here
-    dim = dimension(ds)
-
-    #init ensemble from a trajectory
-    set_parameter!(ds,2,ensemble_init_param)
-    traj,t = trajectory(ds,T_init_traj;Ttr=Ttr_init_traj)
-    lyap_exps_all = zeros(length(nr_ens),length(ws))
-
-    for i in 1:length(ws)
-    	w = ws[i]
-	println("w = $w")
-        #go over initial conditions (paralellized)
-        #select nr_ens init conds from traj
-        lyaps_ensemble = zeros(nr_ens) #save lyap avgs here
-
-        Threads.@threads for e in 1:nr_ens
-            id = Threads.threadid()
-            #println("Thread Id: $id" * " ensemble member: $e" * " w = $w")
-
-            #initialize from previously computed traj
-            ic_idx = rand(1:length(traj))
-            u0 = traj[ic_idx]
-            pds = ParallelDynamicalSystem(deepcopy(ds),[u0,u0 .+ d0 .* rand(dim)])
-            set_parameter!(pds,2,w)
-            lyaps_ensemble[e] = lyapunov(pds,T;Ttr=Ttr)
+        #select calc time and transient time based on w
+        Ttr = w_c1 < w < w_c2 ? Ttr_WLC : Ttr_fp
+        Ttr_scaled = Ttr / α
+        T = w_c1 < w < w_c2 ? T_WLC : T_fp
+        T_scaled = T / α
+        
+        #skip parts of the phase diagram
+        if skip==:chaos
+            w > w_c1 && continue
+        elseif skip==:fp
+            w < w_c1 && continue
         end
         
-
-	open(filename, "a") do f
-	   writedlm(f, lyaps_ensemble')
-	end
-
-
-        lyap_avgs[i] = mean(lyaps_ensemble)
-    end
-
-    return lyap_avgs
+        #calc lyapunov exponent
+        #lyaps[j] = lyapunov(pds,T;Ttr=Ttr)
+        @show current_parameters(ds)
+        lambda = lyapunov(ds,T_scaled;Ttr=Ttr_scaled)
+    
+        #lock file access before writing 
+        file_lock = ReentrantLock()
+    
+        lock(file_lock) do
+            #open file here
+            f = open(savedir*"lyaps_r$(r)_K$(K)_alpha$(α)_N$(N)"*".txt", "a")   
+            #save lyapunov exponents
+            write(f, "$(g_rel)\t$(r)\t$(w)\t$(c)\t$(lambda)\n")
+            close(f) #close file here
+        end
+    end #of threaded param loop
 end
 
-function lyapunov_curve(pinteg,T,Ttr,param_interval;Δt, d0, ut, lt)
-	lyaps = []
-	for param in param_interval
-		reinit!(pinteg)
-		set_parameter!(pinteg,2,param)
-		lyap = lyapunov(pinteg, T, Ttr, Δt, d0, ut, lt)
-		push!(lyaps,lyap)
-	end
-	return lyaps
+#loop over eps params (vertical levels on phase diagram)
+function phasediag_lyapcurves(Ns,g_rel_values;wstart=0.15,wstop=0.4,nr_ws=201,skip=:none,T_WLC=1e3,Ttr_WLC=1e4,Ttr_fp=1e2,T_fp=10,p_L_const = [10,10,0.005],log_sys=false,diffeq=diffeq,diffeqx=diffeqx,calc_xsys=false)
+    g_rel_level_shortened = round.(g_rel_values;digits=2) 
+    N = Ns[1]
+    K,α0 = p_L_const
+
+    for (gi,g_rel) in enumerate(g_rel_values)
+        glevel_short = g_rel_level_shortened[gi] 
+        
+        #convert to r values from relative timescale levels and constant alpha 
+        r = g_rel * α0 *(N-1)
+
+      
+        #calc critical params
+        w_c1 = 1/g_rel #HOPF 
+        w_c2 = (N - 1) / N #heteroclinic
+ 
+        #set param sweep intervals
+        w_values = range(wstart,wstop;length=nr_ws) #[w_c1:0.002:w_stop;] #[0.52:0.002:0.8;] #[w_c1:0.002:0.8;]
+        c_start = c_convert.(wstart,r,K,α0,N)
+        c_stop = c_convert.(w_values[end],r,K,α0,N)
+        #c_values = [1.5:0.01:8.5;]
+        c_values = c_convert.(w_values,r,K,α0,N) #same for all system sizes
+
+        savedir = savedir_root * "lyapunovs_phase_diag_L_logsys_$(glevel_short)_scaled_times_dtmax_$(dtmax)/"
+        mkpath(savedir)
+       
+        
+        for i in 1:length(Ns)
+            N = Ns[i]
+            @info "N = $(N)"
+ 
+            #generate standard init cond
+            u0 = rand(2N)
+            
+            #open file here
+            f = open(savedir*"lyaps_N$(N)_level_$(glevel_short)"*".txt", "a") 
+            
+            Threads.@threads for j in 1:length(c_values) 
+                w = w_values[j] 
+                c = c_values[j] 
+              
+                id = Threads.threadid() 
+        
+                #define ds for each thread 
+                u0_thread = rand(2N) .* 1e-2 #without the scaling, IT DOESN'T WORK
+                p_new = [r, r, K, c, α0, N]
+                if log_sys
+                    u0_log = [log.(u0_thread)[1:2:end]...,u0_thread[2:2:end]...] #take log of Ls and reorder
+                    p_new_log = Union{Int64,Float64}[p_new[1:end-1]...,Int(N)]
+                    ds = create_logtransform_ds(u0_log, p_new_log;diffeq=diffeq)
+                else
+                    ds = create_original_ds(u0_thread,p_new; diffeq=diffeq) 
+                end
+                #set_parameter!(ds, 5, c) 
+
+                #select calc time and transient time based on w
+                Ttr = w_c1 < w < w_c2 ? Ttr_WLC : Ttr_fp
+                Ttr_scaled = Ttr / α0
+                T = w_c1 < w < w_c2 ? T_WLC : T_fp
+                T_scaled = T / α0
+                
+                #skip parts of the phase diagram
+                if skip==:chaos
+                    w > w_c1 && continue
+                elseif skip==:fp
+                    w < w_c1 && continue
+                end
+        
+                @info "1/eps/(N-1) = $(glevel_short),T=$(T),Ttr=$(Ttr),r = $(r),wc1=$(w_c1),wc2=$(w_c2),w = $(w),c = $(c), thread id = $(id)" 
+                flush(stderr) 
+                
+                #calc lyapunov exponent
+                #lyaps[j] = lyapunov(pds,T;Ttr=Ttr)
+                lambda = lyapunov(ds,T_scaled;Ttr=Ttr_scaled)
+            
+                #lock file access before writing 
+                file_lock = ReentrantLock()
+                
+                lock(file_lock) do  
+                    #save lyapunov exponents
+                    write(f, "$(g_rel)\t$(r)\t$(w)\t$(c)\t$(lambda)\n")
+                end
+    
+                if calc_xsys
+                    u0_Ttrx = trajectory(dsx, 0; Ttr=Ttr)[1][1] 
+                    dsx = create_ds(rand(2N), [g_rel*(N-1),w, N]; diffeq=diffeqx)
+                    pdsx = ParallelDynamicalSystem(deepcopy(dsx),[u0_Ttrx,u0_Ttrx .+ d0])
+                    lambdax = lyapunov(pdsx,T;Ttr=Ttr_lyap)
+
+                     #save lyapunov exponents
+                    open(savedir*"lyapsx_N$N"*".txt", "a") do f
+                         write(f, "$(g_rel_calc)\t$(w)\t$(lambdax)\n")
+                    end
+                end #of x sys calc
+
+            end #of threaded param loop
+            close(f) #close file here
+        end  #of system size
+    end #of eps level param
 end
-
-function lyapunov_curves(system_sizes,param_interval::Vector{Float64};T,Ttr,wc,Δt, d0, ut, lt,diffeq,save=false)
-	adapt = diffeq.adaptive
-	u0 = rand(2*system_sizes[1]) #dummy initialization
-	p = zeros(3)
-	ds = create_ds(u0,p)
-	
-	
-	lyap_curves = []
-	
-	for size in system_sizes	
-		u0 = rand(2*size)
-		
-		pinteg = parallel_integrator(ds,[u0,u0+d0*rand(2*size)];diffeq=diffeq)
-		set_parameter!(pinteg,3,size)
-		g = (size-1)/wc
-		set_parameter!(pinteg,1,g)
-		lyaps = lyapunov_curve(pinteg,T,Ttr,param_interval;Δt, d0, ut, lt)
-		
-		if save 
-			filename = "lyaps_samewc_size_$size"*"_T_$T"*"Ttr_$Ttr"*"_adapt_$adapt"*".txt"
-			writedlm(filename,lyaps)
-			println("creating $filename")
-		else
-			push!(lyap_curves,lyaps)
-		end
-	end
-	if save == false 
-		return lyap_curves
-	end
-end
-
-
-function lyapunov_curves(system_sizes,nr_points::Int;T,Ttr,g,Δt, d0, ut, lt,diffeq,save=false)
-	adapt = diffeq.adaptive
-	u0 = rand(2*system_sizes[1]) #dummy initialization
-	p = zeros(3)
-	ds = create_ds(u0,p)
-	
-	
-	lyap_curves = []
-	
-	for N in system_sizes	
-		u0 = rand(2*N)
-		
-		pinteg = parallel_integrator(ds,[u0,u0+d0*rand(2*N)];diffeq=diffeq)
-		set_parameter!(pinteg,3,N)
-		set_parameter!(pinteg,1,g)
-		wc1 = (N-1)/g
-		wc2 = (N-1)/N
-		param_interval = range(wc1,wc2,nr_points)
-		
-		lyaps = lyapunov_curve(pinteg,T,Ttr,param_interval;Δt, d0, ut, lt)
-		
-		if save 
-			filename = "lyaps_size_$N"*"_T_$T"*"Ttr_$Ttr"*"_adapt_$adapt"*"_g_$g.txt"
-			println("creating $filename")
-			writedlm(filename,hcat(param_interval,lyaps))
-		else
-			push!(lyap_curves,lyaps)
-		end
-	end
-	if save == false 
-		return lyap_curves
-	end
-end
-
-function create_pinteg(u0,p,d0;diffeq)
-	ds = create_ds(u0,p)
-	N = Int(p[3])
-	pinteg = parallel_integrator(ds,[u0,u0+d0*rand(2*N)];diffeq=diffeq)
-end
-
-function replace_infs!(Λ,value)
-	for i in 1:size(Λ)[1]
-		for j in 1:size(Λ)[2]
-			if isinf(Λ[i,j])
-				Λ[i,j] = value
-			end
-		end
-	end
-end
-
-#calculate lyapunov exponents for the phase diagram
-#lyapunov considers u0=initial_state(ds)
-#system is multistable! final state of p_i should be the initial state of p_{i+1}
-#highest level series version
-function lyapunov_diagram(ds, gvalues, wvalues; pidx=[1, 2], T, Ttr, Δt, fp_settings=[100, 100, 0.1], d0=1e-9, ut=1e-6, lt=1e-12, parallelize=false, save, realtime_plotting=true, savedir="./")
-	gl = length(gvalues)
-	wl = length(wvalues)
-	Λ = Array{Float64}(undef, (gl,wl))
-	fill!(Λ,Inf)
-	N = Int(dimension(ds) / 2)
-	wc2 = (N-1)/N
-
-	if parallelize
-		lyapunov_diagram_parallel!(Λ,ds,gvalues,wvalues; T=T, Ttr=Ttr, Δt=Δt, d0=d0, ut=ut, lt=lt)
-
-	else
-		#create pds (parallel system) 
-		#for a lower level call to lyapunov
-		s = current_state(ds)
-		states = [s, s .+ rand(2N) .* d0 / sqrt(2N)]
-		pds = ParallelDynamicalSystem(ds,states)
-
-		lyapunov_diagram!(Λ,pds,gvalues,wvalues;pidx=pidx, T=T, Ttr=Ttr, Δt=Δt,fp_settings=fp_settings, d0=d0, ut=ut, lt=lt)
-	end
-
-	if save
-		replace_infs!(Λ,-1)
-		
-		gstart = gvalues[1]
-		gstop = gvalues[end]
-		
-		wstart = wvalues[1]
-		wstop = wvalues[end]
-		
-		writedlm(savedir*"N$N"*"_gvalues_gstart_$gstart"*"_gstop_$gstop"*"_T$T"*"_Ttr$Ttr"*"_res_"*"$gl"*"x$wl"*".txt",gvalues)
-		writedlm(savedir*"N$N"*"_wvalues_wstart_$wstart"*"_wstop_$wstop"*"_T$T"*"_Ttr$Ttr"*"_res_"*"$gl"*"x$wl"*".txt",wvalues)
-		writedlm(savedir*"N$N"*"_T$T"*"_Ttr$Ttr"*"lyaps"*"gvalues_gstart_$gstart"*"_gstop_$gstop"*"_wstart_$wstart"*"_wstop_$wstop"*"_res_"*"$gl"*"x$wl"*".txt",Λ)
-		
-		if realtime_plotting
-			pd = plot_phase_diagram(Λ,wvalues,gvalues,N;HEATMAP_DEFAULTS...)					
-			savefig(pd,savedir*"N$N"*"_T=$T"*"_Ttr=$Ttr"*"_res_"*"$gl"*"x$wl"*"lyap_diagram.pdf")
-		end
-		
-	end 
-	return Λ 
-end
-
-#parallel lyapunov calculation?
-#parallelize row-wise
-#each thread saves λ lyap exponent to the same Λ
-#pds cannot be shared among threads
-function lyapunov_diagram_parallel!(Λ,ds,gvalues,wvalues; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12)
-
-	gl = length(gvalues)
-	N = Int(dimension(ds)/2)
-
-	#init pds states to initial state of ds
-	s = initial_state(ds)
-    states = [s, s .+ rand(2N) .* d0 / sqrt(2N)]
-	gs_ti = zeros(Int,length(gvalues))
-
-	#start threads wrt g values (columns in the lyap. diag.)
-	Threads.@threads for g_i in 1:length(gvalues)
-		gs_ti[g_i] = Threads.threadid()
-		@show gs_ti
-		#@show Threads.threadid(),g_i,gvalues[g_i]
-		#create pds (parallel system) for each thread 
-		pds = ParallelDynamicalSystem(deepcopy(ds),deepcopy(states))
-
-		set_parameter!(pds,1,gvalues[g_i])
-		
-		#set direction for w param (lower to larger or viceversa)
-		if iseven(g_i)
-			witer = reverse(wvalues)
-		else
-			witer = wvalues
-		end
-		
-		#calc lyapunovs and save to Λ
-		#calc for all w values 
-		calc_lyap_row!(Λ,pds,gvalues,witer,g_i; T, Ttr, Δt, d0=1e-9, ut=1e-6, lt=1e-12)
-	end
-end
-
-#serial version (no threading)
-function lyapunov_diagram!(Λ,pds,gvalues,wvalues;pidx=[1,2], T, Ttr, Δt,fp_settings=[100,100,0.1] ,d0=1e-9, ut=1e-6, lt=1e-12)
-
-	gl = length(gvalues)
-
-	for (gindex,g) in enumerate(gvalues)
-		set_parameter!(pds,pidx[1],g)
-		@show g		
-		if iseven(gindex)
-			witer = reverse(wvalues)
-		else
-			witer = wvalues
-		end
-		
-		calc_lyap_row!(Λ,pds,gvalues,witer,gindex;pidx=pidx[2], T, Ttr, Δt,fp_settings=fp_settings, d0=d0, ut=ut, lt=lt)
-	end
-end
-
-
-function calc_lyap_row!(Λ,pds,gvalues,witer,gindex;pidx=2, T, Ttr, Δt,fp_settings=[100,100,0.1], d0=1e-9, ut=1e-6, lt=1e-12)
-	wl = length(witer)
-	N = Int(dimension(pds) / 2)
-	wc2 = (N-1)/N
-	wc1 = (N-1)/gvalues[gindex]
-	T_fp,Ttr_fp,Δt_fp = fp_settings
-
-	#reinit!(pds)
-	for (windex,w) in enumerate(witer)
-		
-		#=
-		#skip second fixed point parameter interval
-		(w <= 1.0 && w > wc2) && continue
-		=#
-
-		set_parameter!(pds,pidx,w)
-        @show current_parameters(pds)
-		reinit!(pds)
-		@show w
-		
-		#parallel debug
-		#@show current_state(pds)[1]
-		#@show Threads.threadid(),gindex,gvalues[gindex],w
-
-		#use lower transients for stable fixed point dynamics
-		if w < wc1 || w > wc2
-			lyap = lyapunov(pds, T_fp; Ttr=Ttr_fp, Δt=Δt_fp, d0=d0, d0_upper=ut, d0_lower=lt)
-		else
-			lyap = lyapunov(pds, T; Ttr=Ttr, Δt=Δt, d0=d0, d0_upper=ut, d0_lower=lt)
-		end
-		@show lyap
-		if iseven(gindex)
-			Λ[gindex,wl-windex+1] = lyap
-		else
-			Λ[gindex,windex] = lyap
-		end
-	end
-
-end
-
-
-
