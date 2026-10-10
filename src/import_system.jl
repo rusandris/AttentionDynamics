@@ -86,6 +86,7 @@ function att_din_original!(du, u, p, t)
 end
 
 #original LY system with logarithmic transformation of L
+#[l,...,l,Y,...Y] phase space vec!
 function att_din_log!(du, u, p, t)
     rp, rc, K, c, α, N = p
     l = @view u[1:N]
