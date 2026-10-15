@@ -5,7 +5,7 @@ cd(@__DIR__)
 
 include("../../scripts/new/load_dataset_param_examples.jl")
 
-src_dir_root = "../../data/lyapcurves_datasets_T500_highres/"
+src_dir_root = "../../data/lyapcurves_datasets_T500_twores/"
 src_dirs = filter(f->!(isfile(f)),src_dir_root .* readdir(src_dir_root))[[2,3,4,5,1]]
 labels = ["Movies 1995-2000","Publications 1990-2010","Reddit 2012","Google Trends 2014","Books 1930-1950"]
 αs = [p_const_mov[5],p_const_pub[5],p_const_reddit[5],p_const_trends[5],p_const_books[5]]
@@ -39,8 +39,8 @@ for (i,dir) in enumerate(src_dirs)
     #λ_pidx = findfirst(w->w==ws_datasets[i],ws) 
     vline!([ws_datasets[i]],lw=2,ls=:dash,lc=colors[i],label=labels[i])
 
-
 end
 
-pl_lyapcurves
+plot!(pl_lyapcurves,dpi=400)
 lens!(pl_lyapcurves,[0.0,0.07], [0.0, 35.0], inset = (1, bbox(0.5, 0.35, 0.45, 0.45)))
+savefig(pl_lyapcurves,"../../paper_figs/lyapcurves_dataset_param_examples_maxima_T_Ttr500.png")
