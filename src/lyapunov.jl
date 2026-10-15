@@ -2,7 +2,7 @@ export lyapcurve,phasediag_lyapcurves
 #TODO:start organizing here reusable functions from unorganized scripts
 
 #get lyap curve for a given vertical level on phase diagram
-function lyapcurve(p,nr_ws;skip=:none,savedir,T_WLC=1e3,Ttr_WLC=1e4,Ttr_fp=1e2,T_fp=10,log_sys=false,diffeq=diffeq)
+function lyapcurve(p,nr_ws;skip=:none,w_stop=Inf,savedir,fname_addition="",T_WLC=1e3,Ttr_WLC=1e4,Ttr_fp=1e2,T_fp=10,log_sys=false,diffeq=diffeq)
 
     r,_,K,c_ref,α,N = p
     N = Int.(N)
@@ -13,9 +13,10 @@ function lyapcurve(p,nr_ws;skip=:none,savedir,T_WLC=1e3,Ttr_WLC=1e4,Ttr_fp=1e2,T
     #calc critical params
     w_c1 = 1/g_rel #HOPF 
     w_c2 = (N - 1) / N #heteroclinic
+    w_stop_range = w_stop == Inf ? w_c2 : w_stop
 
     #take w values around w_ref
-    w_values = range(w_c1,w_c2;length=nr_ws)
+    w_values = range(w_c1,w_stop_range;length=nr_ws)
 
     #set param sweep intervals
     c_start = c_convert.(w_c1,r,K,α,N)
@@ -66,7 +67,7 @@ function lyapcurve(p,nr_ws;skip=:none,savedir,T_WLC=1e3,Ttr_WLC=1e4,Ttr_fp=1e2,T
     
         lock(file_lock) do
             #open file here
-            f = open(savedir*"lyaps_r$(r)_K$(K)_alpha$(α)_N$(N)"*".txt", "a")   
+            f = open(savedir*"lyaps$(fname_addition)_r$(r)_K$(K)_alpha$(α)_N$(N)"*".txt", "a")   
             #save lyapunov exponents
             write(f, "$(g_rel)\t$(r)\t$(w)\t$(c)\t$(lambda)\n")
             close(f) #close file here
