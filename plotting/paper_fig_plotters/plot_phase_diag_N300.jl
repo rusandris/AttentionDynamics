@@ -85,8 +85,10 @@ nr_ws = 80
 ys,ws,pd = read_phasediag_data(data_dir_root)
 ys_ext,ws_ext,pd_ext = read_phasediag_data(data_dir_root)
 
+phase_diag = vcat(pd_ext,pd)
+y_levels = hcat(ys_ext,ys)
 
-pl_pd300 = plot_phase_diagram(phase_diag, ws, g_rel_levels, N;
+pl_pd300 = plot_phase_diagram(phase_diag, ws, y_levels, N;
     xlims=(0.0, 0.95),
     ylims=(g_rel_levels[1], g_rel_levels[end]),
     critical_curve_colors=[:gray10,:gray10],
