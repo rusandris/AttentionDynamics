@@ -24,7 +24,7 @@ function read_phasediag_data(data_dir_root)
 
     #init matrix for phase diagram
     probe_file = readdir(data_dir_root * lyap_subdirs[1])[1] 
-    ws = readdlm(data_dir_root * lyap_subdirs[1] * "/" * probe_file)[:,3] 
+    ws = sort(readdlm(data_dir_root * lyap_subdirs[1] * "/" * probe_file)[:,3])
     nr_ws = length(ws)
 
     phase_diag = zeros(nr_ws,nr_ws)
@@ -65,32 +65,30 @@ dirs_pd300_fp = readdir(data_dir_root_fp)
 
 #phasediag data: y in [0,10]
 data_dir_root = "../../data/phase_diag_N300_recalc_fixed_T500_Ttr500/"
-dirs_pd300 = readdir(data_dir_root)
-files_pd_levels = dirs_pd300[[2:17...,19:81...,18]] #[2:end] #
-files_pd_levels_fp = dirs_pd300_fp[[2:17..., 19:81..., 18]]
+dirs_pd300_all = readdir(data_dir_root)
+dirs_pd_levels = dirs_pd300_all[[2:17...,19:81...,18]] #[2:end] #
+#files_pd_levels_fp = dirs_pd300_fp[[2:17..., 19:81..., 18]]
 
 #phasediag data: y in [10,20]
 data_extension_dir_root = "../../data/phase_diag_N300_extended_highres/"
-dirs_pd300_extension = readdir(data_extension_dir_root)
-
+dirs_pd300_extension_all = readdir(data_extension_dir_root)
+dirs_pd300_extension = dirs_pd300_extension_all[2:end]
 #data_dir_root = "../../data/phase_diag_N300_recalc_fixed_T2000_Ttr2000//"
 #data_dir_root = "../../data/phase_diag_N300_fp/"
 
 #data constants 
 fp_scale = 10
-nr_levels = length(files_pd_levels)
-nr_ws = 80
 #ws_fp_idx_offset = 9
 
-ys,ws,pd = read_phasediag_data(data_dir_root)
-ys_ext,ws_ext,pd_ext = read_phasediag_data(data_dir_root)
+ws,ys,pd = read_phasediag_data(data_dir_root)
+ws_ext,ys_ext,pd_ext = read_phasediag_data(data_extension_dir_root)
 
-phase_diag = vcat(pd_ext,pd)
-y_levels = hcat(ys_ext,ys)
+phase_diag = vcat(pd,pd_ext[2:end,:])
+y_levels = vcat(ys,ys_ext[2:end])
 
 pl_pd300 = plot_phase_diagram(phase_diag, ws, y_levels, N;
     xlims=(0.0, 0.95),
-    ylims=(g_rel_levels[1], g_rel_levels[end]),
+    ylims=(y_levels[1], y_levels[end]),
     critical_curve_colors=[:gray10,:gray10],
     critical_curve_lines=[:dash, :dot],
     HEATMAP_DEFAULTS...,
@@ -193,60 +191,6 @@ plot!(pl_pd300_simple,[w_B4], [g_B4], ms=8, st=:scatter, mc=:purple, label = "",
 
 annotate!(pl_pd300_simple,w_B3 - 0.01, g_B3 - 0.3, text(L"B_3", :orange, :right, annot_size_letters))
 annotate!(pl_pd300_simple,w_B2 - 0.01, g_B2 - 0.1, text(L"B_2", :lime, :right, annot_size_letters))
-
-#try to add data fit curves from Suppl. Fig10 from Lorenz-Spreen
-# get parameters from captions, translate every parameter combination to (Tx,w)
-# N=100 where does that fall on the N=300 phase diag?
-colors = [:orange,:cyan,:slateblue1,:gray70,:royalblue1,:lightseagreen,:lime]
-ms_data = 5
-#Google Books
-rs_books = [8.0,12.0,15.0,17.0,18.0,20.0]
-N_books = 300 
-resc_params_books = rescaled_params.(rs_books, rs_books, K, 2.4, 0.003, N_books)
-ws_books = [resc_params_books[i][1] for i in 1:length(resc_params_books)]
-norm_tscale_books = [resc_params_books[i][2] for i in 1:length(resc_params_books)] ./ (N_books - 1)
-
-#Movies
-rs_mov = [18.0, 20.0, 22.0, 25.0, 30.0, 33.0, 35.0, 37.0]
-N_mov = 100
-resc_params_mov = rescaled_params.(rs_mov, rs_mov, K, 2.4, 0.001, N_mov)
-ws_mov = [resc_params_mov[i][1] for i in 1:length(resc_params_mov)]
-norm_tscale_mov = [resc_params_mov[i][2] for i in 1:length(resc_params_mov)] ./ (N_mov - 1)
-
-#Google Trends
-rs_trends = [15.0, 17.0, 19.0, 21.0, 22.0, 26.0, 27.0, 30.0]
-N_trends = 100
-resc_params_trends = rescaled_params.(rs_trends, rs_trends, K, 2.0, 0.0005, N_trends)
-ws_trends = [resc_params_trends[i][1] for i in 1:length(resc_params_trends)]
-norm_tscale_trends = [resc_params_trends[i][2] for i in 1:length(resc_params_trends)] ./ (N_trends - 1)
-
-#Reddit 
-rs_reddit = [25.0, 29.0, 30.0, 33.0, 34.0, 35.0]
-N_reddit = 100
-resc_params_reddit = rescaled_params.(rs_reddit, rs_reddit, K, 5.4, 0.001, N_reddit)
-ws_reddit = [resc_params_reddit[i][1] for i in 1:length(resc_params_reddit)]
-norm_tscale_reddit = [resc_params_reddit[i][2] for i in 1:length(resc_params_reddit)] ./ (N_reddit - 1)
-
-#publications 
-rs_pub = [6.0, 7.0]
-N_pub = 300
-resc_params_pub = rescaled_params.(rs_pub, rs_pub, K, 2.4, 0.003, N_pub)
-ws_pub = [resc_params_pub[i][1] for i in 1:length(resc_params_pub)]
-norm_tscale_pub = [resc_params_pub[i][2] for i in 1:length(resc_params_pub)] ./ (N_pub - 1)
-
-#wiki 
-rs_wiki = [45.0, 48.0, 50.0]
-N_wiki = 100
-resc_params_wiki = rescaled_params.(rs_wiki, rs_wiki, K, 2.4, 0.0001, N_wiki)
-ws_wiki = [resc_params_wiki[i][1] for i in 1:length(resc_params_wiki)]
-norm_tscale_wiki = [resc_params_wiki[i][2] for i in 1:length(resc_params_wiki)] ./ (N_wiki - 1)
-
-#Twitter
-rs_twitter = [9.0,10.0,11.0,12.0]
-N_twitter = 300 
-resc_params_twitter = rescaled_params.(rs_twitter, rs_twitter, K, 2.4, 0.005, N_twitter)
-ws_twitter = [resc_params_twitter[i][1] for i in 1:length(resc_params_twitter)]
-norm_tscale_twitter = [resc_params_twitter[i][2] for i in 1:length(resc_params_twitter)] ./ (N_twitter - 1)
 
 #add colorbar 
 cbar_range = [-7:0.1:7;]
