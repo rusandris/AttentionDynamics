@@ -53,10 +53,12 @@ end
 
 #plot lyapcurves and parameters markers separately 
 plots = []
-mshapes = [[:utriangle,:dtriangle,:circle], [:hexagon, :diamond,:octagon]]
-colorpairs = [[[:orange,:orangered4],[:lime,:darkgreen],[:lightblue,:darkblue]],[[:orange,:orangered4],[:lime,:darkgreen],[:lightblue,:darkblue]]]
+mshapes = [[:pentagon,:dtriangle,:circle], [:hexagon, :diamond,:octagon]]
+colorpairs = [[[:yellow,:orange],[:darkgreen,:lime],[:darkblue,:lightblue]],
+            [[:yellow,:orange],[:darkgreen,:lime],[:darkblue,:lightblue]]]
+
 xlims_groups = [(0.0,0.5),(0.0,0.04)]
-ms=8;lw=2
+ms=6;lw=2
 
 #curves
 for (gi,lyapcurves_group) in enumerate(lyapcurves_all)
@@ -110,7 +112,7 @@ for (gi,lyapcurves_group) in enumerate(lyapcurves_all)
             @show ws[closest_w_idx], w_dataset
             color = colors[i]
             plot!(plots[gi],[ws[closest_w_idx]],[Λs[closest_w_idx]],
-                st=scatter,markerstrokewidth=0.5,
+                st=scatter,markerstrokewidth=0.5,ms=ms,
                 mc=color,markershape=mshapes[gi][ci],label=dataset_name)
 
             #vline!([w_dataset],ls=:dot,ms=4,
