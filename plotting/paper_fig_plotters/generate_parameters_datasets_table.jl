@@ -2,8 +2,9 @@
 #fitted parameters from datasets  (see Fig10 from Lorenz-Spreen)
 # get parameters from captions, translate every parameter combination to (Tx,w)
 # N=100 where does that fall on the N=300 phase diag?
-colors = [:orange,:cyan,:slateblue1,:gray70,:royalblue1,:lightseagreen,:lime]
-ms_data = 5
+using CSV,DataFrames
+
+save_datatable = true
 
 #Google Books
 rs_books = [8.0,12.0,15.0,17.0,18.0,20.0]
@@ -72,7 +73,8 @@ for i in 1:length(Ns_vals)
     end
 
 end
-CSV.write("../../data/lyapcurve_datasets_parameters/datasets_parameters_precise.txt",df)
+
+save_datatable && CSV.write("../../data/lyapcurve_datasets_parameters/datasets_parameters_precise.txt",df)
 
 
 
