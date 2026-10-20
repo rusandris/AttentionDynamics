@@ -62,11 +62,16 @@ plot!([w_B4_approx],[Λs_B4[w_B4_idx]/αs[1]],st=:scatter,ms=ms,mc=:purple,marke
 plot!([w_B2_approx],[Λs_B2[w_B2_idx]/αs[2]],st=:scatter,ms=ms,mc=:lime,markershape=:dtriangle,label="")
 plot!([w_B3_approx],[Λs_B3[w_B3_idx]/αs[3]],st=:scatter,ms=ms,mc=:orange,markershape=:utriangle,label="")
 
-
+#=
 #add annotations
 annotate!(w_B2 + 0.05, Λs_B2[w_B2_idx]/αs[2] + 0.0, text(L"B_2" *" (Twitter)", :lime, :left, annot_size_letters))
 annotate!(w_B4 + 0.05, Λs_B4[w_B4_idx]/αs[1] + 0.1, text(L"B_4" * " (reference)", :purple, :left, annot_size_letters))
 annotate!(w_B3 + 0.05, Λs_B3[w_B3_idx]/αs[3] + 0.0, text(L"B_3" * " (Google Books)", :orange, :left, annot_size_letters))
+=#
+annotate!(w_B2 + 0.05, Λs_B2[w_B2_idx]/αs[2] + 0.0, text(L"B_2", :lime, :left, annot_size_letters))
+annotate!(w_B4 + 0.05, Λs_B4[w_B4_idx]/αs[1] + 0.1, text(L"B_4", :purple, :left, annot_size_letters))
+annotate!(w_B3 + 0.05, Λs_B3[w_B3_idx]/αs[3] + 0.0, text(L"B_3", :orange, :left, annot_size_letters))
+
 
 
 #plot in function of r 

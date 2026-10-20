@@ -53,10 +53,12 @@ end
 
 #plot lyapcurves and parameters markers separately 
 plots = []
-mshapes = [[:pentagon,:dtriangle,:circle], [:hexagon, :diamond,:octagon]]
-colorpairs = [[[:yellow,:orange],[:darkgreen,:lime],[:darkblue,:lightblue]],
-            [[:yellow,:orange],[:darkgreen,:lime],[:darkblue,:lightblue]]]
 
+mshapes = [[:diamond,:dtriangle,:circle], [:star4, :ltriangle,:pentagon]]
+
+colorpairs = [[[:yellow,:darkorange],[:darkolivegreen1,:lime,:green,:darkgreen],[:turquoise1,:steelblue]],
+            [[:yellow,:darkorange],[:darkolivegreen1,:darkgreen],[:turquoise1,:steelblue]]]
+        
 xlims_groups = [(0.0,0.5),(0.0,0.04)]
 ms=6;lw=2
 

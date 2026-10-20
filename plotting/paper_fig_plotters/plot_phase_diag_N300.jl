@@ -171,8 +171,8 @@ annotate!(pl_pd300,w_B2 + 0.05, g_B2 + 0.6, text(L"B_2", :lime, :center, annot_s
 annotate!(pl_pd300,w_B4 + 0.04, g_B4 + 0.6, text(L"B_4", :purple, :center, annot_size_letters))
 
 #add colorbar 
-cbar_range = [-7:0.1:7;]
-pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [-5,0.0,5], 
+cbar_range = [clims[1]:0.1:clims[2];]
+pl_cbar = heatmap([1], cbar_range, [cbar_range;;],yticks = [-8,0.0,8], 
     c=HEATMAP_DEFAULTS.c, fg_color=:gray10, colorbar=false, xaxis=false, 
     ymirror=true, left_margin=-8Plots.mm,tickfontsize=tick_fontsize_large)
 
@@ -181,7 +181,7 @@ l_cbar = @layout [a{0.95w} b]
 pl_phase_diag = plot!(pl_pd300, pl_cbar, layout=l_cbar, tick_direction=:out)
 
 #add cbar annot
-annotate!(pl_phase_diag,1.0, 10.5, text(L"\Lambda", :gray10, :center, annot_size))
+annotate!(pl_phase_diag[2],1.0, 11.5, text(L"\Lambda", :gray10, :center, annot_size))
 
 #save figures and save processed data
 #=
@@ -203,10 +203,10 @@ msw = 0.5 #5
 ms_data = 6
 #mshape = :x
 
-mshapes = [[:pentagon,:dtriangle,:circle], [:hexagon, :diamond,:octagon]]
+mshapes = [[:diamond,:dtriangle,:circle], [:star4, :ltriangle,:pentagon]]
 
-colorpairs = [[[:yellow,:orange],[:darkgreen,:lime],[:darkblue,:lightblue]],
-            [[:yellow,:orange],[:darkgreen,:lime],[:darkblue,:lightblue]]]
+colorpairs = [[[:yellow,:darkorange],[:darkolivegreen1,:lime,:green,:darkgreen],[:turquoise1,:steelblue]],
+            [[:yellow,:darkorange],[:darkolivegreen1,:darkgreen],[:turquoise1,:steelblue]]]
 
 #Books dataset parameters 
 df_books = df[occursin.("Books",df.Dataset),:] 
@@ -250,10 +250,11 @@ plot!(pl_every_data,ws_books, ys_books, st=:scatter,markershape=mshapes[1][1],
     markerstrokewidth=msw, ms=ms_data, mc=colors_books, label="Google books")
 
 colors_pub = collect(palette(colorpairs[1][3],length(ys_pub)))
-plot!(pl_every_data,ws_pub, ys_pub,st=:scatter ,markershape=mshapes[1][3],
+#plot with a little offset (avoid marker overlaps)
+plot!(pl_every_data,ws_pub, ys_pub .- 0.5,st=:scatter ,markershape=mshapes[1][3],
     markerstrokewidth=msw, ms=ms_data, mc=colors_pub,label="Publications")
 
-colors_twitter = collect(palette(colorpairs[1][2],length(ys_twitter)))
+colors_twitter = colorpairs[1][2] #collect(palette(colorpairs[1][2],length(ys_twitter)))
 plot!(pl_every_data,ws_twitter, ys_twitter, st=:scatter,markershape=mshapes[1][2],
     markerstrokewidth=msw, ms=ms_data, mc=colors_twitter,label="Twitter")
 
@@ -282,13 +283,26 @@ plot!(pl_every_data,legendfontsize=legend_fontsize-5, guidefontsize=25, tickfont
 lens!(pl_every_data,[0.0,0.02], [150.0, 800.0], inset = (1, bbox(0.6, 0.0, 0.4, 0.4)))
 plot!(pl_every_data[2],tickfontsize=tick_fontsize_small,xticks=[0,0.01,0.02])
 
-annotate!(pl_every_data,0.16,25, text("Books", 14, colors_books[end], rotation=-10))
-annotate!(pl_every_data,0.26,13, text("Twitter", 14, colors_twitter[3], rotation=-10))
-annotate!(pl_every_data,0.28,21, text("Publications", 14, colors_pub[3], rotation=-10))
+annotate!(pl_every_data,0.16,32, text("Books", 12, colors_books[end], rotation=-10))
+annotate!(pl_every_data,0.16,22, text("1870-2010", 8, colors_books[end], rotation=-10))
 
-annotate!(pl_every_data[2],0.012,710, text("Google Trends", 12, colors_trends[3], rotation=0))
-annotate!(pl_every_data[2],0.012,310, text("Movies", 14, colors_mov[3], rotation=-40))
-annotate!(pl_every_data[2],0.017,420, text("Reddit", 14, colors_reddit[3], rotation=-20))
+annotate!(pl_every_data,0.26,13, text("Twitter", 12, colors_twitter[end], rotation=-10))
+annotate!(pl_every_data,0.335,9, text("2013-2016", 8, colors_twitter[end], rotation=-10))
+#annotate!(pl_every_data,0.33,10, text("2013 -", 9, colors_twitter[1], rotation=-10))
+#annotate!(pl_every_data,0.358,8.7, text("2016", 9, colors_twitter[end], rotation=-10))
+
+annotate!(pl_every_data,0.28,21, text("Publications", 12, colors_pub[end], rotation=-10))
+annotate!(pl_every_data,0.38,14, text("1990-2020", 8, colors_pub[end], rotation=-10))
+
+annotate!(pl_every_data[2],0.012,710, text("Google Trends", 10, colors_trends[end], rotation=0))
+annotate!(pl_every_data[2],0.012,590, text("1990-2020", 8, colors_trends[end], rotation=0))
+
+annotate!(pl_every_data[2],0.012,310, text("Movies", 10, colors_mov[end], rotation=-40))
+annotate!(pl_every_data[2],0.017,210, text("1980-\n2018", 8, colors_mov[end], rotation=-40))
+
+annotate!(pl_every_data[2],0.019,420, text("Reddit", 10, colors_reddit[end], rotation=-40))
+annotate!(pl_every_data[2],0.019,340, text("2010-2015", 8, colors_reddit[end], rotation=-40))
+
 
 
 #add visual guide
@@ -341,36 +355,54 @@ plot!(ws_curve, r_curve_vals, ls=:dot, lw=3, lc=:white, ylims=(0,20),label="") #
 plot!(pl_pd300_zoom_ext,ws_curve, r_curve_vals, ls=:dot, lw=3, lc=:white, ylims=(0,20),label="") #label=L" \propto (1/w - 1)")
 plot!(pl_pd300_zoom_ext, ws_books, ys_books, st=:scatter,ms=ms_data, mc=colors_books,markershape=mshapes[1][1],
     markerstrokewidth=msw, ylims=(0,20), label="Google books",legend=:bottomleft,legendfontsize = legend_fontsize-5) #label=L" \propto (1/w - 1)")
-plot!(pl_pd300_zoom_ext, ws_pub, ys_pub, st=:scatter, ms=ms_data, mc=colors_pub,
+plot!(pl_pd300_zoom_ext, ws_pub, ys_pub .- 0.15, st=:scatter, ms=ms_data, mc=colors_pub,
     markershape=mshapes[1][3],markerstrokewidth=msw, ylims=(0, 20), label="Publications") #label=L" \propto (1/w - 1)")
 plot!(pl_pd300_zoom_ext, ws_twitter, ys_twitter, st=:scatter, ms=ms_data,markershape=mshapes[1][2],
     markerstrokewidth=msw, mc=colors_twitter, ylims=(0, 20), label="Twitter") #label=L" \propto (1/w - 1)")
 
-#=
-#add twitter year annotations
-annot_offset_x = 0.02
-annot_offset_y = 0.1
-annotate!(pl_pd300_zoom_ext,ws_twitter[1]+annot_offset_x, y_twitter[1]+annot_offset_y, text(L"2013", :lime, :left, annot_size_letters-2))
-annotate!(pl_pd300_zoom_ext,ws_twitter[2]+annot_offset_x, y_twitter[2]+annot_offset_y, text(L"2014", :lime, :left, annot_size_letters-2))
-annotate!(pl_pd300_zoom_ext,ws_twitter[3]+annot_offset_x, y_twitter[3]+annot_offset_y, text(L"2015", :lime, :left, annot_size_letters-2))
-annotate!(pl_pd300_zoom_ext,ws_twitter[4]+annot_offset_x, y_twitter[4]+annot_offset_y, text(L"2016", :lime, :left, annot_size_letters-2))
-=#
+
+#plot B3 marker 
+plot!(pl_pd300_zoom_ext,[w_B3], [g_B3], ms=ms_data, st=:scatter, mc=:orange, label= "",markershape=:utriangle)
+#plot!(pl_pd300_zoom_ext,[w_B4], [g_B4], ms=8, st=:scatter, mc=:purple, label = "",markershape=:rect)
 
 #plot!([w_B1], [g_B2], ms=8, st=:scatter, mc=:cyan,label=L"B_1",markershape=:diamond)
-plot!(pl_pd300_zoom_ext,[w_B2], [g_B2], ms=8, st=:scatter, mc=:lime,label="",markershape=:dtriangle)
-plot!(pl_pd300_zoom_ext,[w_B3], [g_B3], ms=8, st=:scatter, mc=:orange, label= "",markershape=:utriangle)
-plot!(pl_pd300_zoom_ext,[w_B4], [g_B4], ms=8, st=:scatter, mc=:purple, label = "",markershape=:rect)
+#plot!(pl_pd300_zoom_ext,[w_B2], [g_B2], ms=8, st=:scatter, mc=:lime,label="",markershape=:dtriangle)
 
-annotate!(pl_pd300_zoom_ext,w_B3 + 0.05, g_B3 + 0.3, text(L"B_3", :orange, :right, annot_size_letters))
-annotate!(pl_pd300_zoom_ext,w_B2 + 0.05, g_B2 + 1.0, text(L"B_2", :lime, :right, annot_size_letters))
+#B2, B3 annotations 
+annotate!(pl_pd300_zoom_ext,w_B3 + 0.02 , g_B3 - 1.8, text(L"B_3", :orange, :right, annot_size_letters))
+annotate!(pl_pd300_zoom_ext,w_B2 + 0.02, g_B2 - 1.5, text(L"B_2", :lime, :right, annot_size_letters))
+
+#=
+#----------------------------------add year annotations---------------------------------
+
+#add twitter year annotations
+annot_offset_x = 0.01
+annot_offset_y = 1.8
+annotate!(pl_pd300_zoom_ext,ws_twitter[1]+annot_offset_x, ys_twitter[1]+annot_offset_y, text(L"2013", colors_twitter[1], :center, annot_size_letters-5,rotation=60))
+annotate!(pl_pd300_zoom_ext,ws_twitter[4]+annot_offset_x, ys_twitter[4]+annot_offset_y, text(L"2016", colors_twitter[end], :center, annot_size_letters-5,rotation=60))
+
+#annotate!(pl_pd300_zoom_ext,ws_twitter[2]+annot_offset_x, ys_twitter[2]+annot_offset_y, text(L"2014", :lime, :left, annot_size_letters-2))
+#annotate!(pl_pd300_zoom_ext,ws_twitter[3]+annot_offset_x, ys_twitter[3]+annot_offset_y, text(L"2015", :lime, :left, annot_size_letters-2))
+
+#add Pub annotations
+
+#annotate!(pl_pd300_zoom_ext,ws_pub[1]+annot_offset_x+0.01, ys_pub[1]+annot_offset_y, text(L"1990-2010", colors_pub[1], :center, annot_size_letters-10,rotation=60))
+#annotate!(pl_pd300_zoom_ext,ws_pub[end]+annot_offset_x+0.01, ys_pub[end]+annot_offset_y, text(L"2010-2020", colors_pub[end], :center, annot_size_letters-10,rotation=60))
+
+#add Books annotations
+
+annotate!(pl_pd300_zoom_ext,ws_books[1]+annot_offset_x+0.01, ys_books[1]+annot_offset_y+0.2, text(L"1870-1890", colors_books[1], :center, annot_size_letters-10,rotation=60))
+annotate!(pl_pd300_zoom_ext,ws_books[2]+0.06, ys_books[2]+0.5, text(L"1900-1920", colors_books[2], :center, annot_size_letters-7))
+annotate!(pl_pd300_zoom_ext,ws_books[3]+0.06, ys_books[3]+0.5, text(L"1930-1950", colors_books[3], :center, annot_size_letters-7))
+=#
 
 #combine phase diag with data and log scale all data fig 
 
-pl_phase_diag_simple = plot(pl_pd300_zoom_ext, pl_cbar, layout=l_cbar, tick_direction=:out)
+pl_phase_diag_zoom = plot(pl_pd300_zoom_ext, pl_cbar, layout=l_cbar, tick_direction=:out)
 #add cbar annot
-annotate!(pl_phase_diag_simple, 0.418, 10.5, text(L"\Lambda", :gray10, :center, annot_size))
+#annotate!(pl_phase_diag_zoom[2], 1, 11.5, text(L"\Lambda", :gray10, :center, annot_size))
 
-pl_fig3_v1 = plot(pl_phase_diag_simple,pl_every_data,layout=(1,2),size=(1000,400),
+pl_fig3_v1 = plot(pl_phase_diag_zoom,pl_every_data,layout=(1,2),size=(1000,400),
     bottom_margin=6Plots.mm,top_margin=10Plots.mm) 
 
 #=
