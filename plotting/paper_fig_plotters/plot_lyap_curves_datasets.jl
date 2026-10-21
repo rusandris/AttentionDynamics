@@ -14,7 +14,7 @@ param_datasets_table_file = readdir("../../data/lyapcurve_datasets_parameters/")
 parameters_dataset = CSV.read("../../data/lyapcurve_datasets_parameters/" * param_datasets_table_file,DataFrame)
 
 #dataset groups 
-dataset_groups = [["Books","Twitter","Publications"],["Google","Movies","Reddit"]]
+dataset_groups = [["Books","Publications","Twitter"],["Google","Movies","Reddit"]]
 lyapcurves_all = []
 
 #read out data
@@ -51,12 +51,12 @@ for (gi,dataset_group) in enumerate(dataset_groups)
     push!(lyapcurves_all,lyapcurves_group)
 end
 
-#plot lyapcurves and parameters markers separately 
+#------------------plot lyapcurves and parameters markers separately----------------------
 plots = []
 
-mshapes = [[:diamond,:dtriangle,:circle], [:star4, :ltriangle,:pentagon]]
+mshapes = [[:diamond,:circle,:dtriangle], [:star4, :ltriangle,:pentagon]]
 
-colorpairs = [[[:yellow,:darkorange],[:darkolivegreen1,:lime,:green,:darkgreen],[:turquoise1,:steelblue]],
+colorpairs = [[[:yellow,:darkorange],[:turquoise1,:steelblue],[:darkolivegreen1,:lime,:green,:darkgreen]],
             [[:yellow,:darkorange],[:darkolivegreen1,:darkgreen],[:turquoise1,:steelblue]]]
         
 xlims_groups = [(0.0,0.5),(0.0,0.04)]

@@ -279,17 +279,16 @@ plot!(pl_every_data,legendfontsize=legend_fontsize-5, guidefontsize=25, tickfont
     xticks=[0,0.1,0.2,0.3,0.4],yticks=[0,1e1,1e2,1e3],ylims=(1.0,1e3),
     top_margin=5Plots.mm,right_margin=5Plots.mm)
 
-#add inset 
+#add inset
 lens!(pl_every_data,[0.0,0.02], [150.0, 800.0], inset = (1, bbox(0.6, 0.0, 0.4, 0.4)))
 plot!(pl_every_data[2],tickfontsize=tick_fontsize_small,xticks=[0,0.01,0.02])
 
-annotate!(pl_every_data,0.16,32, text("Books", 12, colors_books[end], rotation=-10))
-annotate!(pl_every_data,0.16,22, text("1870-2010", 8, colors_books[end], rotation=-10))
+#add annotations: dataset categories and years
+annotate!(pl_every_data,0.16,32, text("Books", 12, colors_books[end-1], rotation=-10))
+annotate!(pl_every_data,0.16,22, text("1870-2010", 8, colors_books[end-1], rotation=-10))
 
-annotate!(pl_every_data,0.26,13, text("Twitter", 12, colors_twitter[end], rotation=-10))
-annotate!(pl_every_data,0.335,9, text("2013-2016", 8, colors_twitter[end], rotation=-10))
-#annotate!(pl_every_data,0.33,10, text("2013 -", 9, colors_twitter[1], rotation=-10))
-#annotate!(pl_every_data,0.358,8.7, text("2016", 9, colors_twitter[end], rotation=-10))
+annotate!(pl_every_data,0.26,13, text("Twitter", 12, colors_twitter[2], rotation=-10))
+annotate!(pl_every_data,0.335,9, text("2013-2016", 8, colors_twitter[2], rotation=-10))
 
 annotate!(pl_every_data,0.28,21, text("Publications", 12, colors_pub[end], rotation=-10))
 annotate!(pl_every_data,0.38,14, text("1990-2020", 8, colors_pub[end], rotation=-10))
@@ -340,7 +339,7 @@ pl_pd300_zoom_ext = plot_phase_diagram(phase_diag_zoom_ext, ws_ext, ys_zoom_ext,
     xguidefontsize=guide_fontsize_large,
     colorbar_title="",
     colorbar = false,
-    legend=:topright,
+    legend=false,
     legend_fontsize=12,
     xticks=[0,0.1,0.2,0.3,0.4])
 
@@ -354,9 +353,9 @@ plot!(ws_curve, r_curve_vals, ls=:dot, lw=3, lc=:white, ylims=(0,20),label="") #
 #Books, Publications, Twitter
 plot!(pl_pd300_zoom_ext,ws_curve, r_curve_vals, ls=:dot, lw=3, lc=:white, ylims=(0,20),label="") #label=L" \propto (1/w - 1)")
 plot!(pl_pd300_zoom_ext, ws_books, ys_books, st=:scatter,ms=ms_data, mc=colors_books,markershape=mshapes[1][1],
-    markerstrokewidth=msw, ylims=(0,20), label="Google books",legend=:bottomleft,legendfontsize = legend_fontsize-5) #label=L" \propto (1/w - 1)")
-plot!(pl_pd300_zoom_ext, ws_pub, ys_pub .- 0.15, st=:scatter, ms=ms_data, mc=colors_pub,
-    markershape=mshapes[1][3],markerstrokewidth=msw, ylims=(0, 20), label="Publications") #label=L" \propto (1/w - 1)")
+    markerstrokewidth=msw, ylims=(0,20), label="Google books",legendfontsize = legend_fontsize-5) #label=L" \propto (1/w - 1)")
+#plot!(pl_pd300_zoom_ext, ws_pub, ys_pub .- 0.15, st=:scatter, ms=ms_data, mc=colors_pub,
+#    markershape=mshapes[1][3],markerstrokewidth=msw, ylims=(0, 20), label="Publications") #label=L" \propto (1/w - 1)")
 plot!(pl_pd300_zoom_ext, ws_twitter, ys_twitter, st=:scatter, ms=ms_data,markershape=mshapes[1][2],
     markerstrokewidth=msw, mc=colors_twitter, ylims=(0, 20), label="Twitter") #label=L" \propto (1/w - 1)")
 
@@ -395,6 +394,19 @@ annotate!(pl_pd300_zoom_ext,ws_books[1]+annot_offset_x+0.01, ys_books[1]+annot_o
 annotate!(pl_pd300_zoom_ext,ws_books[2]+0.06, ys_books[2]+0.5, text(L"1900-1920", colors_books[2], :center, annot_size_letters-7))
 annotate!(pl_pd300_zoom_ext,ws_books[3]+0.06, ys_books[3]+0.5, text(L"1930-1950", colors_books[3], :center, annot_size_letters-7))
 =#
+
+#add annotations: dataset categories and years
+annotate!(pl_pd300_zoom_ext,0.18,15, text("Books", 12, colors_books[end-1], rotation=-50))
+#annotate!(pl_pd300_zoom_ext,0.16,22, text("1870-2010", 8, colors_books[end], rotation=-10))
+
+annotate!(pl_pd300_zoom_ext,0.28,9, text("Twitter", 12, colors_twitter[2], rotation=-30))
+#annotate!(pl_pd300_zoom_ext,0.335,9, text("2013-2016", 8, colors_twitter[end], rotation=-10))
+
+#annotate!(pl_pd300_zoom_ext,0.29,9, text("Publications", 12, colors_pub[end], rotation=-20))
+#annotate!(pl_pd300_zoom_ext,0.38,14, text("1990-2020", 8, colors_pub[end], rotation=-10))
+
+
+
 
 #combine phase diag with data and log scale all data fig 
 
