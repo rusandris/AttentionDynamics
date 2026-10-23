@@ -417,13 +417,13 @@ pl_phase_diag_zoom = plot(pl_pd300_zoom_ext, pl_cbar, layout=l_cbar, tick_direct
 pl_fig3_v1 = plot(pl_phase_diag_zoom,pl_every_data,layout=(1,2),size=(1000,400),
     bottom_margin=6Plots.mm,top_margin=10Plots.mm) 
 
-#=
+
 #add fig level annotation 
-annotate!(pl_fig3_v1[1],-0.08, 10.8, text(L"(a)", :gray10, :center, annot_size))
+annotate!(pl_fig3_v1[1],-0.08, 21.5, text(L"(a)", :gray10, :center, annot_size))
 annotate!(pl_fig3_v1[3], -0.1, 17.0*1e2, text(L"(b)", :gray10, :center, annot_size))
-plot!(pl_fig3_v1[2],right_margin=6Plots.mm) #adjust right margin
-plot!(pl_fig3_v1[3],right_margin=6Plots.mm) #adjust right margin
-=#
+#plot!(pl_fig3_v1[2],right_margin=6Plots.mm) #adjust right margin
+#plot!(pl_fig3_v1[3],right_margin=6Plots.mm) #adjust right margin
+
 
 savefig(pl_fig3_v1,"../../paper_figs/phase_diag_N300_Ttrmax_500_times_scaled_all_data_curves_log_yscale_revised.png")
 

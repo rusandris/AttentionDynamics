@@ -127,5 +127,8 @@ pl_lyapcurves = plot(plots...,layout=(1,2),size=(1200,400),legend=:outertopright
     bottom_margin=10Plots.mm,left_margin=8Plots.mm,dpi=600,
     guidefontsize=18,tickfontsize=10)
 
+annotate!(pl_lyapcurves[1],-0.1, 13.0, text(L"(a)", :gray10, :center, annot_size))
+annotate!(pl_lyapcurves[2], -0.005, 33.5, text(L"(b)", :gray10, :center, annot_size))
+
 #lens!(pl_lyapcurves,[0.0,0.07], [0.0, 35.0], inset = (1, bbox(0.5, 0.35, 0.45, 0.45)))
 savefig(pl_lyapcurves,"../../paper_figs/lyapcurves_dataset_params_all_maxima_T_Ttr500.png")
