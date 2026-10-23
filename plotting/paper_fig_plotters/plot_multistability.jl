@@ -57,8 +57,8 @@ wc2 = (N-1)/N
 ws = [wc1+0.02:0.01:wc2-0.01;] 
 #w = wc1 + (wc2-wc1)/2 
 w = 0.6
-diffeq = (alg = Rodas5(),dt = 1e-3,adaptive=true,reltol = 1e-8, abstol = 1e-10,maxiters=1e15)
-#diffeq = (alg = Tsit5(),dt = 1e-3,adaptive=true,maxiters=1e15)
+#diffeq = (alg = Rodas5(),dt = 1e-3,adaptive=true,reltol = 1e-8, abstol = 1e-10,maxiters=1e15)
+diffeq = (alg = Tsit5(),dt = 1e-3,adaptive=true,reltol = 1e-8, abstol = 1e-10,maxiters=1e15)
 ds = create_ds(rand(2N),[g,w,N];diffeq=diffeq)
 
 
